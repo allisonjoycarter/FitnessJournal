@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Weightlifting Log</string>
+    <string name="workouts">Workouts</string>
+    <string name="workout_details">Workout</string>
+    <string name="add_workout">Add Workout</string>
+    <string name="stats">Stats</string>
+    <string name="search_exercises">Search Exercises</string>
+    <string name="workout_plan">Edit Workout Plan</string>
+    <string name="workout_plans">Workout Plans</string>
+    <string name="new_workout">New Workout</string>
+</resources>
