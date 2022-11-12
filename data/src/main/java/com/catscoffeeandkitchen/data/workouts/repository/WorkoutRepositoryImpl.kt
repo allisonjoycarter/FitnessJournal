@@ -32,10 +32,25 @@ class WorkoutRepositoryImpl(
                     addedAt = dbWorkout.plan.addedAt,
                     name = dbWorkout.plan.name,
                     note = dbWorkout.plan.note,
-                    exercises = dbWorkout.goals.map { it.toExpectedSet() },
+                    exercises = dbWorkout.goals.map { it.toExpectedSet(it.exercise.toExercise()) },
                 ),
-                sets = refs.map {it.toExerciseSet(dbWorkout.workout.completedAt)}
+                sets = refs.map { it.toExerciseSet() }
             )
+        }
+    }
+
+    override fun getPagedWorkouts(): Flow<PagingData<Workout>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false,
+                prefetchDistance = 5
+            ),
+            pagingSourceFactory = {
+                    database.workoutDao().getAllPaged()
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toWorkout() }
         }
     }
 
@@ -62,7 +77,7 @@ class WorkoutRepositoryImpl(
             note = dbWorkout.note,
             completedAt = dbWorkout.completedAt,
             addedAt = dbWorkout.addedAt,
-            sets = sets.map { it.toExerciseSet(dbWorkout.completedAt) },
+            sets = sets.map { it.set.toExerciseSet(it.exercise.toExercise()) },
             plan = if (plan == null) null else
                 WorkoutPlan(
                     addedAt = plan.plan.addedAt,
@@ -70,7 +85,7 @@ class WorkoutRepositoryImpl(
                     note = plan.plan.note,
                     exercises = plan.goals.map { goal ->
                         val exercise = database.exerciseDao().getExerciseById(goal.exerciseId)
-                        goal.toExpectedSet(exercise.name, exercise.musclesWorked)
+                        goal.toExpectedSet(exercise.toExercise())
                     },
                 )
         )
@@ -101,10 +116,9 @@ class WorkoutRepositoryImpl(
                     note = dbPlan.plan.note,
                     exercises = dbPlan.goals.map { goal ->
                         val relatedExercise = dbExercises.find { it.eId == goal.exerciseId }
-                        goal.toExpectedSet(relatedExercise!!.name, relatedExercise.musclesWorked)
+                        goal.toExpectedSet(relatedExercise!!.toExercise())
                     }
                 ),
-//                sets =
             )
 
             var setNumberInWorkout = 0
@@ -123,6 +137,9 @@ class WorkoutRepositoryImpl(
                             repsInReserve = goal.repsInReserve,
                             perceivedExertion = goal.perceivedExertion,
                             setNumberInWorkout = setNumberInWorkout,
+                            seconds = 0,
+                            modifier = goal.modifier,
+                            type = goal.type,
                         ))
                         setNumberInWorkout++
                     }
@@ -135,7 +152,7 @@ class WorkoutRepositoryImpl(
             val insertedSets = database.exerciseSetDao().getSetsInWorkout(workoutId)
             createdWorkout = createdWorkout.copy(sets = insertedSets.map { set ->
                 val matchingExercise = dbExercises.find { it.eId == set.exerciseId }
-                set.toExerciseSet(matchingExercise!!.name, matchingExercise.musclesWorked)
+                set.toExerciseSet(matchingExercise!!.toExercise())
             })
         }
 
@@ -147,57 +164,21 @@ class WorkoutRepositoryImpl(
         database.workoutDao().delete(dbWorkout)
     }
 
-    override suspend fun updateLatestWorkout(workout: Workout): Workout {
-        val dbWorkout = database.workoutDao().getLastWorkout()
-        database.workoutDao().update(dbWorkout.copy(
-//            minutesToComplete = workout.
-            completedAt = workout.completedAt,
-        ))
-        workout.sets.forEach { set ->
-            val dbExercise = database.exerciseDao().getExerciseByName(set.exercise.name)
-            var exerciseId = dbExercise?.eId
-            if (dbExercise != null) {
-                database.exerciseDao().updateByName(dbExercise.name, set.exercise.musclesWorked)
-//                    Converters().listToString(set.musclesWorked).orEmpty())
-            } else {
-                exerciseId = database.exerciseDao().insert(DbExercise(
-                    0L,
-                    set.exercise.name,
-                    set.exercise.musclesWorked,
-                ))
-            }
-
-            database.exerciseSetDao().insert(
-                set.copy(id = 0L).toDbExerciseSet(exerciseId!!, dbWorkout.wId)
-            )
-        }
-        return workout
-    }
-
     override suspend fun updateWorkout(workout: Workout): Workout {
         val existingWorkout = database.workoutDao().getWorkoutByAddedAt(workout.addedAt)
 
-        database.workoutDao().update(DbWorkout(
-            wId = existingWorkout.wId,
-            minutesToComplete = existingWorkout.minutesToComplete,
-            completedAt = workout.completedAt,
-            addedAt = workout.addedAt,
-            name = workout.name,
-            note = workout.note,
+        database.workoutDao().update(workout.toDbWorkout(
+            existingWorkout.wId,
+            planId = existingWorkout.planId
         ))
 
         workout.sets.forEach { set ->
             val dbExercise = database.exerciseDao().getExerciseByName(set.exercise.name)
             var exerciseId = dbExercise?.eId
             if (dbExercise != null) {
-                database.exerciseDao().updateByName(dbExercise.name, set.exercise.musclesWorked)
-//                    Converters().listToString(set.musclesWorked).orEmpty())
+                database.exerciseDao().update(set.exercise.toDbExercise(dbExercise.eId))
             } else {
-                exerciseId = database.exerciseDao().insert(DbExercise(
-                    0L,
-                    set.exercise.name,
-                    set.exercise.musclesWorked,
-                ))
+                exerciseId = database.exerciseDao().insert(set.exercise.toDbExercise())
             }
 
             database.exerciseSetDao().update(
@@ -243,19 +224,15 @@ class WorkoutRepositoryImpl(
     }
 
     override suspend fun createExercise(exercise: Exercise): Exercise {
-        database.exerciseDao().insert(exercise = DbExercise(
-            eId = 0,
-            name = exercise.name,
-            musclesWorked = exercise.musclesWorked
-        ))
+        database.exerciseDao().insert(exercise = exercise.toDbExercise(id = 0L, userCreated = true))
         return exercise
     }
 
     override suspend fun updateExercise(exercise: Exercise, workout: Workout?) {
-        database.exerciseDao().updateByName(
-            exercise.name,
-            exercise.musclesWorked,
-        )
+        val dbExercise = database.exerciseDao().getExerciseByName(exercise.name)
+        dbExercise?.let { dbEx ->
+            database.exerciseDao().update(exercise.toDbExercise(id = dbEx.eId))
+        }
     }
 
     override suspend fun removeExerciseFromWorkout(exercise: Exercise, workout: Workout) {

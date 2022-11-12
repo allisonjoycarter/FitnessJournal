@@ -112,6 +112,7 @@ fun MPExerciseLineGraph(
                 fillColor = primaryColor
                 fillAlpha = 60
                 valueTextColor = primaryColor
+                valueTextSize = 15f
             }
 
             val lineData = LineData(dataSet)

@@ -150,6 +150,7 @@ class WorkoutPlanViewModel @Inject constructor(
             ExercisePlanField.MinReps -> set.copy(minReps = value)
             ExercisePlanField.Sets -> set.copy(sets = value)
             ExercisePlanField.WeightInPounds -> set
+            ExercisePlanField.WeightInKilograms -> set
             ExercisePlanField.RepsInReserve -> set.copy(rir = value)
             ExercisePlanField.PerceivedExertion -> set.copy(perceivedExertion = value)
         }

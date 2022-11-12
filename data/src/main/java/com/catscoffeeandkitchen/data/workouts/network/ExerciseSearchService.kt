@@ -1,7 +1,6 @@
 package com.catscoffeeandkitchen.data.workouts.network
 
 import com.catscoffeeandkitchen.data.workouts.network.models.*
-import com.catscoffeeandkitchen.data.workouts.util.capitalizeWords
 import retrofit2.Retrofit
 import retrofit2.http.GET
 import retrofit2.http.Query

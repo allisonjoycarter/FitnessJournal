@@ -13,6 +13,8 @@ interface WorkoutPlanRepository {
 
     suspend fun createWorkoutPlan(plan: WorkoutPlan)
 
+    suspend fun createPlanFromWorkout(workout: Workout): OffsetDateTime
+
     suspend fun updateWorkoutPlan(plan: WorkoutPlan)
 
     suspend fun addExpectedSetToWorkout(workout: WorkoutPlan, expectedSet: ExpectedSet)

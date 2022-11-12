@@ -7,16 +7,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
-import com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs.ExerciseLineGraph
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs.MPExerciseLineGraph
-import com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs.SampleChart
+import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
 
 
@@ -25,8 +26,12 @@ fun StatsScreen(
     modifier: Modifier = Modifier,
     viewModel: StatsViewModel = hiltViewModel()
 ) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
     LazyColumn(
         modifier = modifier,
+        state = listState,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
@@ -38,10 +43,15 @@ fun StatsScreen(
             is DataState.Loading -> item { CircularProgressIndicator() }
             is DataState.Error -> item { Text(state.e.message.toString()) }
             is DataState.Success -> item {
-                val pairs = state.data.map { set ->
-                    Pair(
-                        (set.completedAt ?: OffsetDateTime.now()),
-                        (set.weightInPounds / ( 1.0278 - 0.0278 * set.reps )).toFloat())
+                val pairs = state.data
+                    .groupBy { it.completedAt }
+                    .map { grouping ->
+                        val sortedGroup = grouping.value.sortedByDescending { set ->
+                            set.weightInPounds / ( 1.0278 - 0.0278 * set.reps)
+                        }
+                        Pair(
+                            (grouping.key ?: OffsetDateTime.now()),
+                            (sortedGroup.first().weightInPounds / ( 1.0278 - 0.0278 * sortedGroup.first().reps )).toFloat())
                     }
 
                 if (pairs.isNotEmpty()) {
@@ -63,6 +73,10 @@ fun StatsScreen(
                         .padding(horizontal = 8.dp)
                         .clickable {
                             viewModel.selectExercise(exercise.name)
+
+                            coroutineScope.launch {
+                                listState.scrollToItem(0)
+                            }
                         }
                 ) {
                     Text(

@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout.plates
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
-import timber.log.Timber
 
 @Composable
 fun PlateStack(

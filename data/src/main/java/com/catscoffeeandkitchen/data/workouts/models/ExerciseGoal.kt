@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
+import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 
 @Entity(
     primaryKeys = ["workoutPlanId", "setNumberInWorkout"],
@@ -34,9 +36,11 @@ data class ExerciseGoal(
     val reps: Int,
     val repRangeMax: Int = 0,
     val repRangeMin: Int = 0,
-    val weightInPounds: Int = 0,
-    val weightInKilograms: Int = 0,
+    val weightInPounds: Float = 0f,
+    val weightInKilograms: Float = 0f,
     val repsInReserve: Int = 0,
     val perceivedExertion: Int = 0,
     val note: String = "",
+    val modifier: ExerciseSetModifier? = null,
+    val type: ExerciseSetType = ExerciseSetType.Working,
 )

@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.catscoffeeandkitchen.data.workouts.models.*
 
@@ -43,10 +44,17 @@ interface ExerciseSetDao {
     @Query("""
         SELECT *
         FROM ExerciseSet
-        LEFT JOIN Exercise ON Exercise.eId = ExerciseSet.exerciseId
+        WHERE sId IN (:ids)
+    """)
+    suspend fun getSetsByIds(ids: List<Long>): List<ExerciseSet>
+
+    @Transaction
+    @Query("""
+        SELECT *
+        FROM ExerciseSet
         WHERE workoutId = :workoutId
     """)
-    suspend fun getSetsAndExercisesInWorkout(workoutId: Long): List<SetAndExerciseCombined>
+    suspend fun getSetsAndExercisesInWorkout(workoutId: Long): List<SetWithExercise>
 
     @Query("""
         SELECT *
@@ -55,21 +63,38 @@ interface ExerciseSetDao {
     """)
     suspend fun getSetsInWorkout(workoutId: Long): List<ExerciseSet>
 
+    @Transaction
     @Query("""
         SELECT *
         FROM ExerciseSet
-        LEFT JOIN Exercise ON Exercise.eId = ExerciseSet.exerciseId
         INNER JOIN Workout ON Workout.wId = ExerciseSet.workoutId
         WHERE Workout.completedAt IS NOT NULL
     """)
-    suspend fun getAllCompletedSets(): List<SetAndExerciseCombined>
+    suspend fun getAllCompletedSets(): List<SetWithExercise>
+
+    @Transaction
+    @Query("""
+        SELECT *
+        FROM ExerciseSet
+        WHERE ExerciseSet.exerciseId = :eId AND ExerciseSet.completedAt IS NOT NULL
+    """)
+    suspend fun getAllCompletedSetsForExercise(eId: Long): List<SetWithExercise>
 
     @Query("""
         SELECT *
         FROM ExerciseSet
-        LEFT JOIN Exercise ON Exercise.eId = ExerciseSet.exerciseId
-        LEFT JOIN Workout ON Workout.wId = ExerciseSet.workoutId
-        WHERE Exercise.name = :exerciseName AND Workout.completedAt IS NOT NULL
+        WHERE ExerciseSet.completedAt IS NOT NULL AND ExerciseSet.exerciseId = :exerciseId
+        ORDER BY ExerciseSet.completedAt DESC
+        LIMIT 1
     """)
-    suspend fun getAllCompletedSetsForExercise(exerciseName: String): List<SetAndExerciseCombinedWithCompletedAt>
+    fun getLastCompletedSet(exerciseId: Long): ExerciseSet?
+
+    @Query("""
+        SELECT *
+        FROM ExerciseSet
+        WHERE ExerciseSet.exerciseId = :exerciseId
+        ORDER BY ExerciseSet.sId DESC
+        LIMIT 1
+    """)
+    fun getLastSet(exerciseId: Long): ExerciseSet?
 }

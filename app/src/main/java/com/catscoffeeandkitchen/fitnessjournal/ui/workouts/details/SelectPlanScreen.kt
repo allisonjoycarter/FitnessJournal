@@ -8,6 +8,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +27,8 @@ fun SelectPlanScreen(
     modifier: Modifier = Modifier,
     workoutPlansViewModel: WorkoutPlansViewModel = hiltViewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Column(
         modifier = modifier.padding(12.dp),
     ) {
@@ -37,6 +41,14 @@ fun SelectPlanScreen(
             is DataState.Loading -> { CircularProgressIndicator() }
             is DataState.Error -> { Text("Error = ${planState.e.localizedMessage}")}
             is DataState.Success -> {
+                LaunchedEffect(coroutineScope) {
+                    if (planState.data.isEmpty()) {
+                        navController.navigate("${FitnessJournalScreen.WorkoutDetails.route}/0") {
+                            popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                        }
+                    }
+                }
+
                 LazyColumn(
                     modifier = modifier,
                 ) {
@@ -47,7 +59,9 @@ fun SelectPlanScreen(
                                 navController.navigate(
                                     "${FitnessJournalScreen.WorkoutDetails.route}/0?" +
                                             "plan=${item.addedAt.toInstant().toEpochMilli()}"
-                                )
+                                ) {
+                                    popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                                }
                             }
                         )
                     }
@@ -63,7 +77,9 @@ fun SelectPlanScreen(
             TextButton(onClick = {
                 navController.navigate(
                     "${FitnessJournalScreen.WorkoutDetails.route}/0"
-                )
+                ) {
+                    popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                }
             }) {
                 Text("Skip")
             }

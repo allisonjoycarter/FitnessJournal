@@ -47,11 +47,7 @@ fun WorkoutPlanEditScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 navController.currentBackStackEntry?.savedStateHandle
                     ?.getLiveData<String>("exerciseToAdd")?.observe(lifecycleOwner) { result ->
-                        Timber.d("*** running onStartOrResume for $result")
-                        val parts = result.split("|")
-                        onStartOrResume(
-                            parts.first(),
-                        )
+                        onStartOrResume(result)
                         
                         navController.currentBackStackEntry?.savedStateHandle
                             ?.remove<String>("exerciseToAdd")

@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
+import java.time.OffsetDateTime
 
 @Entity(
     foreignKeys = [
@@ -31,11 +33,13 @@ data class ExerciseSet(
     val exerciseId: Long,
     val workoutId: Long,
     val reps: Int = 1,
-    val weightInPounds: Int = 0,
-    val weightInKilograms: Int = 0,
+    val weightInPounds: Float = 0f,
+    val weightInKilograms: Float = 0f,
     val repsInReserve: Int = 0,
     val perceivedExertion: Int = 0,
     val setNumberInWorkout: Int = 1,
-    val isComplete: Boolean = false,
-    val type: ExerciseSetType = ExerciseSetType.Working
+    val completedAt: OffsetDateTime? = null,
+    val type: ExerciseSetType = ExerciseSetType.Working,
+    val seconds: Int = 0,
+    val modifier: ExerciseSetModifier? = null,
 )

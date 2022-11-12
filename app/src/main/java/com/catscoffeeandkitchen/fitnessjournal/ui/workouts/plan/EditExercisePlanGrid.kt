@@ -13,6 +13,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,7 +48,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = {},
                 onBlur = {},
-                useKeyboard = true
             )
             Text("sets", style = MaterialTheme.typography.labelLarge)
         }
@@ -64,7 +65,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = {},
                 onBlur = {},
-                useKeyboard = true
             )
             Text("reps", style = MaterialTheme.typography.labelLarge)
         }
@@ -82,7 +82,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = {},
                 onBlur = {},
-                useKeyboard = true
             )
             Text("min reps", style = MaterialTheme.typography.labelLarge)
         }
@@ -100,7 +99,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = {},
                 onBlur = {},
-                useKeyboard = true
             )
             Text("max reps", style = MaterialTheme.typography.labelLarge)
         }
@@ -118,7 +116,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = { },
                 onBlur = { },
-                useKeyboard = true
             )
             Text("reps in reserve", style = MaterialTheme.typography.labelLarge)
         }
@@ -135,7 +132,6 @@ fun EditExercisePlanGrid(
                 },
                 onFocus = {},
                 onBlur = {},
-                useKeyboard = true
             )
             Text("perceived exertion", style = MaterialTheme.typography.labelLarge)
         }
@@ -149,10 +145,8 @@ fun ExerciseSetInput(
     onValueChange: (value: String) -> Unit,
     onFocus: () -> Unit,
     onBlur: () -> Unit,
-    useKeyboard: Boolean = false,
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue(startingText)) }
-    val keyboardController = LocalSoftwareKeyboardController.current
     var focusTextKey by remember { mutableStateOf("")  }
 
     BasicTextField(
@@ -161,15 +155,13 @@ fun ExerciseSetInput(
         onValueChange = { newText ->
             textFieldValue = newText
         },
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
         modifier = Modifier
-            .requiredWidth(50.dp)
+            .requiredWidth(60.dp)
             .onFocusChanged { state ->
                 if (state.hasFocus) {
                     onFocus()
-                    if (!useKeyboard) {
-                        keyboardController?.hide()
-                    }
                     textFieldValue = textFieldValue.copy(
                         selection = TextRange(0, textFieldValue.text.length)
                     )

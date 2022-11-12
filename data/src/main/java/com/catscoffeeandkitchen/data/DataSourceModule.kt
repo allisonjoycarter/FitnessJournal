@@ -1,14 +1,19 @@
 package com.catscoffeeandkitchen.data
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.catscoffeeandkitchen.data.workouts.db.*
 import com.catscoffeeandkitchen.data.workouts.models.Workout
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
+import com.catscoffeeandkitchen.data.workouts.repository.DataRepositoryImpl
 import com.catscoffeeandkitchen.data.workouts.repository.ExerciseSetRepositoryImpl
 import com.catscoffeeandkitchen.data.workouts.repository.WorkoutPlanRepositoryImpl
 import com.catscoffeeandkitchen.data.workouts.repository.WorkoutRepositoryImpl
+import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
+import com.catscoffeeandkitchen.domain.interfaces.DataRepository
 import com.catscoffeeandkitchen.domain.interfaces.ExerciseSetRepository
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutPlanRepository
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
@@ -17,6 +22,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
@@ -71,6 +77,15 @@ class DataSourceModule {
     @Provides
     fun provideExerciseSearchService(retrofit: Retrofit): ExerciseSearchService.Impl {
         return ExerciseSearchService.Impl(retrofit)
+    }
+
+    @Provides
+    fun provideDatabaseBackupHelper(
+        @ApplicationContext context: Context,
+        sharedPreferences: SharedPreferences,
+        database: FitnessJournalDb,
+        ): DatabaseBackupHelper {
+        return DatabaseBackupHelper(context, sharedPreferences, database)
     }
     //endregion
 
@@ -143,6 +158,15 @@ class DataSourceModule {
         database: FitnessJournalDb,
         ): ExerciseSetRepository {
         return ExerciseSetRepositoryImpl(database)
+    }
+
+    @Provides
+    fun provideDataRepository(
+        @ApplicationContext context: Context,
+        backupHelper: DatabaseBackupHelper,
+        database: FitnessJournalDb
+        ): DataRepository {
+        return DataRepositoryImpl(context, backupHelper, database)
     }
     //endregion
 }

@@ -29,6 +29,7 @@ interface WorkoutPlanDao {
     @Query("""
         SELECT *
         FROM WorkoutPlan
+        ORDER BY addedAt DESC
     """)
     fun getAll(): List<WorkoutPlan>
 
@@ -36,6 +37,7 @@ interface WorkoutPlanDao {
     @Query("""
         SELECT *
         FROM WorkoutPlan
+        ORDER BY addedAt DESC
     """)
     fun getAllWithGoals(): List<WorkoutPlanWithGoals>
 

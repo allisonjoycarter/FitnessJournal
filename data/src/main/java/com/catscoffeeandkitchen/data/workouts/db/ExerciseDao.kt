@@ -12,6 +12,12 @@ interface ExerciseDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(exercises: List<Exercise>): List<Long>
 
+    @Update
+    suspend fun updateAll(exercises: List<Exercise>)
+
+    @Update
+    suspend fun update(exercises: Exercise)
+
 //    @Transaction
 //    @Insert
 //    suspend fun insertCompletedExercise(exercise: Exercise, sets: List<ExerciseSet>, workout: Workout)
@@ -24,13 +30,6 @@ interface ExerciseDao {
         WHERE NOT Exercise.userCreated
     """)
     suspend fun clearRemoteExercises()
-
-    @Query("""
-        UPDATE Exercise
-        SET musclesWorked = :musclesWorked
-        WHERE name = :name
-    """)
-    suspend fun updateByName(name: String, musclesWorked: List<String>)
 
     @Query("""
         SELECT *
@@ -67,6 +66,16 @@ interface ExerciseDao {
         ORDER BY NumberOfSets DESC, Exercise.name ASC
     """)
     fun getPagedExercisesByName(exerciseName: String, muscle: String, category: String): PagingSource<Int, ExerciseWithSets>
+
+
+
+    @Query("""
+        SELECT *
+        FROM Exercise
+        WHERE Exercise.name LIKE '%' || :exerciseName || '%'
+        LIMIT 1
+    """)
+    fun searchExercisesByName(exerciseName: String): Exercise?
 
     @Transaction
     @Query("""

@@ -2,15 +2,17 @@ package com.catscoffeeandkitchen.domain.interfaces
 
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
+import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.Workout
 
 interface ExerciseSetRepository {
     suspend fun updateExerciseSet(exerciseSet: ExerciseSet)
 
-    suspend fun addExerciseSet(
+    suspend fun addExerciseSetWithPopulatedData(
         workout: Workout,
         exercise: Exercise,
-        exerciseSet: ExerciseSet
+        exerciseSet: ExerciseSet,
+        expectedSet: ExpectedSet?
     )
 
     suspend fun addExerciseSets(
@@ -20,4 +22,6 @@ interface ExerciseSetRepository {
     )
 
     suspend fun getCompletedSetsForExercise(name: String): List<ExerciseSet>
+
+    suspend fun changeExerciseForSets(setIds: List<Long>, exercise: Exercise)
 }

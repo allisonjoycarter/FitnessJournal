@@ -7,11 +7,13 @@ data class ExerciseSet(
     val reps: Int,
     val exercise: Exercise,
     val setNumberInWorkout: Int = 0,
-    val weightInPounds: Int = 0,
-    val weightInKilograms: Int = 0,
+    val weightInPounds: Float = 0f,
+    val weightInKilograms: Float = 0f,
     val repsInReserve: Int = 0,
     val perceivedExertion: Int = 0,
     val isComplete: Boolean = false,
     val completedAt: OffsetDateTime? = null,
-    val type: ExerciseSetType = ExerciseSetType.Working
+    val type: ExerciseSetType = ExerciseSetType.Working,
+    val seconds: Int = 0,
+    val modifier: ExerciseSetModifier? = null,
 )

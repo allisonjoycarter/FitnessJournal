@@ -1,17 +1,20 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout.plates
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
-import timber.log.Timber
+import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 
 @Composable
 fun PlateCalculator(
     weight: Double,
+    unit: WeightUnit
     ) {
     var showPlateDialog by remember { mutableStateOf(false) }
-    var settings by remember { mutableStateOf(PlateCalculatorHelper.PlateSettings()) }
+    var settings by remember {
+        mutableStateOf(PlateCalculatorHelper.PlateSettings(amounts = emptyMap(), unit = unit))
+    }
 
     val plateHelper = PlateCalculatorHelper()
     var plates = plateHelper.calculatePlates(weight, settings)

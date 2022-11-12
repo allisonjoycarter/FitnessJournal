@@ -1,13 +1,20 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.catscoffeeandkitchen.fitnessjournal.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
+import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
+import com.catscoffeeandkitchen.fitnessjournal.ui.settings.SettingsScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.SelectPlanScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.WorkoutDetailsScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.list.WorkoutsScreen
@@ -46,6 +53,9 @@ fun Navigation() {
             FitnessJournalScreen.WorkoutPlansScreen.route
         ) {
             Scaffold(
+                topBar = { FitnessJournalTopAppBar {
+                    navController.navigate(FitnessJournalScreen.Settings.route)
+                }},
                 bottomBar = {
                     FitnessJournalBottomNavigationBar(navController = navController)
                 }
@@ -115,7 +125,20 @@ fun Navigation() {
         }
 
         composable(
-            FitnessJournalScreen.SearchExercisesScreen.route
+            "${FitnessJournalScreen.SearchExercisesScreen.route}?" +
+                    "category={category}&muscle={muscle}",
+            arguments = listOf(
+                navArgument("category") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("muscle") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            )
         ) {
             Scaffold() { padding ->
                 SearchExercisesScreen(
@@ -124,7 +147,32 @@ fun Navigation() {
                 )
             }
         }
+
+        composable(
+            FitnessJournalScreen.Settings.route
+        )  {
+            Scaffold() { padding ->
+                SettingsScreen(modifier = Modifier.padding(padding))
+            }
+        }
     }
+}
+
+@Composable
+fun FitnessJournalTopAppBar(
+    navigateToSettings: () -> Unit,
+) {
+    TopAppBar(
+        title = {},
+        actions = {
+            IconButton(onClick = { navigateToSettings() }) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "go to settings"
+                )
+            }
+        }
+    )
 }
 
 @Composable

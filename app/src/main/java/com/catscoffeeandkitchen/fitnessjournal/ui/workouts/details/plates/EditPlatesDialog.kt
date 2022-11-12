@@ -1,9 +1,8 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout.plates
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,16 +28,10 @@ fun PlateDialog(
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         PlateDialogContent(plateSettings = plateSettings) { amount, plateWeight ->
-            val updatedRequest = when (plateWeight) {
-                45.0 -> plateSettings.copy(plates45 = amount)
-                35.0 -> plateSettings.copy(plates35 = amount)
-                25.0 -> plateSettings.copy(plates25 = amount)
-                10.0 -> plateSettings.copy(plates10 = amount)
-                5.0 -> plateSettings.copy(plates5 = amount)
-                2.5 -> plateSettings.copy(plates2 = amount)
-                else -> plateSettings
-            }
-            updatePlateSettings(updatedRequest)
+            val updatedAmounts = plateSettings.amounts.toMutableMap()
+            updatedAmounts[plateWeight] = amount
+
+            updatePlateSettings(plateSettings.copy(amounts = updatedAmounts))
         }
     }
 }
@@ -98,35 +91,12 @@ fun PlateDialogContent(
             crossAxisSpacing = 18.dp,
             modifier = Modifier.padding(12.dp)
         ) {
-            PlateEditColumn(
-                plateAmount = plateSettings.plates45,
-                plateWeight = 45.0
-            ) { updatePlateAmount(it, 45.0) }
-
-            PlateEditColumn(
-                plateAmount = plateSettings.plates35,
-                plateWeight = 35.0
-            ) { updatePlateAmount(it, 35.0) }
-
-            PlateEditColumn(
-                plateAmount = plateSettings.plates25,
-                plateWeight = 25.0
-            ) { updatePlateAmount(it, 25.0) }
-
-            PlateEditColumn(
-                plateAmount = plateSettings.plates10,
-                plateWeight = 10.0
-            ) { updatePlateAmount(it, 10.0) }
-
-            PlateEditColumn(
-                plateAmount = plateSettings.plates5,
-                plateWeight = 5.0
-            ) { updatePlateAmount(it, 5.0) }
-
-            PlateEditColumn(
-                plateAmount = plateSettings.plates2,
-                plateWeight = 2.5
-            ) { updatePlateAmount(it, 2.5) }
+            plateSettings.amounts.entries.forEach { entry ->
+                PlateEditColumn(
+                    plateAmount = entry.value,
+                    plateWeight = entry.key
+                ) { updatePlateAmount(it, entry.key) }
+            }
         }
     }
 }

@@ -10,4 +10,5 @@ data class ExpectedSet(
     val rir: Int = 0,
     val setNumberInWorkout: Int = 0,
     val note: String = "",
+    val type: ExerciseSetType = ExerciseSetType.Working,
 )

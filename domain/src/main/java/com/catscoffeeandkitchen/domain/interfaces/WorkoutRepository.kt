@@ -13,13 +13,13 @@ interface WorkoutRepository {
 
     suspend fun getWorkouts(): List<Workout>
 
+    fun getPagedWorkouts(): Flow<PagingData<Workout>>
+
     suspend fun getCompletedWorkouts(): List<Workout>
 
     suspend fun getWorkoutByAddedDate(addedAt: OffsetDateTime): Workout
 
     suspend fun createWorkout(workout: Workout, planAddedAt: OffsetDateTime?): Workout
-
-    suspend fun updateLatestWorkout(workout: Workout): Workout
 
     suspend fun updateWorkout(workout: Workout): Workout
 

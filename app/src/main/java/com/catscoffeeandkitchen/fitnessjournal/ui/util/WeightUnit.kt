@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+package com.catscoffeeandkitchen.fitnessjournal.ui.util
 
 enum class WeightUnit
 {

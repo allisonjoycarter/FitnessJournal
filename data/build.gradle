@@ -81,4 +81,7 @@ dependencies {
     api "com.squareup.okhttp3:logging-interceptor:4.9.0"
     api "com.squareup.retrofit2:retrofit:2.9.0"
     api "com.squareup.retrofit2:converter-moshi:2.9.0"
+
+    //csv parsing
+    implementation "com.github.doyaaaaaken:kotlin-csv-jvm:1.6.0"
 }

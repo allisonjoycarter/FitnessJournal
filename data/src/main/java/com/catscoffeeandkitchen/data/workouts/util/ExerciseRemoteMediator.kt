@@ -10,6 +10,8 @@ import com.catscoffeeandkitchen.data.workouts.models.ExerciseWithSets
 import com.catscoffeeandkitchen.data.workouts.models.RemoteKeys
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
 import com.catscoffeeandkitchen.data.workouts.network.models.*
+import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
+import com.catscoffeeandkitchen.domain.util.capitalizeWords
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
@@ -128,6 +130,15 @@ class ExerciseRemoteMediator(
 
                 database.remoteKeysDao().insertAll(keys)
                 database.exerciseDao().insertAll(searchedExercises.map { wgerExercise ->
+                    val equipment = when {
+                        wgerExercise.name.contains("barbell", ignoreCase = true) -> ExerciseEquipmentType.Barbell
+                        wgerExercise.name.contains("dumbbell", ignoreCase = true) -> ExerciseEquipmentType.Dumbbell
+                        wgerExercise.name.contains("machine", ignoreCase = true) -> ExerciseEquipmentType.Machine
+                        wgerExercise.name.contains("cable", ignoreCase = true) -> ExerciseEquipmentType.Cable
+                        wgerExercise.name.contains("bodyweight", ignoreCase = true) -> ExerciseEquipmentType.Bodyweight
+                        else -> ExerciseEquipmentType.Bodyweight
+                    }
+
                     DbExercise(
                         eId = 0L,
                         name = wgerExercise.name,
@@ -136,7 +147,8 @@ class ExerciseRemoteMediator(
                         }.orEmpty(),
                         userCreated = false,
                         category = wgerExercise.category,
-                        thumbnailUrl = wgerExercise.image
+                        thumbnailUrl = wgerExercise.image,
+                        equipmentType = equipment,
                     )
                 })
             }

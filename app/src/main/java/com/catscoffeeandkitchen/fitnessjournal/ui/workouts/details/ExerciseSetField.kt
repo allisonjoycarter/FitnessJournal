@@ -1,49 +1,51 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
+import com.catscoffeeandkitchen.data.workouts.util.populateWeight
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import kotlin.math.roundToInt
 
-enum class ExerciseSetField {
-    Reps,
-    WeightInPounds,
-    RepsInReserve,
-    PerceivedExertion,
-    Type,
-    Complete;
-
-    fun getSetValue(set: ExerciseSet): Int {
-        return when (this) {
-            Reps -> set.reps
-            WeightInPounds -> set.weightInPounds
-            RepsInReserve -> set.repsInReserve
-            PerceivedExertion -> set.perceivedExertion
-            Type -> set.type.ordinal
-            Complete -> if (set.isComplete) 1 else 0
-        }
-    }
+sealed class ExerciseSetField(val value: Any?) {
+    class Reps(value: Int): ExerciseSetField(value)
+    class WeightInPounds(value: Float): ExerciseSetField(value)
+    class WeightInKilograms(value: Float): ExerciseSetField(value)
+    class RepsInReserve(value: Int): ExerciseSetField(value)
+    class PerceivedExertion(value: Int): ExerciseSetField(value)
+    class Type(value: ExerciseSetType): ExerciseSetField(value)
+    class Complete(value: OffsetDateTime?): ExerciseSetField(value)
 
     fun copySetWithNewValue(
         set: ExerciseSet,
-        value: Int,
     ): ExerciseSet {
         return when (this) {
-            Reps -> {
-                set.copy(reps = value)
+            is Reps -> {
+                set.copy(reps = value as Int)
             }
-            WeightInPounds -> {
-                set.copy(weightInPounds = value)
+            is WeightInPounds -> {
+                set.copy(
+                    weightInPounds = value as Float,
+                    weightInKilograms = (value * 0.4535924f)
+                )
             }
-            RepsInReserve -> {
-                set.copy(repsInReserve = value)
+            is WeightInKilograms -> {
+                set.copy(
+                    weightInKilograms = value as Float,
+                    weightInPounds = (value * 2.204623f)
+                )
             }
-            PerceivedExertion -> {
-                set.copy(perceivedExertion = value)
+            is RepsInReserve -> {
+                set.copy(repsInReserve = value as Int)
             }
-            Complete -> {
-                set.copy(isComplete = value == 1)
+            is PerceivedExertion -> {
+                set.copy(perceivedExertion = value as Int)
             }
-            Type -> set.copy(type = ExerciseSetType.values().find { it.ordinal == value}
-                ?: ExerciseSetType.Working)
+            is Complete -> {
+                set.copy(completedAt = value as OffsetDateTime?, isComplete = value != null)
+            }
+            is Type -> set.copy(type = value as ExerciseSetType)
         }
     }
 }

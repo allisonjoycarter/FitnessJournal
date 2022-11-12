@@ -61,11 +61,11 @@ fun SearchExerciseHeader(
                     search = value
                 },
                 singleLine = true,
-                keyboardActions = KeyboardActions(onDone = { onSearch(search.text) })
+                keyboardActions = KeyboardActions(onDone = { onSearch(search.text.trim()) })
             )
             IconButton(
                 onClick = {
-                    onSearch(search.text.ifEmpty { null })
+                    onSearch(search.text.trim().ifEmpty { null })
                 }
             ) {
                 Icon(Icons.Default.Search, "search")

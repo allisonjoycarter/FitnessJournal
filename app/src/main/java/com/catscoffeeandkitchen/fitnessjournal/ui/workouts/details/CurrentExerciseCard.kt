@@ -1,10 +1,11 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Fireplace
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
@@ -19,20 +21,20 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.bicepCurlSets
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.exerciseBicepCurl
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.expectedSetBicepCurl
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.currentworkout.plates.PlateCalculator
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates.PlateCalculator
+import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
+import timber.log.Timber
 
 
 @Composable
 fun CurrentExerciseCard(
-    exercise: Exercise,
-    sets: List<ExerciseSet>,
-    expectedSet: ExpectedSet?,
-    useKeyboardForEntry: Boolean,
+    uiData: ExerciseUiData,
     addSet: (Exercise) -> Unit = {},
     addWarmupSets: (Exercise) -> Unit = {},
     removeSet: (set: ExerciseSet) -> Unit = { },
     removeExercise: (exercise: Exercise) -> Unit = { },
-    updateExercise: (ExerciseSet, field: ExerciseSetField, value: Int) -> Unit = { _,_,_ ->},
+    updateExercise: (ExerciseSet, field: ExerciseSetField) -> Unit = { _, _ ->},
+    swapExercise: () -> Unit = { },
     onFocus: () -> Unit = {},
     onBlur: () -> Unit = {},
 ) {
@@ -65,7 +67,7 @@ fun CurrentExerciseCard(
             onDismissRequest = { showRemoveExerciseDialog = false },
             confirmButton = {
                 TextButton(onClick = {
-                    removeExercise(exercise)
+                    removeExercise(uiData.exercise)
                     showRemoveExerciseDialog = false
                 }) {
                     Text("Remove")
@@ -76,7 +78,7 @@ fun CurrentExerciseCard(
                     Text("Cancel")
                 }
             },
-            title = { Text("Remove this exercise and ${sets.size} sets?") },
+            title = { Text("Remove this exercise and ${uiData.sets.size} sets?") },
         )
     }
 
@@ -88,7 +90,7 @@ fun CurrentExerciseCard(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(exercise.name, style = MaterialTheme.typography.headlineSmall)
+            Text(uiData.exercise.name, style = MaterialTheme.typography.headlineSmall)
 
             Box(modifier = Modifier.weight(1f)) {
                 IconButton(
@@ -105,7 +107,7 @@ fun CurrentExerciseCard(
                         leadingIcon = { Icon(Icons.Default.Fireplace, "create warm up sets")},
                         text = { Text("add pyramid warmup") },
                         onClick = {
-                            addWarmupSets(exercise)
+                            addWarmupSets(uiData.exercise)
                         })
                     DropdownMenuItem(
                         leadingIcon = { Icon(Icons.Default.Delete, "remove exercise")},
@@ -113,52 +115,64 @@ fun CurrentExerciseCard(
                         onClick = {
                             showRemoveExerciseDialog = true
                         })
+                    DropdownMenuItem(
+                        leadingIcon = { Icon(Icons.Default.Refresh, "swap exercise")},
+                        text = { Text("swap") },
+                        onClick = {
+                            swapExercise()
+                        })
                 }
             }
         }
 
-        if (expectedSet != null) {
+        if (uiData.expectedSet != null) {
             Text(
-                "${expectedSet.sets}x${expectedSet.minReps} - " +
-                        "${expectedSet.maxReps}reps@${expectedSet.perceivedExertion}PE, " +
-                        "${expectedSet.rir}RIR",
+                "${uiData.expectedSet.sets}x${uiData.expectedSet.minReps} - " +
+                        "${uiData.expectedSet.maxReps}reps@${uiData.expectedSet.perceivedExertion}PE, " +
+                        "${uiData.expectedSet.rir}RIR",
                 modifier = Modifier.padding(4.dp)
             )
         }
 
-        sets.forEach { completedSet ->
+        uiData.sets.forEach { completedSet ->
             Divider(modifier = Modifier.padding(bottom = 2.dp))
             EditSetGrid(
                 completedSet,
-                useKeyboard = useKeyboardForEntry,
-                updateValue = { field, value ->
-                    updateExercise(completedSet, field, value)
+                updateValue = { field ->
+                    updateExercise(completedSet, field)
                 },
                 removeSet = { setToRemove = completedSet },
                 onFocus = {
                     onFocus()
                 },
                 onBlur = onBlur,
+                unit = uiData.unit
             )
 
+            Timber.d("${uiData.exercise.name} = ${completedSet.exercise.equipmentType.name}")
             if (!completedSet.isComplete &&
-                completedSet.setNumberInWorkout == sets.first { set ->
-                    set.exercise.name == completedSet.exercise.name && !set.isComplete }
+                completedSet.exercise.equipmentType == ExerciseEquipmentType.Barbell &&
+                completedSet.setNumberInWorkout == uiData.sets.first { set ->
+                    !set.isComplete && set.exercise.name == completedSet.exercise.name }
                     .setNumberInWorkout ) {
-                PlateCalculator(weight = completedSet.weightInPounds.toDouble())
+                PlateCalculator(weight = if (uiData.unit == WeightUnit.Pounds)
+                    completedSet.weightInPounds.toDouble() else 
+                        completedSet.weightInKilograms.toDouble(),
+                    unit = uiData.unit,
+                )
             }
         }
-        FitnessJournalButton(text = "Add Set", onClick = { addSet(exercise) }, fullWidth = true)
+        FitnessJournalButton(text = "Add Set", onClick = { addSet(uiData.exercise) }, fullWidth = true)
     }
 }
 
 @Preview
 @Composable
 fun CurrentExerciseCardPreview() {
-    CurrentExerciseCard(
+    CurrentExerciseCard(ExerciseUiData(
         exercise = exerciseBicepCurl,
         sets = bicepCurlSets,
         expectedSet = expectedSetBicepCurl,
-        useKeyboardForEntry = false
-    )
+        unit = WeightUnit.Pounds
+    ))
 }

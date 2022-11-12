@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen.WorkoutsScreen.resourceId
@@ -15,6 +16,7 @@ sealed class FitnessJournalScreen(
     @StringRes val resourceId: Int,
     val icon: ImageVector =  Icons.Default.FitnessCenter
 ) {
+    object Settings : FitnessJournalScreen("settings", R.string.settings, Icons.Default.Settings)
     object WorkoutsScreen : FitnessJournalScreen("workouts", R.string.workouts)
     object WorkoutPlansScreen : FitnessJournalScreen("plans", R.string.workout_plans, Icons.Default.Checklist)
     object WorkoutDetails : FitnessJournalScreen("workouts", R.string.workout_details)

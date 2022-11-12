@@ -1,33 +1,22 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material.Colors
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -35,9 +24,10 @@ import androidx.paging.compose.items
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.util.capitalizeWords
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
-import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises.create.CreateOrChangeExerciseDialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -48,12 +38,40 @@ fun SearchExercisesScreen(
     ) {
     val searchState = viewModel.searchRequest.collectAsState(initial = SearchExercisesViewModel.ExerciseSearch())
     val pagingItems = viewModel.pagedExerciseFlow.collectAsLazyPagingItems()
+    var showCreateExerciseDialog by remember { mutableStateOf(false) }
+    var editingExercise by remember { mutableStateOf(null as Exercise?) }
 
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(coroutineScope) {
         if (searchState.value == SearchExercisesViewModel.ExerciseSearch()) {
             viewModel.searchExercises(SearchExercisesViewModel.ExerciseSearch())
         }
+    }
+
+    if (showCreateExerciseDialog) {
+        CreateOrChangeExerciseDialog(
+            isCreating = editingExercise == null,
+            currentExercise = editingExercise ?:
+                Exercise(
+                    name = searchState.value.name.capitalizeWords().orEmpty(),
+                    musclesWorked = emptyList()
+                ),
+            onDismiss = { showCreateExerciseDialog = false },
+            onConfirm = { exercise ->
+                if  (editingExercise == null) {
+                    viewModel.createExercise(exercise) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "exerciseToAdd",
+                            exercise.name
+                        )
+                        navController.popBackStack()
+                    }
+                } else {
+                    viewModel.updateExercise(exercise, refreshItems = { pagingItems.refresh() })
+                }
+                showCreateExerciseDialog = false
+            }
+        )
     }
 
     LazyColumn(modifier = modifier) {
@@ -72,19 +90,32 @@ fun SearchExercisesScreen(
 
         items(pagingItems) {exercise ->
             if (exercise != null) {
-                ExerciseItem(exercise, onTap = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        "exerciseToAdd",
-                        "${exercise.name}|${exercise.musclesWorked.joinToString(";")}"
-                    )
-                    navController.popBackStack()
-                })
+                ExerciseItem(exercise,
+                    onTap = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "exerciseToAdd",
+                            exercise.name
+                        )
+                        navController.popBackStack()
+                    },
+                    onLongPress = {
+                        editingExercise = exercise
+                        showCreateExerciseDialog = true
+                    }
+                )
             }
         }
 
         item {
             when (val loadState = pagingItems.loadState.mediator?.refresh) {
-                is LoadState.Loading -> CircularProgressIndicator()
+                is LoadState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
                 is LoadState.Error -> {
                     Divider()
                     Text(loadState.error.message.toString())
@@ -92,21 +123,38 @@ fun SearchExercisesScreen(
                 else -> { }
             }
         }
+
+        if (pagingItems.loadState.mediator?.refresh is LoadState.NotLoading) {
+            item {
+                FitnessJournalButton(
+                    text = "Create Exercise",
+                    fullWidth = true,
+                    onClick = {
+                        editingExercise = null
+                        showCreateExerciseDialog = true
+                    }
+                )
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExerciseItem(
     exercise: Exercise,
     onTap: () -> Unit = {},
+    onLongPress: () -> Unit = {},
     darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
     FitnessJournalCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clickable { onTap() }
+            .combinedClickable(
+                onClick = { onTap() },
+                onLongClick = { onLongPress() }
+            )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically

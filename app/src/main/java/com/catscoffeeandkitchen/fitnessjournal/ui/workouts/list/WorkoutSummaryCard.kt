@@ -1,16 +1,19 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.list
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +24,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun WorkoutSummaryCard(
     workout: Workout,
@@ -31,15 +35,31 @@ fun WorkoutSummaryCard(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onTap() },
-                    onLongPress = { onLongPress() },
-                )
-            },
+            .combinedClickable(
+                onClick = { onTap() },
+                onLongClick = { onLongPress() },
+            ),
         columnPaddingVertical = 4.dp
     ) {
         Text(workout.name, style = MaterialTheme.typography.headlineMedium)
+
+        if (workout.completedAt == null) {
+
+            Surface(
+                modifier = Modifier.padding(vertical = 4.dp),
+                shape = SuggestionChipDefaults.shape,
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.onBackground.copy(alpha = .5f),
+                ),
+                tonalElevation = 4.dp
+            ) {
+                Text(
+                    "In Progress",
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+        }
 
         when (val completed = workout.completedAt) {
             null -> Text(
