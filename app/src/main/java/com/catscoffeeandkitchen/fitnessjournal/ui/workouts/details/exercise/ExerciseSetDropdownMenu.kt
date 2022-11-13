@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete

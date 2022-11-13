@@ -40,7 +40,6 @@ class WorkoutPlanViewModel @Inject constructor(
                 viewModelScope.launch {
                     createWorkoutPlanUseCase.run(WorkoutPlan(addedAt = now)
                     ).collect { wo ->
-                        Timber.d(" workout = $wo")
                         _workoutPlan.value = wo
                     }
                 }
@@ -50,7 +49,6 @@ class WorkoutPlanViewModel @Inject constructor(
                     getWorkoutByAddedDateUseCase.run(
                         OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
                     ).collect { wo ->
-                        Timber.d(" workout = $wo")
                         _workoutPlan.value = wo
                     }
                 }
@@ -107,7 +105,6 @@ class WorkoutPlanViewModel @Inject constructor(
             ).collect { result ->
                 if (result is DataState.Success) {
                     getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
-                        Timber.d("removed from workout = $wo")
                         _workoutPlan.value = wo
                     }
                 }

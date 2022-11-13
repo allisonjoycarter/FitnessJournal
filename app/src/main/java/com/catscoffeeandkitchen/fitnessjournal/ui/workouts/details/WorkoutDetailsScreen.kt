@@ -8,7 +8,6 @@ import androidx.compose.material.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,7 +18,7 @@ import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
-import timber.log.Timber
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseSetField
 
 @Composable
 fun WorkoutDetailsScreen(

@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet

@@ -1,12 +1,8 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
-import com.catscoffeeandkitchen.data.workouts.util.populateWeight
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import kotlin.math.roundToInt
 
 sealed class ExerciseSetField(val value: Any?) {
     class Reps(value: Int): ExerciseSetField(value)

@@ -16,6 +16,9 @@ import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.Workout
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseSetField
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseUiData
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.InProgressExerciseCard
 import java.time.OffsetDateTime
 
 @Composable
@@ -75,7 +78,7 @@ fun WorkoutDetails(
                 .filter { s -> s.exercise.name == exercise.name }
                 .sortedBy { it.setNumberInWorkout }
             if (workout.sets.filter { it.exercise.name == exercise.name }.any { !it.isComplete }) {
-                CurrentExerciseCard(
+                InProgressExerciseCard(
                     ExerciseUiData(
                         exercise,
                         sets = sets,

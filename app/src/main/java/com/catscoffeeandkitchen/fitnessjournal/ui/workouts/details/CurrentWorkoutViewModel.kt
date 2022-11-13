@@ -81,7 +81,6 @@ class CurrentWorkoutViewModel @Inject constructor(
                     getWorkoutByAddedDateUseCase.run(
                         OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
                     ).collect { wo ->
-                        Timber.d(" workout = $wo")
                         _workout.value = wo
                         cachedWorkout = (wo as? DataState.Success)?.data
                     }
@@ -97,7 +96,6 @@ class CurrentWorkoutViewModel @Inject constructor(
         workoutInstance?.let { currentWorkout ->
             viewModelScope.launch {
                 getWorkoutByAddedDateUseCase.run(currentWorkout.addedAt).collect { wo ->
-                    Timber.d(" workout = $wo")
                     _workout.value = wo
                     cachedWorkout = (wo as? DataState.Success)?.data
                 }
