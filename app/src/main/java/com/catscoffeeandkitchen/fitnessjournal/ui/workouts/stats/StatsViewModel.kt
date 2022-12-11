@@ -54,7 +54,7 @@ class StatsViewModel @Inject constructor(
         }
     }
 
-    fun getExercises() = viewModelScope.launch {
+    private fun getExercises() = viewModelScope.launch {
         getExercisesUseCase.run().collect { state ->
             _exercises.value = state
         }
@@ -62,6 +62,7 @@ class StatsViewModel @Inject constructor(
 
     fun selectExercise(name: String) = viewModelScope.launch {
         _selectedExercise.emit(name)
+        _sets.value = DataState.NotSent()
     }
 
     fun getSetsForExercise(name: String) = viewModelScope.launch {

@@ -17,12 +17,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import com.catscoffeeandkitchen.domain.models.Workout
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -95,10 +97,22 @@ fun WorkoutSummaryCard(
             )
         }
 
-//            Text(
-//                workout.expectedSets.size.toString() + " sets",
-//                style = MaterialTheme.typography.labelLarge
-//            )
+        workout.sets.groupBy { it.exercise.name }.forEach { entry ->
+            val warmupSets = entry.value.filter { it.type == ExerciseSetType.WarmUp }
+            val workingSets = entry.value.filter { it.type == ExerciseSetType.Working }
+            if (warmupSets.any()) {
+                Text(
+                    "${warmupSets.size}x${warmupSets.map { it.reps }.average().roundToInt()} " +
+                            "${entry.key} Warm Up",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Text(
+                "${workingSets.size}x${workingSets.map { it.reps }.average().roundToInt()} " +
+                        entry.key,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }
 

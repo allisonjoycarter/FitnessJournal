@@ -1,13 +1,12 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -16,9 +15,7 @@ import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.Workout
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseSetField
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseUiData
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.InProgressExerciseCard
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.*
 import java.time.OffsetDateTime
 
 @Composable
@@ -26,18 +23,12 @@ fun WorkoutDetails(
     scrollState: LazyListState,
     workout: Workout,
     unit: WeightUnit,
-    updateWorkoutName: (String) -> Unit = {},
-    updateWorkoutNote: (String?) -> Unit = {},
-    addExercise: () -> Unit = {},
-    addSet: (exercise: Exercise) -> Unit = {},
-    addWarmupSets: (exercise: Exercise) -> Unit = {},
-    removeExercise: (exercise: Exercise) -> Unit = {},
-    removeSet: (set: ExerciseSet) -> Unit = { },
-    updateExercise: (set: ExerciseSet, field: ExerciseSetField) -> Unit = { _, _ -> },
-    swapExercise: (setNumber: Int, exercise: Exercise) -> Unit = { _, _, -> },
-    createPlanFromWorkout: () -> Unit = { },
-    finish: () -> Unit = {}
+    workoutActions: WorkoutActions?,
+    exerciseUiActions: ExerciseUiActions?,
+    exerciseNavigableActions: ExerciseNavigableActions?,
 ) {
+    var editingExercise by remember { mutableStateOf(null as String?) }
+    var useKeyboard by rememberSaveable { mutableStateOf(false) }
 
     LazyColumn(
         state = scrollState,
@@ -47,8 +38,8 @@ fun WorkoutDetails(
             WorkoutNameAndNoteSection(
                 workoutName = workout.name,
                 workoutNote = workout.note,
-                updateName = { updateWorkoutName(it) },
-                updateNote = { updateWorkoutNote(it) },
+                updateName = { workoutActions?.updateName(it) },
+                updateNote = { workoutActions?.updateNote(it) },
             )
         }
 
@@ -56,58 +47,105 @@ fun WorkoutDetails(
             item {
                 FitnessJournalButton(
                     text = "Create Plan from this Workout",
-                    onClick = { createPlanFromWorkout() },
+                    onClick = { workoutActions?.createPlanFromWorkout() },
                     fullWidth = true
                 )
             }
         }
 
-        val listOfExercises = (
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Switch(
+                    useKeyboard,
+                    onCheckedChange = { useKeyboard = !useKeyboard }
+                )
+                Text("Use Keyboard", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+
+        val listOfExercises: List<UiExercise> = (
                 (workout.sets
-                    .sortedBy { it.setNumberInWorkout }
-                    .map { it.exercise })
+                    .sortedBy { (it.exercise.positionInWorkout ?: 0) }
+                    .map { UiExercise(
+                        uniqueIdentifier = it.exercise.name,
+                        name = it.exercise.name,
+                        exercise = it.exercise,
+                        position = it.exercise.positionInWorkout ?: 1
+                    ) })
                         +
                 (workout.plan?.exercises.orEmpty()
-                    .sortedBy { it.setNumberInWorkout }
-                    .map { it.exercise })
+                    .sortedBy { it.positionInWorkout }
+                    .filter { workout.sets.none { set ->
+                        set.exercise.positionInWorkout == it.positionInWorkout } }
+                    .map { UiExercise(
+                        uniqueIdentifier = it.exercise?.name ?: "${it.exerciseGroup?.id}${it.positionInWorkout}",
+                        name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
+                        exercise = it.exercise,
+                        group = it.exerciseGroup,
+                        position = it.positionInWorkout
+                    ) })
                 )
-            .distinctBy { it.name }
+            .distinctBy { it.uniqueIdentifier }
 
-        items(listOfExercises) { exercise ->
+        itemsIndexed(listOfExercises) { index, exercise ->
             val sets = workout.sets
                 .filter { s -> s.exercise.name == exercise.name }
-                .sortedBy { it.setNumberInWorkout }
-            if (workout.sets.filter { it.exercise.name == exercise.name }.any { !it.isComplete }) {
+                .sortedBy { it.setNumber }
+            if (exercise.exercise != null &&
+                (editingExercise == exercise.name ||
+                workout.sets.filter { it.exercise.name == exercise.name }.any { !it.isComplete })
+            ) {
                 InProgressExerciseCard(
                     ExerciseUiData(
-                        exercise,
+                        workoutAddedAt = workout.addedAt,
+                        exercise = exercise.exercise,
                         sets = sets,
-                        expectedSet = workout.plan?.exercises?.find { it.exercise.name == exercise.name },
+                        expectedSet = workout.plan?.exercises?.find { it.positionInWorkout == exercise.position },
                         unit = unit,
+                        isFirstExercise = index == 0,
+                        isLastExercise = index == listOfExercises.lastIndex,
+                        useKeyboard = useKeyboard,
                     ),
-                    addSet = addSet,
-                    addWarmupSets = addWarmupSets,
-                    removeSet = removeSet,
-                    removeExercise = removeExercise,
-                    updateExercise = updateExercise,
-                    swapExercise = { swapExercise(sets.first().setNumberInWorkout, exercise) }
+                    uiActions = exerciseUiActions,
+                    navigableActions = exerciseNavigableActions
                 )
-            } else {
+            } else if (exercise.exercise != null) {
                 ReadOnlyExerciseCard(
-                    exercise = exercise,
+                    exercise = exercise.exercise,
                     sets = sets,
-                    expectedSet = workout.plan?.exercises?.find { it.exercise.name == exercise.name },
+                    expectedSet = workout.plan?.exercises?.find { it.exercise?.name == exercise.name },
                     unit = unit,
-                    onEdit = { updateExercise(sets.last(), ExerciseSetField.Complete(null)) }
+                    onEdit = { editingExercise = exercise.name }
+                )
+            } else if (exercise.group != null) {
+                ExerciseGroupCard(
+                    exercise.group,
+                    onExerciseSelected = { ex ->
+                        exerciseUiActions?.selectExerciseFromGroup(
+                            exercise.group,
+                            ex,
+                            ex.positionInWorkout ?: 1,
+                            expectedSet = workout.plan?.exercises?.firstOrNull { it.positionInWorkout == ex.positionInWorkout })
+                    },
+                    editGroup = {
+                        exerciseNavigableActions?.editGroup(exercise.group)
+                    }
                 )
             }
         }
+
         if (workout.completedAt == null) {
             item {
                 FitnessJournalButton(
                     "Add Exercise",
                     onClick = {
-                        addExercise()
+                        exerciseNavigableActions?.addExercise()
                     },
                     fullWidth = true,
                     modifier = Modifier.padding(horizontal = 2.dp)
@@ -117,7 +155,7 @@ fun WorkoutDetails(
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                     OutlinedButton(
-                        onClick = { finish() },
+                        onClick = { workoutActions?.finish() },
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.padding(12.dp)
                     ) {
@@ -153,6 +191,9 @@ fun AddWorkoutFormPreview() {
     WorkoutDetails(
         workout = workoutState,
         scrollState = scrollState,
-        unit = WeightUnit.Pounds
+        unit = WeightUnit.Pounds,
+        workoutActions = null,
+        exerciseUiActions = null,
+        exerciseNavigableActions = null,
     )
 }

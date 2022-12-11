@@ -12,15 +12,16 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
 class AddMultipleExerciseSetsUseCase @Inject constructor(
     private val repository: ExerciseSetRepository
 ) {
-    fun run(sets: List<ExerciseSet>, exercise: Exercise, workout: Workout): Flow<DataState<Boolean>> = flow {
+    fun run(sets: List<ExerciseSet>, exercise: Exercise, workoutAddedAt: OffsetDateTime): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
-        repository.addExerciseSets(exerciseSets = sets, exercise = exercise, workout = workout)
+        repository.addExerciseSets(exerciseSets = sets, exercise = exercise, workoutAddedAt = workoutAddedAt)
         emit(DataState.Success(true))
     }
         .catch { ex ->

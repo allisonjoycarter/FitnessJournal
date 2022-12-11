@@ -1,21 +1,20 @@
 package com.catscoffeeandkitchen.data.workouts.db
 
 import androidx.room.*
-import com.catscoffeeandkitchen.data.workouts.models.Workout
-import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlan
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanWithGoals
 import java.time.OffsetDateTime
 
 @Dao
 interface WorkoutPlanDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(workout: WorkoutPlan): Long
+    suspend fun insert(workout: WorkoutPlanEntity): Long
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun update(workout: WorkoutPlan): Int
+    suspend fun update(workout: WorkoutPlanEntity): Int
 
     @Transaction
-    suspend fun upsert(workout: WorkoutPlan) {
+    suspend fun upsert(workout: WorkoutPlanEntity) {
         val id = insert(workout)
         if (id == -1L) {
             update(workout)
@@ -23,46 +22,56 @@ interface WorkoutPlanDao {
     }
 
     @Delete
-    suspend fun delete(workout: WorkoutPlan)
+    suspend fun delete(workout: WorkoutPlanEntity)
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM WorkoutPlan
+        FROM WorkoutPlanEntity
         ORDER BY addedAt DESC
-    """)
-    fun getAll(): List<WorkoutPlan>
+    """
+    )
+    fun getAll(): List<WorkoutPlanEntity>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM WorkoutPlan
+        FROM WorkoutPlanEntity
         ORDER BY addedAt DESC
-    """)
+    """
+    )
     fun getAllWithGoals(): List<WorkoutPlanWithGoals>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM WorkoutPlan
+        FROM WorkoutPlanEntity
         WHERE addedAt = :addedAt
         LIMIT 1
-    """)
-    suspend fun getWorkoutPlanByAddedAt(addedAt: OffsetDateTime): WorkoutPlan
+    """
+    )
+    suspend fun getWorkoutPlanByAddedAt(addedAt: OffsetDateTime): WorkoutPlanEntity
 
 //        LEFT JOIN ExerciseGoal ON ExerciseGoal.workoutPlanId = WorkoutPlan.wpId
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM WorkoutPlan
-        WHERE WorkoutPlan.addedAt = :addedAt
-    """)
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.addedAt = :addedAt
+    """
+    )
     fun getWorkoutPlanWithGoalsByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoals
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM WorkoutPlan
-        WHERE WorkoutPlan.wpId = :planId
-    """)
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.wpId = :planId
+    """
+    )
     fun getWorkoutPlanWithGoalsById(planId: Long): WorkoutPlanWithGoals
 }

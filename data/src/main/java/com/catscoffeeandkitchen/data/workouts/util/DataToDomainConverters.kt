@@ -4,10 +4,10 @@ import com.catscoffeeandkitchen.data.workouts.models.CombinedSetData
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
 import com.catscoffeeandkitchen.domain.models.*
-import java.time.OffsetDateTime
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseSet as DbExerciseSet
-import com.catscoffeeandkitchen.data.workouts.models.Workout as DbWorkout
-import com.catscoffeeandkitchen.data.workouts.models.Exercise as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity as DbExerciseGroup
 
 fun DbExerciseSet.toExerciseSet(exercise: Exercise): ExerciseSet {
     return ExerciseSet(
@@ -16,25 +16,28 @@ fun DbExerciseSet.toExerciseSet(exercise: Exercise): ExerciseSet {
         reps = this.reps,
         weightInKilograms = this.weightInKilograms,
         weightInPounds = this.weightInPounds,
-        setNumberInWorkout = this.setNumberInWorkout,
+        setNumber = this.setNumber,
         isComplete = this.completedAt != null,
         completedAt = this.completedAt,
         type = this.type,
         seconds = this.seconds,
         modifier = this.modifier,
+        repsInReserve = this.repsInReserve,
+        perceivedExertion = this.perceivedExertion
     )
 }
 
-fun ExerciseGoal.toExpectedSet(exercise: Exercise): ExpectedSet {
+fun ExerciseGoal.toExpectedSet(exercise: Exercise? = null, group: ExerciseGroup? = null): ExpectedSet {
     return ExpectedSet(
         exercise = exercise,
+        exerciseGroup = group,
         reps = this.reps,
         sets = this.sets,
         maxReps = this.repRangeMax,
         minReps = this.repRangeMin,
         perceivedExertion = this.perceivedExertion,
         rir = this.repsInReserve,
-        setNumberInWorkout = this.setNumberInWorkout,
+        positionInWorkout = this.positionInWorkout,
         note = this.note,
     )
 }
@@ -52,7 +55,7 @@ fun CombinedSetData.toExerciseSet(): ExerciseSet {
         reps = this.reps,
         weightInKilograms = this.weightInKilograms,
         weightInPounds = this.weightInPounds,
-        setNumberInWorkout = this.setNumberInWorkout,
+        setNumber = this.setNumber,
         isComplete = this.completedAt != null,
         completedAt = this.completedAt,
         type = this.type
@@ -68,19 +71,30 @@ fun ExerciseGoalWithExercises.toExpectedSet(exercise: Exercise): ExpectedSet {
         minReps = this.goal.repRangeMin,
         perceivedExertion = this.goal.perceivedExertion,
         rir = this.goal.repsInReserve,
-        setNumberInWorkout = this.goal.setNumberInWorkout,
+        positionInWorkout = this.goal.positionInWorkout,
         note = this.goal.note,
         type = this.goal.type,
     )
 }
 
-fun DbExercise.toExercise(): Exercise {
+fun DbExerciseGroup.toExerciseGroup(exercises: List<Exercise>): ExerciseGroup {
+    return ExerciseGroup(
+        id = this.gId,
+        name = this.name.orEmpty(),
+        exercises = exercises,
+    )
+}
+
+fun DbExercise.toExercise(position: Int? = null, amountOfSets: Int? = null, stats: ExerciseStats? = null): Exercise {
     return Exercise(
         name = this.name,
         musclesWorked = this.musclesWorked,
         category = this.category,
         thumbnailUrl = this.thumbnailUrl,
-        equipmentType = this.equipmentType
+        equipmentType = this.equipmentType,
+        positionInWorkout = position,
+        amountOfSets = amountOfSets,
+        stats = stats,
     )
 }
 

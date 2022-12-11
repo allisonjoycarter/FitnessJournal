@@ -10,7 +10,7 @@ data class ExerciseSetPartial(
     val weightInKilograms: Float = 0f,
     val repsInReserve: Int = 0,
     val perceivedExertion: Int = 0,
-    val setNumberInWorkout: Int = 1,
+    val setNumber: Int = 1,
     val completedAt: OffsetDateTime? = null,
     val type: ExerciseSetType = ExerciseSetType.Working
 )

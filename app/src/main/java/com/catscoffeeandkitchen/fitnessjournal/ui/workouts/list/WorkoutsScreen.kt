@@ -36,125 +36,52 @@ fun WorkoutsScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: WorkoutsViewModel = hiltViewModel(),
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+) {
+    val workouts = viewModel.pagedWorkout.collectAsLazyPagingItems()
+    var workoutToDelete by remember { mutableStateOf(null as Workout?) }
+
+    if (workoutToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { workoutToDelete = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    workoutToDelete?.let { viewModel.deleteWorkout(it) }
+                    workoutToDelete = null
+                }) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { workoutToDelete = null }) {
+                    Text("Cancel")
+                }
+            },
+            title = { Text("Remove ${workoutToDelete?.name.orEmpty().ifEmpty { "workout" }}?") },
+        )
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
     ) {
-//    val onStartOrResume by rememberUpdatedState(viewModel::getWorkouts)
-//
-//    DisposableEffect(lifecycleOwner) {
-//        val observer = LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_START || event == Lifecycle.Event.ON_RESUME) {
-//                onStartOrResume()
-//            }
-//        }
-//        lifecycleOwner.lifecycle.addObserver(observer)
-//        onDispose {
-//            lifecycleOwner.lifecycle.removeObserver(observer)
-//        }
-//    }
-
-//    Timber.d(viewModel.workouts.value.toString())
-//        when (val workouts = viewModel.workouts.value) {
-//            is DataState.Loading -> {
-//                Column(
-//                    modifier = modifier
-//                        .fillMaxSize()
-//                        .background(MaterialTheme.colorScheme.background),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Center
-//                ) {
-//                    Box(modifier = Modifier.fillMaxSize(.3f)) {
-//                        CircularProgressIndicator()
-//                    }
-//                }
-//            }
-//            is DataState.Success -> {
-//                if (workouts.data.isNotEmpty()) {
-            val workouts = viewModel.pagedWorkout.collectAsLazyPagingItems()
-                    var workoutToDelete by remember { mutableStateOf(null as Workout?) }
-
-                    if (workoutToDelete != null) {
-                        AlertDialog(
-                            onDismissRequest = { workoutToDelete = null },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    workoutToDelete?.let { viewModel.deleteWorkout(it) }
-                                    workoutToDelete = null
-                                }) {
-                                    Text("Remove")
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { workoutToDelete = null }) {
-                                    Text("Cancel")
-                                }
-                            },
-                            title = { Text("Remove ${workoutToDelete?.name.orEmpty().ifEmpty { "workout" }}?") },
+        items(workouts) { item ->
+            if (item != null) {
+                WorkoutSummaryCard(
+                    item,
+                    onTap = {
+                        navController.navigate(
+                            "${FitnessJournalScreen.WorkoutDetails.route}/${
+                                item.addedAt
+                                    .toInstant()
+                                    .toEpochMilli()
+                            }"
                         )
-                    }
-
-                        LazyColumn(modifier = modifier
-                            .background(MaterialTheme.colorScheme.background)
-                        ) {
-                            stickyHeader {
-                                Column(
-                                    modifier = Modifier
-                                        .background(MaterialTheme.colorScheme.background)
-                                        .padding(12.dp)
-                                ) {
-                                    FitnessJournalButton(
-                                        text = "Add Workout",
-                                        onClick = {
-                                            navController.navigate(
-                                                FitnessJournalScreen.NewWorkoutScreen.route
-                                            )
-                                        },
-                                        fullWidth = true
-                                    )
-                                }
-                            }
-
-                            items(workouts) { item ->
-                                if (item != null) {
-                                    WorkoutSummaryCard(
-                                        item,
-                                        onTap = {
-                                            navController.navigate(
-                                                "${FitnessJournalScreen.WorkoutDetails.route}/${
-                                                    item.addedAt
-                                                        .toInstant()
-                                                        .toEpochMilli()
-                                                }"
-                                            )
-                                        },
-                                        onLongPress = { workoutToDelete = item }
-                                    )
-                                }
-                            }
-                        }
-//                } else {
-//                    EmptyWorkoutList(
-//                        modifier = modifier,
-//                        addWorkout = {
-//                            navController.navigate(
-//                                FitnessJournalScreen.NewWorkoutScreen.route
-//                            )
-//                        }
-//                    )
-//                }
-//            }
-//            is DataState.Error -> {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .background(MaterialTheme.colorScheme.background),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Center
-//                ) {
-//                    Text(workouts.e.message ?: "unknown error")
-//                }
-//            }
-//            is DataState.NotSent -> {}
-//        }
+                    },
+                    onLongPress = { workoutToDelete = item }
+                )
+            }
+        }
+    }
 }
 
 @Preview

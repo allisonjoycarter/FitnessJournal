@@ -3,7 +3,7 @@ package com.catscoffeeandkitchen.data.workouts.models
 data class GoalAndExerciseCombined(
     val workoutPlanId: Long,
     val sets: Int,
-    val setNumberInWorkout: Int = 0,
+    val setNumber: Int = 0,
     val reps: Int,
     val repRangeMax: Int = 0,
     val repRangeMin: Int = 0,

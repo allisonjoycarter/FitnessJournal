@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.components
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 fun FitnessJournalButton(
     text: String,
     onClick: () -> Unit,
+    icon: (@Composable()() -> Unit)? = null,
     modifier: Modifier = Modifier,
     fullWidth: Boolean = false,
 ) {
@@ -25,7 +27,10 @@ fun FitnessJournalButton(
         modifier = (if (fullWidth) modifier.fillMaxWidth() else modifier)
             .padding(6.dp)
     ) {
-        Text(text)
+        if (icon != null) {
+            icon()
+        }
+        Text(text, modifier = Modifier.padding(start = if (icon != null) 4.dp else 0.dp))
     }
 }
 

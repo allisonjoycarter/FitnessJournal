@@ -10,6 +10,7 @@ enum class ExercisePlanField {
     WeightInPounds,
     WeightInKilograms,
     RepsInReserve,
-    PerceivedExertion;
+    PerceivedExertion,
+    SetNumber;
 
 }

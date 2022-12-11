@@ -2,23 +2,17 @@
 
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -27,8 +21,8 @@ import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
-import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import timber.log.Timber
@@ -41,6 +35,12 @@ fun WorkoutPlanEditScreen(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     ) {
     val onStartOrResume by rememberUpdatedState(viewModel::addExercise)
+    val groupExercises by rememberUpdatedState(viewModel::showGroupNameDialog)
+    val selectGroup by rememberUpdatedState(viewModel::selectGroup)
+    var exerciseToRemove by remember { mutableStateOf(null as ExpectedSet?) }
+    val showExerciseGroupNameDialog = viewModel.showExerciseGroupNameDialog.collectAsState()
+    val exercisesToGroup = viewModel.exercisesToGroup.collectAsState()
+    var groupName by remember { mutableStateOf("") }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -52,6 +52,23 @@ fun WorkoutPlanEditScreen(
                         navController.currentBackStackEntry?.savedStateHandle
                             ?.remove<String>("exerciseToAdd")
                     }
+
+                navController.currentBackStackEntry?.savedStateHandle
+                    ?.getLiveData<String>("selectedExercises")?.observe(lifecycleOwner) { result ->
+                        groupExercises(result.split("|"))
+                        navController.currentBackStackEntry?.savedStateHandle
+                            ?.remove<String>("selectedExercises")
+                    }
+
+                navController.currentBackStackEntry?.savedStateHandle
+                    ?.getLiveData<Long?>("selectedGroup")?.observe(lifecycleOwner) { result ->
+                        Timber.d("*** selectedGroup = $result")
+                        result?.let {
+                            selectGroup(it)
+                            navController.currentBackStackEntry?.savedStateHandle
+                                ?.remove<Long>("selectedGroup")
+                        }
+                    }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -60,70 +77,52 @@ fun WorkoutPlanEditScreen(
         }
     }
 
-    when (val workoutState = viewModel.workoutPlan.value) {
-        is DataState.Loading -> {
-            Column(
-                modifier = modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        is DataState.Success -> {
-            ExercisePlanColumn(
-                modifier = modifier,
-                plan = workoutState.data,
-                updateWorkoutName = { name ->
-                    viewModel.updateWorkoutName(name)
-                },
-                updateWorkoutNotes = { notes ->
-                    viewModel.updateWorkoutNotes(notes)
-                },
-                expectedSets = workoutState.data.exercises,
-                updateExercise = { setNumber, field, value ->
-                    viewModel.updateExercisePlan(setNumber, field, value)
-                },
-                addExercise = {
-                    navController.navigate(FitnessJournalScreen.SearchExercisesScreen.route)
-                },
-                removeExercise = { expected ->
-                    viewModel.removeSet(expected)
+    if (showExerciseGroupNameDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                groupName = ""
+                viewModel.hideGroupNameDialog()
+            },
+            confirmButton = { TextButton(onClick = {
+                viewModel.addExerciseGroup(exercisesToGroup.value, groupName = groupName)
+                viewModel.hideGroupNameDialog()
+                groupName = ""
+            }) { Text("OK") }},
+            dismissButton = { TextButton(onClick = {
+                groupName = ""
+                viewModel.addExerciseGroup(exercisesToGroup.value)
+                viewModel.hideGroupNameDialog()
+            }) { Text("Skip") }},
+            title = { Text(
+                "Name this group?",
+                style = MaterialTheme.typography.titleSmall
+            ) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(.9f)
+                        .height(((30 * exercisesToGroup.value.size) + 120).dp),
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text(
+                        "Create a name for this group of " +
+                            "exercises:\n\n${exercisesToGroup.value.joinToString("\n")}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    TextField(
+                        value = groupName,
+                        onValueChange = { groupName = it },
+                    )
                 }
-            )
-        }
-        else -> { Column(
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(workoutState.toString())
-        } }
+            }
+        )
     }
-}
-
-
-@Composable
-fun ExercisePlanColumn(
-    plan: WorkoutPlan,
-    expectedSets: List<ExpectedSet>,
-    modifier: Modifier = Modifier,
-    updateWorkoutName: (String) -> Unit = {},
-    updateWorkoutNotes: (String) -> Unit = {},
-    updateExercise: (setNumber: Int, field: ExercisePlanField, value: Int) -> Unit = { _, _, _ -> },
-    addExercise: () -> Unit = {},
-    removeExercise: (expectedSet: ExpectedSet) -> Unit = {}
-    ) {
-    var exerciseToRemove by remember { mutableStateOf(null as ExpectedSet?) }
-
-    var title by remember { mutableStateOf(plan.name)}
-    var note by remember { mutableStateOf(plan.note.orEmpty())}
 
     if (exerciseToRemove != null) {
         AlertDialog(
             onDismissRequest = { exerciseToRemove = null },
             confirmButton = { TextButton(onClick = {
-                removeExercise(exerciseToRemove!!)
+                viewModel.removeSet(exerciseToRemove!!)
                 exerciseToRemove = null
             }) { Text("Remove") }},
             dismissButton = { TextButton(onClick = {
@@ -140,80 +139,146 @@ fun ExercisePlanColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
-            FitnessJournalOutlinedTextField(
-                value = title,
-                onUpdate = { updateWorkoutName(it) },
-                label = "plan name",
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-            )
-        }
+        when (val workoutState = viewModel.workoutPlan.value) {
+            is DataState.Loading -> {
+                item {
+                    CircularProgressIndicator()
+                }
+            }
+            is DataState.Success -> {
+                exercisePlanItems(
+                    plan = workoutState.data,
+                    expectedSets = workoutState.data.exercises,
+                    uiActions = object : ExercisePlanUiActions {
 
-        item {
-            FitnessJournalOutlinedTextField(
-                value = note,
-                onUpdate = { updateWorkoutNotes(it) },
-                singleLine = false,
-                label = "note",
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-            )
-        }
+                        override fun updateWorkoutName(name: String) {
+                            viewModel.updateWorkoutName(name)
+                        }
 
-        items(expectedSets) { expected ->
-            ExercisePlanCard(
-                expected,
-                updateExercise = { field, value ->
-                    updateExercise(expected.setNumberInWorkout, field, value)
-                },
-                removeExpectedSet = { exerciseToRemove = expected }
-            )
-        }
-        item {
-            FitnessJournalButton(
-                "Add Exercise",
-                onClick = {
-                    addExercise()
-                },
-                fullWidth = true
-            )
-        }
-    }
-}
+                        override fun updateWorkoutNotes(notes: String) {
+                            viewModel.updateWorkoutNotes(notes)
+                        }
 
-@Composable
-fun ExercisePlanCard(
-    expectedSet: ExpectedSet,
-    updateExercise: (field: ExercisePlanField, value: Int) -> Unit = { _, _ -> },
-    removeExpectedSet: () -> Unit = {}
-) {
-    FitnessJournalCard(
-        columnPaddingVertical = 4.dp,
-        columnPaddingHorizontal = 8.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = {
-                        removeExpectedSet()
+                        override fun updateExercise(
+                            setNumber: Int,
+                            field: ExercisePlanField,
+                            value: Int
+                        ) {
+                            if (field == ExercisePlanField.SetNumber) {
+                                viewModel.updateExercisePosition(setNumber, value)
+                            } else {
+                                viewModel.updateExercisePlan(setNumber, field, value)
+                            }
+                        }
+
+                        override fun startWorkout() {
+                            navController.navigate(
+                                "${FitnessJournalScreen.WorkoutDetails.route}/0?" +
+                                        "plan=${workoutState.data.addedAt.toInstant().toEpochMilli()}"
+                            )
+                        }
+
+                        override fun addExercise() {
+                            navController.navigate(FitnessJournalScreen.SearchExercisesScreen.route)
+                        }
+
+                        override fun addExerciseGroup() {
+                            navController.navigate("${FitnessJournalScreen.ExerciseGroupScreen.route}?selectable=true")
+                        }
+
+                        override fun removeExercise(exercise: ExpectedSet) {
+                            exerciseToRemove = exercise
+                        }
                     }
                 )
             }
-    ) {
-        Text(
-            expectedSet.exercise.name,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            expectedSet.exercise.musclesWorked.joinToString(", "),
-            style = MaterialTheme.typography.labelSmall
-        )
+            else -> {
+                item {
+                    Text(workoutState.toString())
+                }
+            }
+        }
+    }
+}
 
-        EditExercisePlanGrid(
-            expectedSet,
-            updateValue = { field, value ->
-                updateExercise(field, value)
+
+fun LazyListScope.exercisePlanItems(
+    plan: WorkoutPlan,
+    expectedSets: List<ExpectedSet>,
+    uiActions: ExercisePlanUiActions?
+    ) {
+
+    item {
+        FitnessJournalOutlinedTextField(
+            value = plan.name,
+            onUpdate = { uiActions?.updateWorkoutName(it) },
+            label = "plan name",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+    }
+
+    item {
+        FitnessJournalOutlinedTextField(
+            value = plan.note.orEmpty(),
+            onUpdate = { uiActions?.updateWorkoutNotes(it) },
+            singleLine = false,
+            label = "note",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+    }
+
+    items(expectedSets) { expected ->
+        ExercisePlanCard(
+            expected,
+            updateExercise = { field, value ->
+                uiActions?.updateExercise(expected.positionInWorkout, field, value)
             },
+            removeExpectedSet = { uiActions?.removeExercise(expected) },
+            isFirstSet = expectedSets.minOfOrNull { it.positionInWorkout } == expected.positionInWorkout,
+            isLastSet = expectedSets.maxOfOrNull { it.positionInWorkout } == expected.positionInWorkout
+        )
+    }
+    item {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            FitnessJournalButton(
+                "Add Exercise",
+                onClick = {
+                    uiActions?.addExercise()
+                },
+                icon = {
+                    Icon(painterResource(id = R.drawable.fitness_center), "group")
+                },
+                modifier = Modifier.weight(1f)
+            )
+
+            FitnessJournalButton(
+                "Add Group",
+                icon = {
+                    Icon(painterResource(id = R.drawable.dataset), "group")
+                },
+                onClick = {
+                    uiActions?.addExerciseGroup()
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+
+    item {
+        FitnessJournalButton(
+            "Start Workout",
+            onClick = {
+                uiActions?.startWorkout()
+            },
+            fullWidth = true
         )
     }
 }
+

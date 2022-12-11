@@ -1,8 +1,7 @@
 package com.catscoffeeandkitchen.data.workouts.util
 
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseSet as DbExerciseSet
-import kotlin.math.roundToInt
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
 
 fun ExerciseSet.populateWeight(): ExerciseSet {
     return if (this.weightInPounds == 0f && this.weightInKilograms > 0) {

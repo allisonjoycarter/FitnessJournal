@@ -6,7 +6,7 @@ data class ExerciseSet(
     val id: Long,
     val reps: Int,
     val exercise: Exercise,
-    val setNumberInWorkout: Int = 0,
+    val setNumber: Int = 1,
     val weightInPounds: Float = 0f,
     val weightInKilograms: Float = 0f,
     val repsInReserve: Int = 0,

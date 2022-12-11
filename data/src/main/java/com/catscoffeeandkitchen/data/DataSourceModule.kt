@@ -1,36 +1,24 @@
 package com.catscoffeeandkitchen.data
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.catscoffeeandkitchen.data.workouts.db.*
-import com.catscoffeeandkitchen.data.workouts.models.Workout
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
-import com.catscoffeeandkitchen.data.workouts.repository.DataRepositoryImpl
-import com.catscoffeeandkitchen.data.workouts.repository.ExerciseSetRepositoryImpl
-import com.catscoffeeandkitchen.data.workouts.repository.WorkoutPlanRepositoryImpl
-import com.catscoffeeandkitchen.data.workouts.repository.WorkoutRepositoryImpl
+import com.catscoffeeandkitchen.data.workouts.repository.*
 import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
-import com.catscoffeeandkitchen.domain.interfaces.DataRepository
-import com.catscoffeeandkitchen.domain.interfaces.ExerciseSetRepository
-import com.catscoffeeandkitchen.domain.interfaces.WorkoutPlanRepository
-import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
+import com.catscoffeeandkitchen.domain.interfaces.*
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import timber.log.Timber
-import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -116,6 +104,16 @@ class DataSourceModule {
     }
 
     @Provides
+    fun provideExerciseGroupDao(database: FitnessJournalDb): ExerciseGroupDao {
+        return database.exerciseGroupDao()
+    }
+
+    @Provides
+    fun provideExercisePositionDao(database: FitnessJournalDb): ExercisePositionDao {
+        return database.exercisePositionDao()
+    }
+
+    @Provides
     fun provideExerciseSetDao(database: FitnessJournalDb): ExerciseSetDao {
         return database.exerciseSetDao()
     }
@@ -158,6 +156,13 @@ class DataSourceModule {
         database: FitnessJournalDb,
         ): ExerciseSetRepository {
         return ExerciseSetRepositoryImpl(database)
+    }
+
+    @Provides
+    fun provideExerciseGroupRepository(
+        database: FitnessJournalDb,
+        ): ExerciseRepository {
+        return ExerciseRepositoryImpl(database)
     }
 
     @Provides

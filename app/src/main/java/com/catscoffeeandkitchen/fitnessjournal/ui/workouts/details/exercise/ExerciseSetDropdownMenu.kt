@@ -2,15 +2,15 @@ package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Fireplace
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
+import com.catscoffeeandkitchen.fitnessjournal.R
 
 @Composable
 fun ExerciseSetDropdownMenu(
@@ -24,7 +24,7 @@ fun ExerciseSetDropdownMenu(
         when (set.type) {
             ExerciseSetType.Working -> {
                 DropdownMenuItem(
-                    leadingIcon = { Icon(Icons.Default.Fireplace, "change to warm up set") },
+                    leadingIcon = { Icon(painterResource(id = R.drawable.fireplace), "change to warm up set") },
                     text = { Text("make warmup set") },
                     onClick = {
                         updateValue(ExerciseSetField.Type(ExerciseSetType.WarmUp))
@@ -33,7 +33,7 @@ fun ExerciseSetDropdownMenu(
             }
             ExerciseSetType.WarmUp -> {
                 DropdownMenuItem(
-                    leadingIcon = { Icon(Icons.Default.LocalFireDepartment, "change to working set") },
+                    leadingIcon = { Icon(painterResource(R.drawable.whatshot), "change to working set") },
                     text = {
                         Text("make working set") },
                     onClick = {

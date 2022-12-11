@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,13 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
+import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.bicepCurlSets
@@ -81,6 +81,7 @@ fun ReadOnlyExerciseCard(
         }
 
         sets
+            .filter { it.type == ExerciseSetType.Working }
             .distinctBy { it.reps }
             .distinctBy { if (unit == WeightUnit.Pounds) it.weightInPounds else it.weightInKilograms }
             .forEach { set ->

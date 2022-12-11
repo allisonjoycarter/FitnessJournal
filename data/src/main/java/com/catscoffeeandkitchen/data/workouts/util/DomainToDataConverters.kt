@@ -1,26 +1,31 @@
 package com.catscoffeeandkitchen.data.workouts.util
 
-import com.catscoffeeandkitchen.domain.models.Exercise
-import com.catscoffeeandkitchen.domain.models.ExerciseSet
-import com.catscoffeeandkitchen.domain.models.Workout
-import com.catscoffeeandkitchen.domain.models.WorkoutPlan
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseSet as DbExerciseSet
-import com.catscoffeeandkitchen.data.workouts.models.Exercise as DbExercise
-import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlan as DbWorkoutPlan
-import com.catscoffeeandkitchen.data.workouts.models.Workout as DbWorkout
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithStats
+import com.catscoffeeandkitchen.domain.models.*
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity as DbWorkoutPlan
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
 
 
-fun ExerciseSet.toDbExerciseSet(exerciseId: Long, workoutId: Long): DbExerciseSet {
+fun ExerciseSet.toDbExerciseSet(
+    exerciseId: Long,
+    workoutId: Long,
+    positionId: Long
+): DbExerciseSet {
     return DbExerciseSet(
         this.id,
         exerciseId = exerciseId,
         workoutId = workoutId,
+        positionId = positionId,
         reps = this.reps,
         weightInKilograms = this.weightInKilograms,
         weightInPounds = this.weightInPounds,
         repsInReserve = this.repsInReserve,
         perceivedExertion = this.perceivedExertion,
-        setNumberInWorkout = this.setNumberInWorkout,
+        setNumber = this.setNumber,
         type = this.type
     )
 }
@@ -56,5 +61,41 @@ fun Workout.toDbWorkout(id: Long = 0L, planId: Long? = null): DbWorkout {
         completedAt = this.completedAt,
         name = this.name,
         note = this.note,
+    )
+}
+
+fun ExpectedSet.toGoal(exerciseId: Long?, groupId: Long?, planId: Long): ExerciseGoal {
+    return ExerciseGoal(
+        exerciseId = exerciseId,
+        exerciseGroupId = groupId,
+        workoutPlanId = planId,
+        sets = this.sets,
+        positionInWorkout = this.positionInWorkout,
+        reps = this.reps,
+        repRangeMax = this.maxReps,
+        repRangeMin = this.minReps,
+        weightInPounds = 0f,
+        weightInKilograms = 0f,
+        repsInReserve = this.rir,
+        perceivedExertion = this.perceivedExertion,
+        note = this.note,
+        modifier = null,
+        type = this.type,
+    )
+}
+
+fun ExerciseGroup.toEntity(): ExerciseGroupEntity {
+    return ExerciseGroupEntity(
+        gId = id,
+        name = this.name
+    )
+}
+
+fun ExerciseWithStats.toStats(): ExerciseStats {
+    return ExerciseStats(
+        lastCompletedAt = this.lastCompletedAt,
+        amountCompleted = this.amountPerformed,
+        highestWeightInKilograms = this.highestWeightInKilograms,
+        highestWeightInPounds = this.highestWeightInPounds
     )
 }

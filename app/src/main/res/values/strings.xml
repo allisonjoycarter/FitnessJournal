@@ -9,4 +9,6 @@
     <string name="workout_plans">Workout Plans</string>
     <string name="new_workout">New Workout</string>
     <string name="settings">Settings</string>
+    <string name="search_exercises_multi">Select Multiple Exercises</string>
+    <string name="exercise_groups">Exercise Groups</string>
 </resources>

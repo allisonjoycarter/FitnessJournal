@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
@@ -20,13 +21,18 @@ class AddExerciseSetUseCase @Inject constructor(
 ) {
     fun run(
         set: ExerciseSet,
-        exercise: Exercise,
-        workout: Workout,
+        exerciseName: String,
+        workoutAddedAt: OffsetDateTime,
         expectedSet: ExpectedSet? = null
-    ): Flow<DataState<Boolean>> = flow {
+    ): Flow<DataState<ExerciseSet>> = flow {
         emit(DataState.Loading())
-        repository.addExerciseSetWithPopulatedData(exerciseSet = set, exercise = exercise, workout = workout, expectedSet = expectedSet)
-        emit(DataState.Success(true))
+        val result = repository.addExerciseSetWithPopulatedData(
+            exerciseSet = set,
+            exerciseName = exerciseName,
+            workoutAddedAt = workoutAddedAt,
+            expectedSet = expectedSet
+        )
+        emit(DataState.Success(result))
     }
         .catch { ex ->
             Timber.e(ex)

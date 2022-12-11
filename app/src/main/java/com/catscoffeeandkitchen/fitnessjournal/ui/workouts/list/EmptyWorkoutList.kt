@@ -17,8 +17,6 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButto
 @Composable
 fun EmptyWorkoutList(
     modifier: Modifier = Modifier,
-    addWorkout: (() -> Unit)? = null,
-    addPlan: (() -> Unit)? = null,
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.squat))
     Box(
@@ -31,28 +29,10 @@ fun EmptyWorkoutList(
                 iterations = LottieConstants.IterateForever,
             )
             Text(
-                "No workouts yet.",
+                "Nothing here yet.",
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-            )
-        }
-
-        if (addWorkout != null) {
-            FitnessJournalButton(
-                text = "Add Workout",
-                modifier = Modifier.align(Alignment.BottomCenter),
-                fullWidth = true,
-                onClick = addWorkout
-            )
-        }
-
-        if (addPlan != null) {
-            FitnessJournalButton(
-                text = "Add Workout Plan",
-                modifier = Modifier.align(Alignment.BottomCenter),
-                fullWidth = true,
-                onClick = addPlan
             )
         }
     }
@@ -62,6 +42,5 @@ fun EmptyWorkoutList(
 @Composable
 fun EmptyWorkoutListPreview() {
     EmptyWorkoutList(
-        addPlan = {}
     )
 }

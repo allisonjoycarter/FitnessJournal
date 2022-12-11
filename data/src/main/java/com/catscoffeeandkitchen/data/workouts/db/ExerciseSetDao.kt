@@ -12,89 +12,117 @@ import com.catscoffeeandkitchen.data.workouts.models.*
 @Dao
 interface ExerciseSetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(exerciseSet: ExerciseSet): Long
+    suspend fun insert(exerciseSet: SetEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(sets: List<ExerciseSet>): List<Long>
+    suspend fun insertAll(sets: List<SetEntity>): List<Long>
 
     @Update
-    suspend fun update(exerciseSet: ExerciseSet)
+    suspend fun update(exerciseSet: SetEntity)
 
-    @Update(entity = ExerciseSet::class)
+    @Update(entity = SetEntity::class)
     suspend fun updatePartial(exerciseSet: ExerciseSetPartial)
 
     @Update
-    suspend fun updateAll(exerciseSet: List<ExerciseSet>)
+    suspend fun updateAll(exerciseSet: List<SetEntity>)
 
-    @Query("""
-        DELETE FROM ExerciseSet
+    @Query(
+        """
+        DELETE FROM SetEntity
         WHERE sId = :setId
-    """)
+    """
+    )
     suspend fun delete(setId: Long)
 
     @Delete
-    suspend fun deleteAll(sets: List<ExerciseSet>)
+    suspend fun deleteAll(sets: List<SetEntity>)
 
-    @Query("""
-        SELECT *
-        FROM ExerciseSet
-    """)
-    suspend fun getAllSets(): List<ExerciseSet>
+    @Query(
+        """
+        DELETE 
+        FROM SetEntity
+        WHERE positionId = :positionId
+    """
+    )
+    suspend fun deleteSetsWithPositionId(positionId: Long)
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
+        FROM SetEntity
+    """
+    )
+    suspend fun getAllSets(): List<SetEntity>
+
+    @Query(
+        """
+        SELECT *
+        FROM SetEntity
         WHERE sId IN (:ids)
-    """)
-    suspend fun getSetsByIds(ids: List<Long>): List<ExerciseSet>
+    """
+    )
+    suspend fun getSetsByIds(ids: List<Long>): List<SetEntity>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
+        FROM SetEntity
         WHERE workoutId = :workoutId
-    """)
+    """
+    )
     suspend fun getSetsAndExercisesInWorkout(workoutId: Long): List<SetWithExercise>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
+        FROM SetEntity
         WHERE workoutId = :workoutId
-    """)
-    suspend fun getSetsInWorkout(workoutId: Long): List<ExerciseSet>
+    """
+    )
+    suspend fun getSetsInWorkout(workoutId: Long): List<SetEntity>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
-        INNER JOIN Workout ON Workout.wId = ExerciseSet.workoutId
-        WHERE Workout.completedAt IS NOT NULL
-    """)
+        FROM SetEntity
+        INNER JOIN WorkoutEntity ON WorkoutEntity.wId = SetEntity.workoutId
+        WHERE WorkoutEntity.completedAt IS NOT NULL
+    """
+    )
     suspend fun getAllCompletedSets(): List<SetWithExercise>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
-        WHERE ExerciseSet.exerciseId = :eId AND ExerciseSet.completedAt IS NOT NULL
-    """)
+        FROM SetEntity
+        WHERE SetEntity.exerciseId = :eId 
+            AND SetEntity.completedAt IS NOT NULL
+    """
+    )
     suspend fun getAllCompletedSetsForExercise(eId: Long): List<SetWithExercise>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
-        WHERE ExerciseSet.completedAt IS NOT NULL AND ExerciseSet.exerciseId = :exerciseId
-        ORDER BY ExerciseSet.completedAt DESC
+        FROM SetEntity
+        WHERE SetEntity.completedAt IS NOT NULL AND SetEntity.exerciseId = :exerciseId
+        ORDER BY SetEntity.completedAt DESC
         LIMIT 1
-    """)
-    fun getLastCompletedSet(exerciseId: Long): ExerciseSet?
+    """
+    )
+    fun getLastCompletedSet(exerciseId: Long): SetEntity?
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM ExerciseSet
-        WHERE ExerciseSet.exerciseId = :exerciseId
-        ORDER BY ExerciseSet.sId DESC
+        FROM SetEntity
+        WHERE SetEntity.exerciseId = :exerciseId
+        ORDER BY SetEntity.sId DESC
         LIMIT 1
-    """)
-    fun getLastSet(exerciseId: Long): ExerciseSet?
+    """
+    )
+    fun getLastSet(exerciseId: Long): SetEntity?
 }

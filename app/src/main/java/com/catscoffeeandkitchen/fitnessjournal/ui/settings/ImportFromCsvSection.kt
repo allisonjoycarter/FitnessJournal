@@ -1,6 +1,8 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.settings
 
 import android.content.pm.PackageManager
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.catscoffeeandkitchen.domain.models.csv.CsvFormatError
+import com.catscoffeeandkitchen.domain.models.csv.CsvImportException
+import com.catscoffeeandkitchen.domain.models.csv.DatabaseError
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import timber.log.Timber
@@ -92,6 +97,13 @@ fun ImportFromCsvSection(
             }
         )
     } else if (showImportErrorDialog && importStatus is DataState.Error) {
+        val errorDescription = when (importStatus.e) {
+            is CsvFormatError -> "The format of the CSV could not be read."
+            is DatabaseError -> "Could not merge CSV data with existing data."
+            is DateTimeParseException -> "Could not read the dates from CSV file."
+            else -> "Could not read CSV."
+        }
+
         AlertDialog(
             onDismissRequest = { showImportErrorDialog = false },
             confirmButton = {
@@ -102,10 +114,7 @@ fun ImportFromCsvSection(
             dismissButton = {},
             title = { Text("Import Error") },
             text = {
-                when (importStatus.e) {
-                    is DateTimeParseException -> Text("Could not read the dates from CSV file.")
-                    else -> Text("Could not read CSV.")
-                }
+                Text(errorDescription)
             }
         )
 

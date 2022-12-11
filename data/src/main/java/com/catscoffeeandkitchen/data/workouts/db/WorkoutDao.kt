@@ -3,9 +3,9 @@ package com.catscoffeeandkitchen.data.workouts.db
 import androidx.paging.PagingSource
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteQuery
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseWithSets
-import com.catscoffeeandkitchen.data.workouts.models.Workout
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutWithPlanAndGoals
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutWithSetsAndExercises
 import java.time.OffsetDateTime
 
 
@@ -15,13 +15,13 @@ interface WorkoutDao {
     fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(workout: Workout): Long
+    suspend fun insert(workout: WorkoutEntity): Long
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun update(workout: Workout): Int
+    suspend fun update(workout: WorkoutEntity): Int
 
     @Transaction
-    suspend fun upsert(workout: Workout) {
+    suspend fun upsert(workout: WorkoutEntity) {
         val id = insert(workout)
         if (id == -1L) {
             update(workout)
@@ -29,56 +29,68 @@ interface WorkoutDao {
     }
 
     @Delete
-    suspend fun delete(workout: Workout)
+    suspend fun delete(workout: WorkoutEntity)
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
+        FROM WorkoutEntity
         ORDER BY addedAt DESC, completedAt DESC
-    """)
-    fun getAll(): List<Workout>
+    """
+    )
+    fun getAll(): List<WorkoutEntity>
 
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
+        FROM WorkoutEntity
         ORDER BY addedAt DESC, completedAt DESC
-    """)
-    fun getAllPaged(): PagingSource<Int, Workout>
+    """
+    )
+    fun getAllPaged(): PagingSource<Int, WorkoutWithSetsAndExercises>
 
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
+        FROM WorkoutEntity
         WHERE completedAt IS NOT NULL
         ORDER BY addedAt DESC, completedAt DESC
-    """)
-    suspend fun getAllCompletedWorkouts(): List<Workout>
+    """
+    )
+    suspend fun getAllCompletedWorkouts(): List<WorkoutEntity>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
+        FROM WorkoutEntity
         WHERE completedAt IS NOT NULL
         ORDER BY completedAt DESC
         LIMIT 1
-    """)
-    suspend fun getLastWorkout(): Workout
+    """
+    )
+    suspend fun getLastWorkout(): WorkoutEntity
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
+        FROM WorkoutEntity
         WHERE addedAt = :addedAt
         LIMIT 1
-    """)
-    suspend fun getWorkoutByAddedAt(addedAt: OffsetDateTime): Workout
+    """
+    )
+    suspend fun getWorkoutByAddedAt(addedAt: OffsetDateTime): WorkoutEntity
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Workout
-    """)
+        FROM WorkoutEntity
+    """
+    )
     suspend fun getWorkoutsWithPlans(): List<WorkoutWithPlanAndGoals>
 
 }

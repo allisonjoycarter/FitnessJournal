@@ -15,19 +15,24 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import com.catscoffeeandkitchen.domain.models.ExerciseSet
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.Navigator
+import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseSetField
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseNavigableActions
+import timber.log.Timber
 
 @Composable
 fun WorkoutDetailsScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    viewModel: CurrentWorkoutViewModel = hiltViewModel(),
+    viewModel: WorkoutDetailsViewModel = hiltViewModel(),
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     ) {
-    val onAddExercise by rememberUpdatedState(viewModel::addExerciseSet)
+    val onAddExercise by rememberUpdatedState(viewModel::addExercise)
     val onSwapExercise by rememberUpdatedState(viewModel::swapExercise)
     val refreshWorkout by rememberUpdatedState(viewModel::getWorkout)
 
@@ -35,12 +40,14 @@ fun WorkoutDetailsScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 refreshWorkout()
+
+                // TODO: edit exercise group
                 navController.currentBackStackEntry?.savedStateHandle
                     ?.getLiveData<String>("exerciseToAdd")?.observe(lifecycleOwner) { result ->
-                        val setToSwap = navController.currentBackStackEntry
-                            ?.savedStateHandle?.get<Int>("swappingExerciseSet")
-                        if (setToSwap != null) {
-                            onSwapExercise(setToSwap, result)
+                        val swapping = navController.currentBackStackEntry
+                            ?.savedStateHandle?.get<Int>("swappingExercise")
+                        if (swapping != null) {
+                            onSwapExercise(swapping, Exercise(result))
                         } else {
                             onAddExercise(result)
                         }
@@ -48,7 +55,7 @@ fun WorkoutDetailsScreen(
                         navController.currentBackStackEntry?.savedStateHandle
                             ?.remove<String>("exerciseToAdd")
                         navController.currentBackStackEntry?.savedStateHandle
-                            ?.remove<Int>("swappingExerciseSet")
+                            ?.remove<Int>("swappingExercise")
                     }
             }
         }
@@ -64,13 +71,16 @@ fun WorkoutDetailsScreen(
         modifier = modifier
     ) {
         when (val workoutState = viewModel.workout.value) {
-            is DataState.NotSent -> {}
+            is DataState.NotSent -> { }
             is DataState.Loading -> {
                 if (viewModel.cachedWorkout != null) {
                     WorkoutDetails(
                         listState,
                         workout = viewModel.cachedWorkout!!,
-                        unit = viewModel.weightUnit.value
+                        unit = viewModel.weightUnit.value,
+                        workoutActions = null,
+                        exerciseUiActions = null,
+                        exerciseNavigableActions = null,
                     )
                 } else {
                     CircularProgressIndicator()
@@ -81,32 +91,45 @@ fun WorkoutDetailsScreen(
                     listState,
                     workout = workoutState.data,
                     unit = viewModel.weightUnit.value,
-                    updateWorkoutName = { title -> viewModel.updateWorkoutName(title) },
-                    updateWorkoutNote = { note -> viewModel.updateWorkoutNote(note) },
-                    addExercise = {
-                        navController.navigate(FitnessJournalScreen.SearchExercisesScreen.route)
+                    workoutActions = object : WorkoutActions {
+                        override fun updateName(name: String) {
+                            viewModel.updateWorkoutName(name)
+                        }
+
+                        override fun updateNote(note: String?) {
+                            viewModel.updateWorkoutNote(note)
+                        }
+
+                        override fun finish() {
+                            viewModel.finishWorkout()
+                            navController.popBackStack()
+                        }
+
+                        override fun createPlanFromWorkout() {
+                            viewModel.createPlanFromWorkout()
+                            navController.navigate(FitnessJournalScreen.WorkoutPlansScreen.route)
+                        }
+
                     },
-                    addSet = { viewModel.addExerciseSet(it.name) },
-                    addWarmupSets = { viewModel.addWarmupSets(it) },
-                    removeExercise = { viewModel.removeExercise(it) },
-                    removeSet = { viewModel.removeSet(it.id) },
-                    updateExercise = { set: ExerciseSet, field: ExerciseSetField ->
-                        viewModel.updateSet(field.copySetWithNewValue(set))
+                    exerciseUiActions = viewModel,
+                    exerciseNavigableActions = object : ExerciseNavigableActions {
+                        override fun addExercise() {
+                            navController.navigate(FitnessJournalScreen.SearchExercisesScreen.route)
+                        }
+
+                        override fun swapExercise(exercise: Exercise) {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("swappingExercise", exercise.positionInWorkout)
+                            navController.navigate("${FitnessJournalScreen.SearchExercisesScreen.route}?" +
+                                    "category=${exercise.category}&" +
+                                    "muscle=${exercise.musclesWorked.firstOrNull().orEmpty()}")
+                        }
+
+                        override fun editGroup(group: ExerciseGroup) {
+                            navController.navigate(
+                                "${FitnessJournalScreen.SearchExercisesMultiSelectScreen.route}?" +
+                                        "selectedExercises=${group.exercises.joinToString("|") { it.name }}")
+                        }
                     },
-                    createPlanFromWorkout = {
-                        viewModel.createPlanFromWorkout()
-                        navController.navigate(FitnessJournalScreen.WorkoutPlansScreen.route)
-                    },
-                    swapExercise = { swapping, exercise ->
-                        navController.currentBackStackEntry?.savedStateHandle?.set("swappingExerciseSet", swapping)
-                        navController.navigate("${FitnessJournalScreen.SearchExercisesScreen.route}?" +
-                                "category=${exercise.category}&" +
-                                "muscle=${exercise.musclesWorked.firstOrNull().orEmpty()}")
-                    },
-                    finish = {
-                        viewModel.finishWorkout()
-                        navController.popBackStack()
-                    }
                 )
             }
             is DataState.Error -> {

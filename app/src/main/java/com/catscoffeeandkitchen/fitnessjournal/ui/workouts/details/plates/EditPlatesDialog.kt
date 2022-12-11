@@ -1,23 +1,18 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.google.accompanist.flowlayout.FlowRow
+import com.catscoffeeandkitchen.fitnessjournal.R
 
 
 @Composable
@@ -36,36 +31,47 @@ fun PlateDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlateEditColumn(
     plateAmount: Int = 100,
     plateWeight: Double,
     onUpdate: (Int) -> Unit = {}
 ) {
-    var weightInput by remember { mutableStateOf(plateAmount.toString()) }
-
     Column(
-//        modifier = Modifier.width(150.dp)
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        TextField(
-            value = weightInput,
-            onValueChange = { weightInput = it },
-            modifier = Modifier
-                .onFocusChanged { state ->
-                    if (!state.hasFocus && weightInput != plateWeight.toString()) {
-                        onUpdate(weightInput.toIntOrNull() ?: 0)
-                    }
-                },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { onUpdate(weightInput.toIntOrNull() ?: 0) }
-            ),
-            label = { Text("${plateWeight.toString().replace(".0", "")}s available") }
-        )
+        Text(
+            plateWeight.toString() + "s",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(start = 12.dp)
+            )
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(
+                enabled = plateAmount > 0,
+                onClick = { onUpdate(plateAmount - 1) }
+            ) {
+                Icon(painterResource(R.drawable.remove), "remove plate")
+            }
+
+            Text(
+                plateAmount.toString(),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surface)
+            )
+
+            IconButton(onClick = { onUpdate(plateAmount + 1) }) {
+                Icon(Icons.Default.Add, "add plate")
+            }
+        }
     }
 }
 
@@ -82,21 +88,16 @@ fun PlateDialogContent(
             .padding(12.dp)
     ) {
         Text(
-            "Available Plate Amounts",
+            "Plates to Use",
             modifier = Modifier.padding(12.dp),
             style = MaterialTheme.typography.headlineMedium
         )
-        FlowRow(
-            mainAxisSpacing = 18.dp,
-            crossAxisSpacing = 18.dp,
-            modifier = Modifier.padding(12.dp)
-        ) {
-            plateSettings.amounts.entries.forEach { entry ->
-                PlateEditColumn(
-                    plateAmount = entry.value,
-                    plateWeight = entry.key
-                ) { updatePlateAmount(it, entry.key) }
-            }
+
+        plateSettings.amounts.entries.forEach { entry ->
+            PlateEditColumn(
+                plateAmount = entry.value,
+                plateWeight = entry.key
+            ) { updatePlateAmount(it, entry.key) }
         }
     }
 }

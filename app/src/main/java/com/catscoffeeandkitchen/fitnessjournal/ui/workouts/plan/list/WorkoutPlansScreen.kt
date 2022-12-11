@@ -80,27 +80,10 @@ fun WorkoutPlansScreen(
                                     }
                                 )
                             }
-
-                            item {
-                                FitnessJournalButton(
-                                    text = "Add Plan",
-                                    onClick = {
-                                        navController.navigate(
-                                            "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/0"
-                                        )
-                                    },
-                                    fullWidth = true
-                                )
-                            }
                         }
                 } else {
                     EmptyWorkoutList(
                         modifier = modifier,
-                        addPlan = {
-                            navController.navigate(
-                                "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/0"
-                            )
-                        },
                     )
                 }
             }

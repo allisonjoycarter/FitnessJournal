@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -145,6 +147,7 @@ fun ExerciseSetInput(
     onValueChange: (value: String) -> Unit,
     onFocus: () -> Unit,
     onBlur: () -> Unit,
+    focusRequester: FocusRequester? = null,
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue(startingText)) }
     var focusTextKey by remember { mutableStateOf("")  }
@@ -159,6 +162,7 @@ fun ExerciseSetInput(
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
         modifier = Modifier
             .requiredWidth(60.dp)
+            .focusRequester(focusRequester ?: FocusRequester())
             .onFocusChanged { state ->
                 if (state.hasFocus) {
                     onFocus()

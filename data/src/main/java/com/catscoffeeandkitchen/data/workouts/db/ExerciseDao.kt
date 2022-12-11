@@ -3,49 +3,57 @@ package com.catscoffeeandkitchen.data.workouts.db
 import androidx.paging.PagingSource
 import androidx.room.*
 import com.catscoffeeandkitchen.data.workouts.models.*
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithPositionCount
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithStats
 
 @Dao
 interface ExerciseDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(exercise: Exercise): Long
+    suspend fun insert(exercise: ExerciseEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(exercises: List<Exercise>): List<Long>
+    suspend fun insertAll(exercises: List<ExerciseEntity>): List<Long>
 
     @Update
-    suspend fun updateAll(exercises: List<Exercise>)
+    suspend fun updateAll(exercises: List<ExerciseEntity>)
 
     @Update
-    suspend fun update(exercises: Exercise)
-
-//    @Transaction
-//    @Insert
-//    suspend fun insertCompletedExercise(exercise: Exercise, sets: List<ExerciseSet>, workout: Workout)
+    suspend fun update(exercises: ExerciseEntity)
 
     @Delete
-    suspend fun delete(exercise: Exercise)
+    suspend fun delete(exercise: ExerciseEntity)
 
-    @Query("""
-        DELETE FROM Exercise
-        WHERE NOT Exercise.userCreated
-    """)
+    @Query(
+        """
+        DELETE FROM ExerciseEntity
+        WHERE NOT ExerciseEntity.userCreated
+    """
+    )
     suspend fun clearRemoteExercises()
 
-    @Query("""
-        SELECT *
-        FROM Exercise
-    """)
-    suspend fun getAllExercises(): List<Exercise>
+    @Query(
+        """
+        SELECT *, COUNT(ExercisePositionInWorkout.exerciseId) AS amountPerformed
+        FROM ExerciseEntity
+        LEFT JOIN ExercisePositionInWorkout ON ExercisePositionInWorkout.exerciseId = ExerciseEntity.eId
+        GROUP BY ExerciseEntity.eId
+        HAVING amountPerformed > 0
+        ORDER BY amountPerformed DESC
+    """
+    )
+    suspend fun getAllExercises(): List<ExerciseWithPositionCount>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("""
-        SELECT *, COUNT(ExerciseSet.sId) AS NumberOfSets
-        FROM Exercise
-        LEFT JOIN ExerciseSet ON Exercise.eId = ExerciseSet.exerciseId
+    @Query(
+        """
+        SELECT *, COUNT(SetEntity.sId) AS NumberOfSets
+        FROM ExerciseEntity
+        LEFT JOIN SetEntity ON ExerciseEntity.eId = SetEntity.exerciseId
         WHERE (
                 :exerciseName <> ''
-                AND Exercise.name LIKE '%' || :exerciseName || '%'
+                AND ExerciseEntity.name LIKE '%' || :exerciseName || '%'
             )
             OR (
                 musclesWorked <> '' 
@@ -62,64 +70,93 @@ interface ExerciseDao {
                 AND :category <> ''
                 AND category LIKE '%' || :category || '%'
             )
-        GROUP BY Exercise.name
-        ORDER BY NumberOfSets DESC, Exercise.name ASC
-    """)
+        GROUP BY ExerciseEntity.name
+        ORDER BY NumberOfSets DESC, ExerciseEntity.name ASC
+    """
+    )
     fun getPagedExercisesByName(exerciseName: String, muscle: String, category: String): PagingSource<Int, ExerciseWithSets>
 
 
-
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Exercise
-        WHERE Exercise.name LIKE '%' || :exerciseName || '%'
+        FROM ExerciseEntity
+        WHERE ExerciseEntity.name LIKE '%' || :exerciseName || '%'
         LIMIT 1
-    """)
-    fun searchExercisesByName(exerciseName: String): Exercise?
+    """
+    )
+    fun searchExercisesByName(exerciseName: String): ExerciseEntity?
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Exercise
-        ORDER BY Exercise.name ASC
-    """)
+        FROM ExerciseEntity
+        ORDER BY ExerciseEntity.name ASC
+    """
+    )
     fun getAllPagedExercises(): PagingSource<Int, ExerciseWithSets>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Exercise
+        FROM ExerciseEntity
         WHERE eId IN (:ids)
-    """)
-    suspend fun getExercisesByIds(ids: List<Long>): List<Exercise>
+    """
+    )
+    suspend fun getExercisesByIds(ids: List<Long>): List<ExerciseEntity>
 
-    @Query("""
+    @Query(
+        """
         SELECT *
-        FROM Exercise
-        WHERE eId = :eId
-    """)
-    suspend fun getExerciseById(eId: Long): Exercise
-
-    @Query("""
-        SELECT *
-        FROM Exercise
-        WHERE Exercise.name=:name
-        LIMIT 1
-    """)
-    suspend fun getExerciseByName(name: String): Exercise?
+        FROM ExerciseEntity
+        WHERE name IN (:names)
+    """
+    )
+    suspend fun getExercisesByName(names: List<String>): List<ExerciseEntity>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
+        SELECT *, 
+            COUNT(SetEntity.completedAt) AS amountPerformed,
+            MAX(SetEntity.completedAt) as lastCompletedAt,
+            MAX(SetEntity.weightInKilograms) as highestWeightInKilograms,
+            MAX(SetEntity.weightInPounds) as highestWeightInPounds
+        FROM ExerciseEntity
+        LEFT JOIN SetEntity ON SetEntity.exerciseId = ExerciseEntity.eId
+        WHERE name IN (:names)
+        GROUP BY ExerciseEntity.eId
+    """
+    )
+    suspend fun getExercisesWithStatsByName(names: List<String>): List<ExerciseWithStats>
+
+    @Query(
+        """
         SELECT *
-        FROM Exercise
-    """)
+        FROM ExerciseEntity
+        WHERE eId = :eId
+    """
+    )
+    suspend fun getExerciseById(eId: Long): ExerciseEntity
+
+    @Query(
+        """
+        SELECT *
+        FROM ExerciseEntity
+        WHERE ExerciseEntity.name=:name
+        LIMIT 1
+    """
+    )
+    suspend fun getExerciseByName(name: String): ExerciseEntity?
+
+
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM ExerciseEntity
+    """
+    )
     fun getExercisesWithSets(): List<ExerciseWithSets>
-
-
-    @Query("""
-        SELECT *
-        FROM Exercise
-        LEFT JOIN ExerciseSet ON Exercise.eId = ExerciseSet.exerciseId
-        WHERE ExerciseSet.workoutId = :workoutId
-    """)
-    suspend fun getSetsAndExercisesInWorkout(workoutId: Long): List<CombinedSetData>
 }

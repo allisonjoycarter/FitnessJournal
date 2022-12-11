@@ -3,13 +3,13 @@ package com.catscoffeeandkitchen.data.workouts.models
 import androidx.room.*
 
 data class WorkoutWithPlanAndGoals(
-    @Embedded val workout: Workout,
+    @Embedded val workout: WorkoutEntity,
     @Relation(
         parentColumn = "planId",
-        entity = WorkoutPlan::class,
+        entity = WorkoutPlanEntity::class,
         entityColumn = "wpId"
     )
-    val plan: WorkoutPlan? = null,
+    val plan: WorkoutPlanEntity? = null,
     @Relation(
         parentColumn = "planId",
         entity = ExerciseGoal::class,

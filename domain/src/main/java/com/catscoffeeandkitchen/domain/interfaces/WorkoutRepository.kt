@@ -2,10 +2,7 @@ package com.catscoffeeandkitchen.domain.interfaces
 
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
-import com.catscoffeeandkitchen.domain.models.CompletedExerciseSet
-import com.catscoffeeandkitchen.domain.models.Exercise
-import com.catscoffeeandkitchen.domain.models.ExerciseSet
-import com.catscoffeeandkitchen.domain.models.Workout
+import com.catscoffeeandkitchen.domain.models.*
 import kotlinx.coroutines.flow.Flow
 import java.time.OffsetDateTime
 
@@ -25,7 +22,7 @@ interface WorkoutRepository {
 
     suspend fun deleteWorkout(workout: Workout)
 
-    suspend fun getExercises(): List<Exercise>
+    suspend fun getExercises(names: List<String>? = null): List<Exercise>
 
     suspend fun getExerciseByName(name: String): Exercise?
 
@@ -35,9 +32,23 @@ interface WorkoutRepository {
 
     suspend fun updateExercise(exercise: Exercise, workout: Workout? = null)
 
-    suspend fun removeExerciseFromWorkout(exercise: Exercise, workout: Workout)
+    suspend fun removeExerciseFromWorkout(exercise: Exercise, workoutAddedAt: OffsetDateTime)
 
     suspend fun updateCompletedSet(workout: Workout, exerciseSet: ExerciseSet)
 
     suspend fun deleteSet(setId: Long)
+
+    suspend fun swapExercisePosition(
+        workoutAddedAt: OffsetDateTime,
+        exercise: Exercise,
+        newPosition: Int
+    )
+
+    suspend fun replaceGroupWithExercise(
+        workoutAddedAt: OffsetDateTime,
+        group: ExerciseGroup,
+        exercise: Exercise,
+        position: Int,
+        expectedSet: ExpectedSet?
+    )
 }

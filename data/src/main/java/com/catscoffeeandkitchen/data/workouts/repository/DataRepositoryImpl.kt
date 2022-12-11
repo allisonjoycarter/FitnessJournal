@@ -1,32 +1,31 @@
 package com.catscoffeeandkitchen.data.workouts.repository
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
 import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
 import com.catscoffeeandkitchen.data.workouts.util.populateWeight
 import com.catscoffeeandkitchen.domain.interfaces.DataRepository
 import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import com.github.doyaaaaaken.kotlincsv.util.MalformedCSVException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.io.File
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.CancellationException
 import javax.inject.Inject
-import com.catscoffeeandkitchen.data.workouts.models.Workout as DbWorkout
-import com.catscoffeeandkitchen.data.workouts.models.Exercise as DbExercise
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseSet as DbExerciseSet
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
 
 @ActivityScoped
 class DataRepositoryImpl @Inject constructor(
@@ -61,83 +60,100 @@ class DataRepositoryImpl @Inject constructor(
         val inputStream = context.contentResolver.openInputStream(uri) ?: return@flow
 
         coroutineScope {
-            csvReader { delimiter = ';' }.openAsync(inputStream) {
-                readAllWithHeaderAsSequence().asFlow().collect { row: Map<String, String> ->
-                    val exerciseName = row.entries.find { rowData -> rowData.key == "Exercise Name" }?.value
-                    val workoutName = row.entries.find { rowData -> rowData.key == "Workout Name" }?.value
+            try {
 
-                    var csvData = CSVRowWorkoutData(
-                        workout ?: DbWorkout(wId = 0L),
-                        exercise ?: DbExercise(eId = 0L, name = ""),
-                        DbExerciseSet(sId = 0L, exerciseId = 0L, workoutId = 0L, setNumberInWorkout = setNumber)
-                    )
-                    Timber.d("*** READING ROW \n exerciseName = $exerciseName," +
-                            " csv = ${csvData.exercise.name} \n workoutName = $workoutName" +
-                            ", csv = ${csvData.workout.name}")
+                csvReader { delimiter = ';' }.openAsync(inputStream) {
+                    readAllWithHeaderAsSequence().asFlow().collect { row: Map<String, String> ->
+                        val exerciseName = row.entries.find { rowData -> rowData.key == "Exercise Name" }?.value
+                        val workoutName = row.entries.find { rowData -> rowData.key == "Workout Name" }?.value
 
-                    if (csvData.exercise.name != exerciseName) {
-                        val workoutId = when {
-                            csvData.workout.wId == 0L || workoutName != workout?.name -> {
-                                Timber.d("*** creating workout $workoutName, csv wId = ${csvData.workout.wId}, workout.name = ${workout?.name}")
-                                database.workoutDao().insert(csvData.workout.copy(wId = 0L))
-                            }
-                            else -> csvData.workout.wId
-                        }
-                        csvData = csvData.copy(workout = csvData.workout.copy(wId = workoutId))
-
-                        Timber.d("*** inserting sets for exercise ${csvData.exercise.name} on workout $workoutId ($workoutName)")
-                        val dbExercise = database.exerciseDao().searchExercisesByName(csvData.exercise.name)
-                        val exerciseToUpdate = DbExercise(
-                            eId = dbExercise?.eId ?: 0L,
-                            name = csvData.exercise.name,
-                            musclesWorked = dbExercise?.musclesWorked.orEmpty(),
-                            userCreated = false,
-                            category = dbExercise?.category.orEmpty(),
-                            thumbnailUrl = dbExercise?.thumbnailUrl
+                        var csvData = CSVRowWorkoutData(
+                            workout ?: DbWorkout(wId = 0L),
+                            exercise ?: DbExercise(eId = 0L, name = ""),
+                            DbExerciseSet(sId = 0L, exerciseId = 0L, workoutId = 0L, positionId = 0L, setNumber = setNumber)
                         )
 
-                        if (exerciseToUpdate.name.isNotEmpty()) {
-                            var exerciseId = exerciseToUpdate.eId
-                            if (exerciseToUpdate.eId == 0L) {
-                                exerciseId = database.exerciseDao().insert(exerciseToUpdate)
-                            } else {
-                                database.exerciseDao().update(exerciseToUpdate)
+                        if (csvData.exercise.name != exerciseName) {
+                            val workoutId = when {
+                                csvData.workout.wId == 0L || workoutName != workout?.name -> {
+                                    database.workoutDao().insert(csvData.workout.copy(wId = 0L))
+                                }
+                                else -> csvData.workout.wId
+                            }
+                            csvData = csvData.copy(workout = csvData.workout.copy(wId = workoutId))
+
+                            val dbExercise = database.exerciseDao().searchExercisesByName(csvData.exercise.name)
+                            val exerciseToUpdate = DbExercise(
+                                eId = dbExercise?.eId ?: 0L,
+                                name = csvData.exercise.name,
+                                musclesWorked = dbExercise?.musclesWorked.orEmpty(),
+                                userCreated = false,
+                                category = dbExercise?.category.orEmpty(),
+                                thumbnailUrl = dbExercise?.thumbnailUrl
+                            )
+
+                            if (exerciseToUpdate.name.isNotEmpty()) {
+                                var exerciseId = exerciseToUpdate.eId
+                                if (exerciseToUpdate.eId == 0L) {
+                                    exerciseId = database.exerciseDao().insert(exerciseToUpdate)
+                                } else {
+                                    database.exerciseDao().update(exerciseToUpdate)
+                                }
+
+                                val positions = database.exercisePositionDao().getPositionsInWorkout(workoutId)
+                                val positionToInsert = ExercisePositionInWorkout(
+                                    epId = 0L,
+                                    exerciseId = exerciseId,
+                                    workoutId = workoutId,
+                                    position = positions.size + 1,
+                                )
+                                val positionId = database.exercisePositionDao().insert(positionToInsert)
+
+                                val setsToInsert = sets.map { item ->
+                                    item.copy(
+                                        sId = 0L,
+                                        workoutId = workoutId,
+                                        exerciseId = exerciseId,
+                                        positionId = positionId,
+                                        completedAt = workout?.completedAt
+                                    )
+                                }
+                                database.exerciseSetDao().insertAll(setsToInsert)
                             }
 
-                            val setsToInsert = sets.map { item ->
-                                item.copy(
-                                    workoutId = workoutId,
-                                    exerciseId = exerciseId,
-                                    completedAt = workout?.completedAt
-                                )
-                            }
-                            database.exerciseSetDao().insertAll(setsToInsert)
+                            sets.removeAll(sets.toSet())
                         }
 
-                        sets.removeAll(sets.toSet())
-                    }
+                        if (workoutName != workout?.name) {
+                            counted += 1.0
+                            this@flow.emit(DataState.Success(counted))
 
-                    if (workoutName != workout?.name) {
-                        counted += 1.0
-                        this@flow.emit(DataState.Success(counted))
+                            setNumber = 1
+                        } else {
+                            setNumber++
+                        }
 
-                        setNumber = 1
-                    } else {
-                        setNumber++
-                    }
+                        try {
+                            val newData = getRowData(row, csvData)
 
-                    try {
-                        val newData = getRowData(row, csvData)
-
-                        workout = newData.workout
-                        exercise = newData.exercise
-                        sets.add(newData.set)
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        this@flow.emit(DataState.Error(e))
-                        this@coroutineScope.cancel()
+                            workout = newData.workout
+                            exercise = newData.exercise
+                            sets.add(newData.set)
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            this@flow.emit(DataState.Error(e))
+                            this@coroutineScope.cancel()
+                        }
                     }
                 }
+            } catch (e: MalformedCSVException) {
+                Timber.e(e)
+                emit(DataState.Error(e))
+                this@coroutineScope.cancel()
+            } catch (e: SQLiteConstraintException) {
+                Timber.e(e)
+                emit(DataState.Error(e))
+                this@coroutineScope.cancel()
             }
         }
         inputStream.close()
@@ -183,11 +199,10 @@ class DataRepositoryImpl @Inject constructor(
                     csvRowData = csvRowData.copy(exercise = updated)
                 }
                 "Set Order" -> {
-//                    val updated = csvRowData.set.copy(setNumberInWorkout = item.value.toIntOrNull() ?: 1)
-//                    csvRowData = csvRowData.copy(set = updated)
+                    val updated = csvRowData.set.copy(setNumber = item.value.toIntOrNull() ?: 1)
+                    csvRowData = csvRowData.copy(set = updated)
                 }
                 "Weight" -> {
-                    Timber.d("*** weight = ${item.value}, we logged $weight")
                 }
                 "Weight Unit" -> {
                     val updated = if (item.value == "lbs") {

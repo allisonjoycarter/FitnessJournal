@@ -3,36 +3,42 @@ package com.catscoffeeandkitchen.data.workouts.models
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 
 @Entity(
-    primaryKeys = ["workoutPlanId", "setNumberInWorkout"],
+    primaryKeys = ["workoutPlanId", "positionInWorkout"],
     foreignKeys = [
         ForeignKey(
-            entity = Exercise::class,
+            entity = ExerciseEntity::class,
             parentColumns = ["eId"],
             childColumns = ["exerciseId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = WorkoutPlan::class,
+            entity = ExerciseGroupEntity::class,
+            parentColumns = ["gId"],
+            childColumns = ["exerciseGroupId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = WorkoutPlanEntity::class,
             parentColumns = ["wpId"],
             childColumns = ["workoutPlanId"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["exerciseId"]),
         Index(value = ["workoutPlanId"]),
     ]
 )
 data class ExerciseGoal(
-    val exerciseId: Long,
+    val exerciseId: Long? = null,
+    val exerciseGroupId: Long? = null,
     val workoutPlanId: Long,
     val sets: Int,
-    val setNumberInWorkout: Int = 0,
+    val positionInWorkout: Int = 0,
     val reps: Int,
     val repRangeMax: Int = 0,
     val repRangeMin: Int = 0,

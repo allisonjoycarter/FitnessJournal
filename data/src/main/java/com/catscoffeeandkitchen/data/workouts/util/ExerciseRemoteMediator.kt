@@ -15,7 +15,7 @@ import com.catscoffeeandkitchen.domain.util.capitalizeWords
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
-import com.catscoffeeandkitchen.data.workouts.models.Exercise as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
 
 @OptIn(ExperimentalPagingApi::class)
 class ExerciseRemoteMediator(
@@ -29,6 +29,14 @@ class ExerciseRemoteMediator(
     companion object {
         const val PAGE_SIZE = 20
         const val STARTING_PAGE = 0
+        fun isBarbellExercise(exerciseName: String): Boolean {
+            val lowercased = exerciseName.lowercase()
+            return lowercased.contains("barbell") ||
+                    lowercased.contains("bench press") ||
+                    lowercased.contains("good morning") ||
+                    lowercased.contains("hip thrust") ||
+                    (lowercased.contains("squat") && !lowercased.contains("dumbbell"))
+        }
     }
 
     override suspend fun initialize(): InitializeAction {
@@ -58,7 +66,6 @@ class ExerciseRemoteMediator(
                 nextKey
             }
         }
-        Timber.d("*** attempting to get result for exercises, page = $page")
 
         try {
             val searchedExercises = mutableListOf<WgerSearchData>()
@@ -116,7 +123,6 @@ class ExerciseRemoteMediator(
                 nextPage = exerciseResult.next
             }
 
-            Timber.d("*** results for page $page = " + searchedExercises.joinToString(", ") { it.name })
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
                     database.remoteKeysDao().clearRemoteKeys()
@@ -131,7 +137,7 @@ class ExerciseRemoteMediator(
                 database.remoteKeysDao().insertAll(keys)
                 database.exerciseDao().insertAll(searchedExercises.map { wgerExercise ->
                     val equipment = when {
-                        wgerExercise.name.contains("barbell", ignoreCase = true) -> ExerciseEquipmentType.Barbell
+                        isBarbellExercise(wgerExercise.name) -> ExerciseEquipmentType.Barbell
                         wgerExercise.name.contains("dumbbell", ignoreCase = true) -> ExerciseEquipmentType.Dumbbell
                         wgerExercise.name.contains("machine", ignoreCase = true) -> ExerciseEquipmentType.Machine
                         wgerExercise.name.contains("cable", ignoreCase = true) -> ExerciseEquipmentType.Cable

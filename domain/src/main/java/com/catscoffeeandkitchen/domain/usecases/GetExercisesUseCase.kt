@@ -14,9 +14,9 @@ import javax.inject.Inject
 class GetExercisesUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository
 ) {
-    fun run(): Flow<DataState<List<Exercise>>> = flow {
+    fun run(names: List<String>? = null): Flow<DataState<List<Exercise>>> = flow {
         emit(DataState.Loading())
-        val exercises = workoutRepository.getExercises()
+        val exercises = workoutRepository.getExercises(names)
         emit(DataState.Success(exercises))
     }
         .catch { ex ->

@@ -7,10 +7,16 @@ class PlateCalculatorHelper {
         val amounts: Map<Double, Int>,
         val unit: WeightUnit,
     )
+
+    data class PlateResults(
+        val amounts: Map<Double, Int>,
+        val leftoverWeight: Double
+    )
+
     private val poundPlates = listOf(45.0, 35.0, 25.0, 10.0, 5.0, 2.5)
     private val kgPlates = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25)
 
-    fun calculatePlates(weight: Double, settings: PlateSettings): Map<Double, Int> {
+    fun calculatePlates(weight: Double, settings: PlateSettings): PlateResults {
         val barWeight = if (settings.unit == WeightUnit.Pounds) 45 else 20
         val plates = if (settings.unit == WeightUnit.Pounds) poundPlates else kgPlates
 
@@ -25,7 +31,7 @@ class PlateCalculatorHelper {
         plateOptions: List<Double>,
         plateIndex: Int,
         currentPlates: Map<Double, Int>
-    ): Map<Double, Int> {
+    ): PlateResults {
         val plateCalculating = plateOptions[plateIndex]
 
         var amountOfPlates = weight.toInt() / plateCalculating.toInt()
@@ -39,7 +45,7 @@ class PlateCalculatorHelper {
 //        Timber.d("*** weight = ${weight}. calculating $plateCalculating lb plate, " +
 //                "using $amountOfPlates plates, next plate = $nextPlate. map = $updatedMap")
         return when (plateIndex + 1 >= plateOptions.size) {
-            true -> updatedMap
+            true -> PlateResults(updatedMap, leftoverWeight = weight)
             else -> calculateAmountOfPlates(
                 weight - (plateCalculating * amountOfPlates),
                 settings,

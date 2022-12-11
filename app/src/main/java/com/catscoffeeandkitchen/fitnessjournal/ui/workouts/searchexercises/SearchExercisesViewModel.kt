@@ -31,12 +31,6 @@ class SearchExercisesViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    data class ExerciseSearch(
-        val name: String? = null,
-        val muscle: String? = null,
-        val category: String? = null,
-    )
-
     private val _search = MutableSharedFlow<ExerciseSearch>()
     private val _searchRequest: Flow<ExerciseSearch>
     val searchRequest: Flow<ExerciseSearch>
@@ -61,16 +55,9 @@ class SearchExercisesViewModel @Inject constructor(
             getPagedExercisesUseCase.run(request.name, request.muscle, request.category)
         }
             .cachedIn(viewModelScope)
-
-        val startingRequest = ExerciseSearch(
-            muscle = savedStateHandle["muscle"],
-            category = savedStateHandle["category"]
-        )
-        searchExercises(startingRequest)
     }
 
     fun searchExercises(search: ExerciseSearch) = viewModelScope.launch {
-        Timber.d("*** searching exercises for $search")
         _search.emit(search)
     }
 

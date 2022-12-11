@@ -4,24 +4,30 @@ import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.Workout
+import java.time.OffsetDateTime
 
 interface ExerciseSetRepository {
-    suspend fun updateExerciseSet(exerciseSet: ExerciseSet)
+    suspend fun updateExerciseSet(exerciseSet: ExerciseSet): ExerciseSet
 
     suspend fun addExerciseSetWithPopulatedData(
-        workout: Workout,
-        exercise: Exercise,
+        workoutAddedAt: OffsetDateTime,
+        exerciseName: String,
         exerciseSet: ExerciseSet,
         expectedSet: ExpectedSet?
-    )
+    ): ExerciseSet
 
     suspend fun addExerciseSets(
-        workout: Workout,
+        workoutAddedAt: OffsetDateTime,
         exercise: Exercise,
         exerciseSets: List<ExerciseSet>
     )
 
     suspend fun getCompletedSetsForExercise(name: String): List<ExerciseSet>
 
-    suspend fun changeExerciseForSets(setIds: List<Long>, exercise: Exercise)
+    suspend fun changeExerciseForSets(
+        setIds: List<Long>,
+        exercise: Exercise,
+        position: Int,
+        workoutAddedAt: OffsetDateTime
+    ): Exercise
 }

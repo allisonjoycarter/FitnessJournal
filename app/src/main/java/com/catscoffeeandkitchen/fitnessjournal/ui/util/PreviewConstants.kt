@@ -4,7 +4,6 @@ import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
-import java.time.OffsetDateTime
 
 object PreviewConstants {
 
@@ -22,7 +21,7 @@ object PreviewConstants {
         minReps = 8,
         perceivedExertion = 7,
         rir = 2,
-        setNumberInWorkout = 1,
+        positionInWorkout = 1,
         note = "Drop set????"
     )
 
@@ -31,7 +30,7 @@ object PreviewConstants {
             id = 0,
             reps = 10,
             exercise = exerciseBicepCurl,
-            setNumberInWorkout = 1,
+            setNumber = 1,
             weightInPounds = 5f,
             weightInKilograms = 3f,
             repsInReserve = 100,
@@ -43,7 +42,7 @@ object PreviewConstants {
             id = 1,
             reps = 10,
             exercise = exerciseBicepCurl,
-            setNumberInWorkout = 2,
+            setNumber = 2,
             weightInPounds = 5f,
             weightInKilograms = 3f,
             repsInReserve = 100,
@@ -55,7 +54,7 @@ object PreviewConstants {
             id = 2,
             reps = 10,
             exercise = exerciseBicepCurl,
-            setNumberInWorkout = 3,
+            setNumber = 3,
             weightInPounds = 25f,
             weightInKilograms = 12f,
             repsInReserve = 3,
@@ -67,7 +66,7 @@ object PreviewConstants {
             id = 3,
             reps = 10,
             exercise = exerciseBicepCurl,
-            setNumberInWorkout = 4,
+            setNumber = 4,
             weightInPounds = 25f,
             weightInKilograms = 12f,
             repsInReserve = 3,

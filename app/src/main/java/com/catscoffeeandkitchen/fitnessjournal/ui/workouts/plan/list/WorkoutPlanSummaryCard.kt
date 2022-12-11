@@ -59,8 +59,9 @@ fun WorkoutPlanSummaryCard(
         }
 
         workout.exercises.forEach { set ->
+            val exerciseName = set.exercise?.name ?: set.exerciseGroup?.name ?: set.note.ifEmpty { " Unknown Exercise" }
             Text(
-                "${set.sets}x${set.reps} ${set.exercise.name}",
+                "${set.sets}x${set.reps} $exerciseName",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .padding(4.dp)

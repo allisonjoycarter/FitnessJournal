@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScree
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list.WorkoutPlanSummaryCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list.WorkoutPlansViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SelectPlanScreen(
     navController: NavController,
@@ -29,61 +31,61 @@ fun SelectPlanScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = modifier.padding(12.dp),
-    ) {
-        Text(
-            "Select a Plan",
-            style = MaterialTheme.typography.headlineMedium
-        )
+    when (val planState = workoutPlansViewModel.workouts.value) {
+        is DataState.Loading -> { CircularProgressIndicator() }
+        is DataState.Error -> { Text("Error = ${planState.e.localizedMessage}")}
+        is DataState.Success -> {
+            LaunchedEffect(coroutineScope) {
+                if (planState.data.isEmpty()) {
+                    navController.navigate("${FitnessJournalScreen.WorkoutDetails.route}/0") {
+                        popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                    }
+                }
+            }
 
-        when (val planState = workoutPlansViewModel.workouts.value) {
-            is DataState.Loading -> { CircularProgressIndicator() }
-            is DataState.Error -> { Text("Error = ${planState.e.localizedMessage}")}
-            is DataState.Success -> {
-                LaunchedEffect(coroutineScope) {
-                    if (planState.data.isEmpty()) {
-                        navController.navigate("${FitnessJournalScreen.WorkoutDetails.route}/0") {
-                            popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+            LazyColumn(
+                modifier = modifier.padding(12.dp),
+            ) {
+                stickyHeader {
+                    Text(
+                        "Select a Plan",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+
+                items(planState.data) { item ->
+                    WorkoutPlanSummaryCard(
+                        workout = item,
+                        onTap = {
+                            navController.navigate(
+                                "${FitnessJournalScreen.WorkoutDetails.route}/0?" +
+                                        "plan=${item.addedAt.toInstant().toEpochMilli()}"
+                            ) {
+                                popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                            }
+                        }
+                    )
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = {
+                            navController.navigate(
+                                "${FitnessJournalScreen.WorkoutDetails.route}/0"
+                            ) {
+                                popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
+                            }
+                        }) {
+                            Text("Skip")
                         }
                     }
                 }
-
-                LazyColumn(
-                    modifier = modifier,
-                ) {
-                    items(planState.data) { item ->
-                        WorkoutPlanSummaryCard(
-                            workout = item,
-                            onTap = {
-                                navController.navigate(
-                                    "${FitnessJournalScreen.WorkoutDetails.route}/0?" +
-                                            "plan=${item.addedAt.toInstant().toEpochMilli()}"
-                                ) {
-                                    popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-            else -> {}
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(onClick = {
-                navController.navigate(
-                    "${FitnessJournalScreen.WorkoutDetails.route}/0"
-                ) {
-                    popUpTo(FitnessJournalScreen.WorkoutsScreen.route)
-                }
-            }) {
-                Text("Skip")
             }
         }
+        else -> {}
     }
 }
 

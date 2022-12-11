@@ -60,7 +60,8 @@ class MusclesWorkedDescriptor(
     val mostCommonMuscleWorked: String?
         get() {
             val muscles = sets
-                .flatMap { it.exercise.musclesWorked }
+                .filter { it.exercise != null }
+                .flatMap { it.exercise!!.musclesWorked }
                 .filterNot { duplicateMuscleNames.any { duplicates -> duplicates.value.contains(it) }}
                 .groupBy { it }
                 .map { it.key to it.value.size }
@@ -73,7 +74,7 @@ class MusclesWorkedDescriptor(
             return results.joinToString(", ") { it.first }
         }
 
-    val compoundMovements: String = sets.map { it.exercise.name }
+    val compoundMovements: String = sets.mapNotNull { it.exercise?.name }
         .filter { compounds.any { comp -> it.contains(comp, ignoreCase = true) } }
         .joinToString(", ")
 }

@@ -24,26 +24,34 @@ import com.google.android.material.chip.ChipGroup
 fun SearchExerciseHeader(
     currentSearch: String?,
     currentMuscleFilter: String?,
+    currentCategoryFilter: String?,
     onSearch: (search: String?) -> Unit = {},
     filterMuscle: (muscle: String?) -> Unit = {},
     filterCategory: (category: String?) -> Unit = {}
 ) {
     var search by remember { mutableStateOf(TextFieldValue(currentSearch.orEmpty())) }
-    var muscleFilter by remember { mutableStateOf(currentMuscleFilter as String?) }
-    val muscleFilterOptions = listOf(
+    var muscleFilter by remember { mutableStateOf(currentMuscleFilter) }
+    var categoryFilter by remember { mutableStateOf(currentCategoryFilter) }
+    val categoryOptions = listOf(
         "Chest",
         "Abs",
         "Legs",
         "Shoulders",
         "Arms",
         "Back"
-//        "Biceps",
-//        "Triceps",
-//        "Lats",
-//        "Glutes",
-//        "Quads",
-//        "Calves",
     )
+
+    val muscleOptions: List<String> =
+        (if (!currentMuscleFilter.isNullOrEmpty())
+            listOf(currentMuscleFilter)
+        else emptyList()) + listOf(
+            "Pecs",
+            "Quads",
+            "Triceps",
+            "Abs",
+            "Glutes",
+            "Lats",
+        )
 
     Column(
         modifier = Modifier
@@ -72,12 +80,17 @@ fun SearchExerciseHeader(
             }
         }
 
+        Text(
+            "Muscles",
+            modifier = Modifier.padding(start = 4.dp, top = 10.dp),
+            style = MaterialTheme.typography.labelSmall
+        )
         LazyRow(
             modifier = Modifier
                 .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(muscleFilterOptions) { option ->
+            items(muscleOptions) { option ->
                 FilterChip(
                     selected = muscleFilter == option,
                     onClick = {
@@ -86,7 +99,35 @@ fun SearchExerciseHeader(
                         } else {
                             option
                         }
-                        filterCategory(muscleFilter)
+                        filterMuscle(muscleFilter)
+                    },
+                    label = { Text(option) }
+                )
+            }
+        }
+
+        Divider()
+
+        Text(
+            "Category",
+            modifier = Modifier.padding(start = 4.dp, top = 10.dp),
+            style = MaterialTheme.typography.labelSmall
+        )
+        LazyRow(
+            modifier = Modifier
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            items(categoryOptions) { option ->
+                FilterChip(
+                    selected = categoryFilter == option,
+                    onClick = {
+                        categoryFilter = if (categoryFilter == option) {
+                            null
+                        } else {
+                            option
+                        }
+                        filterCategory(categoryFilter)
                     },
                     label = { Text(option) }
                 )
@@ -99,5 +140,9 @@ fun SearchExerciseHeader(
 @Preview
 @Composable
 fun SearchExerciseHeaderPreview() {
-    SearchExerciseHeader("Bicep Curl", "Chest")
+    SearchExerciseHeader(
+        "Bicep Curl",
+        "Chest",
+        "Pecs"
+    )
 }

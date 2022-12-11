@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.stats.StatsData
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -19,24 +21,20 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
-import java.text.SimpleDateFormat
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
-import java.time.format.FormatStyle
 import java.time.temporal.ChronoUnit
-import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.days
+import kotlin.math.roundToInt
 
 
 @Composable
 fun MPExerciseLineGraph(
-    entries: List<Pair<OffsetDateTime, Float>>
+    entries: List<StatsData>
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary.toArgb()
     AndroidView(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,8 +43,8 @@ fun MPExerciseLineGraph(
             // programmatically create a LineChart
             val chart = LineChart(context)
 
-            val earliest = entries.minOfOrNull { it.first }
-            val hours = earliest?.until(entries.maxOf { it.first }, ChronoUnit.HOURS)
+            val earliest = entries.minOfOrNull { it.date }
+            val hours = earliest?.until(entries.maxOf { it.date }, ChronoUnit.HOURS)
             val unitToUse = when {
                 hours == null -> ChronoUnit.HOURS
                 hours > (730.5 * 3) -> ChronoUnit.MONTHS
@@ -54,32 +52,34 @@ fun MPExerciseLineGraph(
                 else ->  ChronoUnit.HOURS
             }
 
+            val dateFormatter = DateTimeFormatterBuilder()
+                .appendPattern("MMM d")
+                .appendPattern(if (unitToUse == ChronoUnit.MONTHS) " yy" else "")
+                .appendPattern(if (unitToUse == ChronoUnit.HOURS) " ha" else "")
+                .toFormatter()
+
             val xAxis = chart.xAxis
+
             xAxis.position = XAxis.XAxisPosition.BOTTOM
-            xAxis.textSize = 10f
+            xAxis.textSize = 8f
             xAxis.textColor = Color.White.toArgb()
             xAxis.setDrawAxisLine(false)
             xAxis.setDrawGridLines(true)
-            xAxis.granularity = when (unitToUse) {
-                ChronoUnit.HOURS -> 1f
-                ChronoUnit.DAYS -> 24f
-                ChronoUnit.MONTHS -> 730.5f
-                else -> 1f
-            }
+            xAxis.granularity = 1f
+            xAxis.setDrawLabels(true)
+            xAxis.setCenterAxisLabels(false)
 
             xAxis.valueFormatter = object : ValueFormatter() {
                 override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-                    val date = entries.first().first.plusHours(value.toLong())
-                        .toZonedDateTime()
-                        .withZoneSameInstant(ZoneId.systemDefault())
-                    return DateTimeFormatterBuilder()
-                        .appendPattern("MMM d")
-                        .appendPattern(if (unitToUse == ChronoUnit.MONTHS) " 'yy" else "")
-                        .appendPattern(if (unitToUse == ChronoUnit.HOURS) " ha" else "")
-                        .toFormatter()
-                        .format(date)
+                    val date = unitToUse.addTo(earliest, value.toLong())
+                    return if (date == null) "" else
+                        date
+                            .toZonedDateTime()
+                            .withZoneSameInstant(ZoneId.systemDefault())
+                            .format(dateFormatter)
                 }
             }
+            xAxis.labelRotationAngle = 45f
 
             val leftAxis = chart.axisLeft
             leftAxis.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART)
@@ -87,36 +87,140 @@ fun MPExerciseLineGraph(
             leftAxis.setDrawGridLines(true)
             leftAxis.isGranularityEnabled = true
             leftAxis.axisMinimum = 0f
-            leftAxis.axisMaximum = (entries.maxOfOrNull { it.second } ?: 0f) + 20f
+            leftAxis.axisMaximum = (entries.maxOfOrNull { it.repMax } ?: 0f) + 20f
             leftAxis.yOffset = -9f
             leftAxis.textColor = primaryColor
 
             chart.axisRight.isEnabled = false
 
-            val lineEntries = arrayListOf<Entry>()
+            val repMaxEntries = arrayListOf<Entry>()
+            val highestWeightEntries = arrayListOf<Entry>()
+            val repEntries = arrayListOf<Entry>()
             if (hours != null) {
-                entries.forEach { entry ->
-                    lineEntries.add(Entry(
-                        earliest.until(entry.first, unitToUse).toFloat(),
-                        entry.second
-                    ))
+                val groupingFormatter = when (unitToUse) {
+                    ChronoUnit.HOURS -> DateTimeFormatterBuilder().appendPattern("d-ha").toFormatter()
+                    ChronoUnit.MONTHS -> DateTimeFormatterBuilder().appendPattern("yyyy-MM").toFormatter()
+                    else -> DateTimeFormatterBuilder().appendPattern("yyyy-MM-d").toFormatter()
                 }
+                val groupedEntries = entries.groupBy { it.date.format(groupingFormatter) }
+                Timber.d("*** entries = ${entries.size}, grouped into ${groupedEntries.size}, groups = ${groupedEntries.map { it.key }.joinToString(", ")}")
+                groupedEntries.forEach { entry ->
+                    val value = earliest.until(entry.value.first().date, unitToUse)
+                    repMaxEntries.add(
+                        Entry(
+                            value.toFloat(),
+                            entry.value.maxOfOrNull { it.repMax } ?: 0f
+                        )
+                    )
+
+                    repEntries.add(
+                        Entry(
+                            value.toFloat(),
+                            entry.value.maxOfOrNull { it.reps } ?: 0f
+                        )
+                    )
+                }
+
+                xAxis.labelCount = groupedEntries.size
             }
 
-            Timber.d("*** matching entries entered ${lineEntries.size}")
+            val take = if (repMaxEntries.size > 2) 3 else repMaxEntries.size
+            val trendEntries = arrayListOf(
+                Entry(repMaxEntries.first().x, repMaxEntries.subList(0, take).map { it.y }.average().toFloat()),
+                Entry(repMaxEntries.last().x, repMaxEntries.takeLast(take).map { it.y }.average().toFloat())
+            )
 
-            val dataSet = LineDataSet(lineEntries, "a cool label").apply {
+            val repMaxDataSet = LineDataSet(repMaxEntries, "Estimated 1RM").apply {
                 color = primaryColor
                 axisDependency = YAxis.AxisDependency.LEFT;
                 lineWidth = 1.5f
                 fillColor = primaryColor
                 fillAlpha = 60
                 valueTextColor = primaryColor
-                valueTextSize = 15f
+                valueTextSize = 12f
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return ""
+                    }
+                }
+                setCircleColor(primaryColor)
+                circleHoleColor = primaryColor
             }
 
-            val lineData = LineData(dataSet)
+            val highestWeightDataSet = LineDataSet(highestWeightEntries, "Highest Weight Lifted").apply {
+                color = tertiaryColor
+                axisDependency = YAxis.AxisDependency.LEFT;
+                lineWidth = 1.5f
+                fillColor = tertiaryColor
+                fillAlpha = 60
+                valueTextColor = tertiaryColor
+                valueTextSize = 12f
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return ""
+                    }
+                }
+                setCircleColor(tertiaryColor)
+                circleHoleColor = tertiaryColor
+                highLightColor = Color.White.toArgb()
+            }
+
+            val repsDataSet = LineDataSet(repEntries, "Reps").apply {
+                color = primaryColor
+                axisDependency = YAxis.AxisDependency.LEFT;
+                lineWidth = 1.5f
+                fillColor = primaryColor
+                fillAlpha = 60
+                valueTextColor = primaryColor
+                valueTextSize = 12f
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return ""
+                    }
+                }
+                setCircleColor(primaryColor)
+                circleHoleColor = primaryColor
+            }
+
+            val trendDataSet = LineDataSet(trendEntries, "Trend").apply {
+                color = secondaryColor
+                axisDependency = YAxis.AxisDependency.LEFT;
+                lineWidth = 1f
+                fillColor = secondaryColor
+                fillAlpha = 10
+                valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return ""
+                    }
+                }
+                setDrawCircles(false)
+                enableDashedLine(15f, 8f, 0f)
+                highLightColor = Color.White.toArgb()
+            }
+
+            val lineData = when {
+                entries.maxOf { it.repMax } < 30 -> LineData(repsDataSet)
+                else -> LineData(repMaxDataSet, highestWeightDataSet, trendDataSet)
+            }
             chart.data = lineData
+            chart.legend.apply {
+                textColor = Color.White.toArgb()
+            }
             chart.invalidate()
             chart.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,

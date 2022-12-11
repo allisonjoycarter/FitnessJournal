@@ -20,7 +20,7 @@ data class CombinedSetData(
     val weightInKilograms: Float,
     val repsInReserve: Int,
     val perceivedExertion: Int,
-    val setNumberInWorkout: Int,
+    val setNumber: Int,
     val completedAt: OffsetDateTime?,
     val type: ExerciseSetType
 )

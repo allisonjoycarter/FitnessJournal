@@ -12,14 +12,15 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 class RemoveExerciseFromWorkoutUseCase @Inject constructor(
     private val repository: WorkoutRepository
 ) {
-    fun run(exercise: Exercise, workout: Workout): Flow<DataState<Boolean>> = flow {
+    fun run(exercise: Exercise, workoutAddedAt: OffsetDateTime): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
-        repository.removeExerciseFromWorkout(exercise = exercise, workout = workout)
+        repository.removeExerciseFromWorkout(exercise = exercise, workoutAddedAt = workoutAddedAt)
         emit(DataState.Success(true))
     }
         .catch { ex ->

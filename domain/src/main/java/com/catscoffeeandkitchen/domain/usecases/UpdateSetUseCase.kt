@@ -18,10 +18,10 @@ import javax.inject.Inject
 class UpdateSetUseCase @Inject constructor(
     private val exerciseSetRepository: ExerciseSetRepository
 ) {
-    fun run(set: ExerciseSet): Flow<DataState<Boolean>> = flow {
+    fun run(set: ExerciseSet): Flow<DataState<ExerciseSet>> = flow {
         emit(DataState.Loading())
-        exerciseSetRepository.updateExerciseSet(set)
-        emit(DataState.Success(true))
+        val result = exerciseSetRepository.updateExerciseSet(set)
+        emit(DataState.Success(result))
     }
         .catch { ex ->
             Timber.e(ex)

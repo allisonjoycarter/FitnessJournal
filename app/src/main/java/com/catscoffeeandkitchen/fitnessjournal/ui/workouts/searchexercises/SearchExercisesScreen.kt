@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
@@ -28,23 +29,30 @@ import com.catscoffeeandkitchen.domain.util.capitalizeWords
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises.create.CreateOrChangeExerciseDialog
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SearchExercisesScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
+    muscle: String? = null,
+    category: String? = null,
     viewModel: SearchExercisesViewModel = hiltViewModel(),
     ) {
-    val searchState = viewModel.searchRequest.collectAsState(initial = SearchExercisesViewModel.ExerciseSearch())
+    val searchState = viewModel.searchRequest.collectAsState(
+        initial = ExerciseSearch(
+            muscle = muscle, category = category
+        ))
     val pagingItems = viewModel.pagedExerciseFlow.collectAsLazyPagingItems()
     var showCreateExerciseDialog by remember { mutableStateOf(false) }
     var editingExercise by remember { mutableStateOf(null as Exercise?) }
 
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(coroutineScope) {
-        if (searchState.value == SearchExercisesViewModel.ExerciseSearch()) {
-            viewModel.searchExercises(SearchExercisesViewModel.ExerciseSearch())
+        Timber.d("*** launchedEffect muscle = $muscle, category = $category")
+        if (pagingItems.itemSnapshotList.isEmpty()) {
+            viewModel.searchExercises(searchState.value)
         }
     }
 
@@ -76,9 +84,16 @@ fun SearchExercisesScreen(
 
     LazyColumn(modifier = modifier) {
         stickyHeader {
-            SearchExerciseHeader(searchState.value.name, searchState.value.muscle,
+            SearchExerciseHeader(
+                currentSearch = searchState.value.name,
+                currentCategoryFilter = searchState.value.category,
+                currentMuscleFilter = searchState.value.muscle,
                 onSearch = { text ->
                     viewModel.searchExercises(searchState.value.copy(name = text))
+                    pagingItems.refresh()
+                },
+                filterMuscle = { muscle ->
+                    viewModel.searchExercises(searchState.value.copy(muscle = muscle))
                     pagingItems.refresh()
                 },
                 filterCategory = { category ->

@@ -3,15 +3,19 @@ package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
+import com.catscoffeeandkitchen.domain.usecases.exercisegroup.CreateExerciseGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.workoutplan.*
 import com.catscoffeeandkitchen.domain.util.DataState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
@@ -24,13 +28,20 @@ class WorkoutPlanViewModel @Inject constructor(
     private val getWorkoutByAddedDateUseCase: GetWorkoutPlanByAddedDateUseCase,
     private val updateWorkoutPlanUseCase: UpdateWorkoutPlanUseCase,
     private val addSetToWorkoutPlan: AddSetToWorkoutPlanUseCase,
+    private val createExerciseGroupUseCase: CreateExerciseGroupUseCase,
     private val removeSetFromWorkoutPlan: RemoveSetFromWorkoutPlanUseCase,
     private val updateExpectedSet: UpdateExpectedSetUseCase,
+    private val updateExercisePositionUseCase: UpdateExpectedSetPositionUseCase,
     private val createWorkoutPlanUseCase: CreateWorkoutPlanUseCase,
     savedStateHandle: SavedStateHandle
 ): ViewModel() {
     private var _workoutPlan: MutableState<DataState<WorkoutPlan>> = mutableStateOf(DataState.NotSent())
     val workoutPlan: State<DataState<WorkoutPlan>> = _workoutPlan
+
+    private var _showExerciseGroupNameDialog = MutableStateFlow(false)
+    val showExerciseGroupNameDialog = _showExerciseGroupNameDialog
+    private var _exercisesToGroup = MutableStateFlow(emptyList<String>())
+    var exercisesToGroup = _exercisesToGroup
 
     init {
         val workoutDate = savedStateHandle.get<Long?>("workoutId")
@@ -49,6 +60,7 @@ class WorkoutPlanViewModel @Inject constructor(
                     getWorkoutByAddedDateUseCase.run(
                         OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
                     ).collect { wo ->
+                        Timber.d("*** ${(wo as? DataState.Success)?.data?.exercises}")
                         _workoutPlan.value = wo
                     }
                 }
@@ -57,14 +69,32 @@ class WorkoutPlanViewModel @Inject constructor(
     }
 
     fun updateExercisePlan(setNumber: Int, field: ExercisePlanField, value: Int) = viewModelScope.launch {
-        Timber.d("*** updating workout plan")
         (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
-            val setFromWorkout = workout.exercises.find { it.setNumberInWorkout == setNumber }
-            Timber.d("*** updating set number ${setFromWorkout?.setNumberInWorkout}")
+            val setFromWorkout = workout.exercises.find { it.positionInWorkout == setNumber }
             if (setFromWorkout != null) {
                 updateExpectedSet.run(
                     workout,
                     getUpdatedExpectedSetField(setFromWorkout, field, value)
+                ).collect { result ->
+                    if (result is DataState.Success) {
+                        getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                            Timber.d("updated plan = $wo")
+                            _workoutPlan.value = wo
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateExercisePosition(originalSetNumber: Int, newSetNumber: Int) = viewModelScope.launch {
+        (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
+            val setFromWorkout = workout.exercises.find { it.positionInWorkout == originalSetNumber }
+            setFromWorkout?.let { set ->
+                updateExercisePositionUseCase.run(
+                    workout,
+                    set,
+                    newSetNumber,
                 ).collect { result ->
                     if (result is DataState.Success) {
                         getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
@@ -93,6 +123,30 @@ class WorkoutPlanViewModel @Inject constructor(
                         _workoutPlan.value = wo
                     }
                 }
+            }
+        }
+    }
+
+    fun addExerciseGroup(names: List<String>, groupName: String = "") = viewModelScope.launch {
+        Timber.d("*** creating exercise group $names")
+        (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
+            createExerciseGroupUseCase.run(names, groupName)
+                .collect { state ->
+                    Timber.d("*** create group state = $state")
+                    if (state is DataState.Success) {
+                        addSetToWorkoutPlan.run(
+                            workout,
+                            ExpectedSet(
+                                exerciseGroup = state.data
+                            )
+                        ).collectLatest { addedSetState ->
+                            if (addedSetState is DataState.Success) {
+                                getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                                    _workoutPlan.value = wo
+                                }
+                            }
+                        }
+                    }
             }
         }
     }
@@ -140,6 +194,32 @@ class WorkoutPlanViewModel @Inject constructor(
         }
     }
 
+    fun selectGroup(id: Long) = viewModelScope.launch {
+        (workoutPlan.value as? DataState.Success)?.data?.let { currentWorkout ->
+            addSetToWorkoutPlan.run(
+                currentWorkout,
+                ExpectedSet(
+                    exerciseGroup = ExerciseGroup(id = id, name = "", emptyList())
+                )
+            ).collectLatest { addedSetState ->
+                if (addedSetState is DataState.Success) {
+                    getWorkoutByAddedDateUseCase.run(currentWorkout.addedAt).collect { wo ->
+                        _workoutPlan.value = wo
+                    }
+                }
+            }
+        }
+    }
+
+    fun showGroupNameDialog(names: List<String>) {
+        _showExerciseGroupNameDialog.value = true
+        _exercisesToGroup.value = names
+    }
+
+    fun hideGroupNameDialog() {
+        _showExerciseGroupNameDialog.value = false
+    }
+
     private fun getUpdatedExpectedSetField(set: ExpectedSet, field: ExercisePlanField, value: Int): ExpectedSet {
         return when (field) {
             ExercisePlanField.Reps -> set.copy(reps = value)
@@ -150,6 +230,7 @@ class WorkoutPlanViewModel @Inject constructor(
             ExercisePlanField.WeightInKilograms -> set
             ExercisePlanField.RepsInReserve -> set.copy(rir = value)
             ExercisePlanField.PerceivedExertion -> set.copy(perceivedExertion = value)
+            ExercisePlanField.SetNumber -> set
         }
     }
 }

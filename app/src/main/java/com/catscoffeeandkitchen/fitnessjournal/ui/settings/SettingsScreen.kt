@@ -31,24 +31,6 @@ fun SettingsScreen(
     val importStatus = viewModel.importStatus.collectAsState(DataState.NotSent())
     val lastBackupDate = viewModel.lastBackup.collectAsState(initial = OffsetDateTime.now())
     val context = LocalContext.current
-//
-//    if (restoreStatus.value is DataState.Success || backupStatus.value is DataState.Success) {
-//        val coroutineScope = rememberCoroutineScope()
-//        val packageManager: PackageManager = context.packageManager
-//
-//        LaunchedEffect(coroutineScope) {
-//            val intent: Intent = packageManager.getLaunchIntentForPackage(context.packageName)!!
-//            val componentName: ComponentName = intent.component!!
-//            val restartIntent: Intent = Intent.makeRestartActivityTask(componentName)
-//
-//            restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//
-//            if (context is Activity) {
-//                context.finishAndRemoveTask()
-//            }
-//            exitProcess(0)
-//        }
-//    }
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp)

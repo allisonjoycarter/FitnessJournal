@@ -17,6 +17,6 @@ class GetPagedExercisesUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository
 ) {
     fun run(search: String? = null, muscle: String? = null, category: String? = null): Flow<PagingData<Exercise>> =
-        workoutRepository.getPagedExercises(search, muscle, category)
+        workoutRepository.getPagedExercises(search = search, muscle = muscle, category = category)
 }
 
