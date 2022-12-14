@@ -1,5 +1,8 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +24,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.*
 import java.time.OffsetDateTime
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WorkoutDetails(
     scrollState: LazyListState,
@@ -31,7 +35,6 @@ fun WorkoutDetails(
     exerciseUiActions: ExerciseUiActions?,
     exerciseNavigableActions: ExerciseNavigableActions?,
 ) {
-    var editingExercise by remember { mutableStateOf(null as String?) }
     var useKeyboard by rememberSaveable { mutableStateOf(false) }
 
     LazyColumn(
@@ -57,7 +60,7 @@ fun WorkoutDetails(
             }
         }
 
-        if (editingExercise != null || workout.sets.any { !it.isComplete }) {
+        if (workout.sets.any { !it.isComplete }) {
             item {
                 Row(
                     modifier = Modifier
@@ -76,55 +79,28 @@ fun WorkoutDetails(
         }
 
         itemsIndexed(sets) { index, exercise ->
-            val individualSets = workout.sets
-                .filter { s -> s.exercise.name == exercise.name }
-                .sortedBy { it.setNumber }
-            if (exercise.exercise != null &&
-                (editingExercise == exercise.name ||
-                individualSets.any { !it.isComplete })
-            ) {
-                EditableExerciseCard(
-                    ExerciseUiData(
-                        workoutAddedAt = workout.addedAt,
-                        exercise = exercise.exercise,
-                        sets = individualSets,
-                        expectedSet = workout.plan?.exercises?.find { it.positionInWorkout == exercise.position },
-                        unit = unit,
-                        isFirstExercise = index == 0,
-                        isLastExercise = index == sets.lastIndex,
-                        useKeyboard = useKeyboard,
-                        wasChosenFromGroup = workout.plan?.exercises?.any { plannedExercise ->
-                            plannedExercise.exerciseGroup != null &&
-                                    plannedExercise.exerciseGroup!!.exercises.any { it.name == exercise.name } &&
-                                    plannedExercise.positionInWorkout == exercise.position
-                        } == true
-                    ),
-                    uiActions = exerciseUiActions,
-                    navigableActions = exerciseNavigableActions
-                )
-            } else if (exercise.exercise != null) {
-                ReadOnlyExerciseCard(
+            ExerciseCard(
+                ExerciseUiData(
+                    workout.addedAt,
                     exercise = exercise.exercise,
-                    sets = individualSets,
-                    expectedSet = workout.plan?.exercises?.find { it.exercise?.name == exercise.name },
+                    group = exercise.group,
+                    position = exercise.position,
+                    sets = workout.sets.filter { it.exercise.name == exercise.name },
+                    expectedSet = workout.plan?.exercises?.firstOrNull { exercise.position == it.positionInWorkout },
                     unit = unit,
-                    onEdit = { editingExercise = exercise.name }
-                )
-            } else if (exercise.group != null) {
-                ExerciseGroupCard(
-                    exercise.group,
-                    onExerciseSelected = { ex ->
-                        exerciseUiActions?.selectExerciseFromGroup(
-                            exercise.group,
-                            ex,
-                            ex.positionInWorkout ?: 1,
-                            expectedSet = workout.plan?.exercises?.firstOrNull { it.positionInWorkout == ex.positionInWorkout })
-                    },
-                    editGroup = {
-                        exerciseNavigableActions?.editGroup(exercise.group)
-                    }
-                )
-            }
+                    isFirstExercise = index == 0,
+                    isLastExercise = index == sets.lastIndex,
+                    useKeyboard = useKeyboard,
+                    wasChosenFromGroup = workout.plan?.exercises?.any { expectedSet ->
+                        expectedSet.positionInWorkout == exercise.position &&
+                            expectedSet.exerciseGroup?.exercises.orEmpty()
+                                .any { ex -> ex.name == exercise.name }
+                    } == true
+                ),
+                uiActions = exerciseUiActions,
+                navigableActions = exerciseNavigableActions,
+                modifier = Modifier.animateItemPlacement()
+            )
         }
 
         if (workout.completedAt == null) {
@@ -144,7 +120,9 @@ fun WorkoutDetails(
 
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     OutlinedButton(
@@ -158,7 +136,9 @@ fun WorkoutDetails(
             }
         } else {
             item {
-                Box(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp))
             }
         }
     }

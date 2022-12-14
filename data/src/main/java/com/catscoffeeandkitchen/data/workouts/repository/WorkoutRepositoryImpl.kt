@@ -252,25 +252,6 @@ class WorkoutRepositoryImpl(
             existingWorkout.wId,
             planId = existingWorkout.planId
         ))
-
-        workout.sets.forEach { set ->
-            val dbExercise = database.exerciseDao().getExerciseByName(set.exercise.name)
-            var exerciseId = dbExercise?.eId
-            if (dbExercise != null) {
-                database.exerciseDao().update(set.exercise.toDbExercise(dbExercise.eId))
-            } else {
-                exerciseId = database.exerciseDao().insert(set.exercise.toDbExercise())
-            }
-
-            val position = database.exercisePositionDao().getPositionsInWorkoutWithExerciseId(
-                existingWorkout.wId,
-                exerciseId!!
-            )
-
-            database.exerciseSetDao().update(
-                set.toDbExerciseSet(exerciseId, existingWorkout.wId, position.first().epId)
-            )
-        }
         return workout
     }
 
@@ -456,7 +437,7 @@ class WorkoutRepositoryImpl(
             ))
 
             val dbSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)
-            database.exerciseSetDao().deleteAll(dbSets)
+            database.exerciseSetDao().deleteAll(dbSets.filter { it.positionId == pos.epId })
         }
     }
 }

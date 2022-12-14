@@ -32,8 +32,8 @@ fun TimeSinceText(
         "${seconds / 60}:${if (seconds % 60 < 10) "0" else ""}${seconds % 60}",
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(4.dp),
-        color = MaterialTheme.colorScheme.onPrimary
+        color = MaterialTheme.colorScheme.onPrimaryContainer
     )
 }

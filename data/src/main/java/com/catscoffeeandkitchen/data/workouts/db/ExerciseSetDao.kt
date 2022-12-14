@@ -125,4 +125,15 @@ interface ExerciseSetDao {
     """
     )
     fun getLastSet(exerciseId: Long): SetEntity?
+
+    @Query(
+        """
+        SELECT *
+        FROM SetEntity
+        WHERE exerciseId = :exerciseId AND workoutId = :workoutId
+        ORDER BY setNumber DESC
+        LIMIT 1
+    """
+    )
+    fun getLastSetOfExerciseInWorkout(exerciseId: Long, workoutId: Long): SetEntity?
 }

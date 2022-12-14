@@ -29,13 +29,14 @@ import java.time.OffsetDateTime
 @Composable
 fun ExerciseGroupCard(
     group: ExerciseGroup,
+    editGroup: () -> Unit,
+    modifier: Modifier = Modifier,
     onExerciseSelected: (Exercise) -> Unit = {},
-    editGroup: () -> Unit
 ) {
     var showExtrasDropdown by remember { mutableStateOf(false) }
 
     FitnessJournalCard(
-        modifier = Modifier.padding(horizontal = 8.dp)
+        modifier = modifier.padding(horizontal = 8.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -68,58 +69,66 @@ fun ExerciseGroupCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             group.exercises.forEach { exercise ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                            .padding(8.dp)
-                            .clickable { onExerciseSelected(exercise) }
-                    ) {
-                        Text(exercise.name, style = MaterialTheme.typography.titleMedium)
-                        if (exercise.stats != null) {
-                            val completed = exercise.stats?.lastCompletedAt
-                            val completedAmount = exercise.stats?.amountCompleted
-                            val completedAmountThisWeek = exercise.stats?.amountCompletedThisWeek
-
-                            if (completed != null) {
-                                val formattedDate = when {
-                                    Duration.between(completed, OffsetDateTime.now()).toDays() < 2 -> DateUtils.getRelativeTimeSpanString(
-                                        completed.toInstant().toEpochMilli(),
-                                        OffsetDateTime.now().toInstant().toEpochMilli(),
-                                        DateUtils.DAY_IN_MILLIS
-                                    ).toString().lowercase()
-                                    else -> completed.dayOfWeek.name.lowercase()
-                                }
-                                Text(
-                                    "last completed $formattedDate",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            } else {
-                                Text(
-                                    "Never completed",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-
-                            if (completedAmountThisWeek != null && completedAmountThisWeek > 0) {
-                                Text("$completedAmountThisWeek " +
-                                        "${if (completedAmountThisWeek == 1) "set" else "sets"} " +
-                                        "this week",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            } else if (completedAmount != null && completedAmount > 0) {
-                                Text(
-                                    "completed ${exercise.stats?.amountCompleted} sets total, none this week",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        } else {
-                            Text("No stats available.")
-                        }
-                    }
-                }
+                GroupExerciseItem(exercise, onSelect = onExerciseSelected)
+            }
         }
 
+    }
+}
+
+@Composable
+fun GroupExerciseItem(
+    exercise: Exercise,
+    onSelect: (Exercise) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(8.dp)
+            .clickable { onSelect(exercise) }
+    ) {
+        Text(exercise.name, style = MaterialTheme.typography.titleMedium)
+        if (exercise.stats != null) {
+            val completed = exercise.stats?.lastCompletedAt
+            val completedAmount = exercise.stats?.amountCompleted
+            val completedAmountThisWeek = exercise.stats?.amountCompletedThisWeek
+
+            if (completed != null) {
+                val formattedDate = when {
+                    Duration.between(completed, OffsetDateTime.now()).toDays() < 2 -> DateUtils.getRelativeTimeSpanString(
+                        completed.toInstant().toEpochMilli(),
+                        OffsetDateTime.now().toInstant().toEpochMilli(),
+                        DateUtils.DAY_IN_MILLIS
+                    ).toString().lowercase()
+                    else -> completed.dayOfWeek.name.lowercase()
+                }
+                Text(
+                    "last completed $formattedDate",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            } else {
+                Text(
+                    "Never completed",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
+            if (completedAmountThisWeek != null && completedAmountThisWeek > 0) {
+                Text("$completedAmountThisWeek " +
+                        "${if (completedAmountThisWeek == 1) "set" else "sets"} " +
+                        "this week",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            } else if (completedAmount != null && completedAmount > 0) {
+                Text(
+                    "completed ${exercise.stats?.amountCompleted} sets total, none this week",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        } else {
+            Text("No stats available.")
+        }
     }
 }

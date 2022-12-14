@@ -23,6 +23,8 @@ import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseNavigableActions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Composable
@@ -34,12 +36,22 @@ fun WorkoutDetailsScreen(
     ) {
     val onAddExercise by rememberUpdatedState(viewModel::addExercise)
     val onSwapExercise by rememberUpdatedState(viewModel::swapExercise)
+    val editGroup by rememberUpdatedState(viewModel::editGroup)
     val refreshWorkout by rememberUpdatedState(viewModel::getWorkout)
+    var editingGroup by remember { mutableStateOf(null as ExerciseGroup?)}
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 refreshWorkout()
+
+                navController.currentBackStackEntry?.savedStateHandle
+                    ?.getLiveData<String>("selectedExercises")?.observe(lifecycleOwner) { result ->
+                        editingGroup?.let { editGroup(it, result.split("|")) }
+                        editingGroup = null
+                        navController.currentBackStackEntry?.savedStateHandle
+                            ?.remove<String>("selectedExercises")
+                    }
 
                 navController.currentBackStackEntry?.savedStateHandle
                     ?.getLiveData<String>("exerciseToAdd")?.observe(lifecycleOwner) { result ->
@@ -76,7 +88,8 @@ fun WorkoutDetailsScreen(
                     WorkoutDetails(
                         listState,
                         workout = viewModel.cachedWorkout!!,
-                        sets = viewModel.cachedExercises,
+                        sets = if (viewModel.cachedWorkout?.completedAt != null)
+                            viewModel.cachedFinishedExercises else viewModel.cachedExercises,
                         unit = viewModel.weightUnit.value,
                         workoutActions = null,
                         exerciseUiActions = null,
@@ -103,7 +116,6 @@ fun WorkoutDetailsScreen(
 
                         override fun finish() {
                             viewModel.finishWorkout()
-                            navController.popBackStack()
                         }
 
                         override fun createPlanFromWorkout() {
@@ -128,6 +140,7 @@ fun WorkoutDetailsScreen(
                         }
 
                         override fun editGroup(group: ExerciseGroup) {
+                            editingGroup = group
                             navController.navigate(
                                 "${FitnessJournalScreen.SearchExercisesMultiSelectScreen.route}?" +
                                         "selectedExercises=${group.exercises.joinToString("|") { it.name }}")

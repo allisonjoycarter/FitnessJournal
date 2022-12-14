@@ -50,7 +50,7 @@ class ExerciseSetRepositoryImpl@Inject constructor(
         val dbExercise = database.exerciseDao().getExerciseByName(exerciseName)
         val dbSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)
 
-        val lastSet = database.exerciseSetDao().getLastSet(dbExercise!!.eId)
+        val lastSet = database.exerciseSetDao().getLastSetOfExerciseInWorkout(dbExercise!!.eId, dbWorkout.wId)
 
         // use expected data, then last set, then whatever is coming in from exerciseSet
         val exerciseSetWithPreviousData = exerciseSet.copy(
@@ -79,8 +79,7 @@ class ExerciseSetRepositoryImpl@Inject constructor(
                 exerciseId = dbExercise.eId,
                 workoutId = dbWorkout.wId,
                 position = allPositions.size + 1
-            )
-            )
+            ))
             exercisePosition = allPositions.size + 1
         }
 
@@ -109,11 +108,14 @@ class ExerciseSetRepositoryImpl@Inject constructor(
         val dbExercise = database.exerciseDao().getExerciseByName(exercise.name)
 
         val existingSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)
-        existingSets.filter { it.exerciseId == dbExercise?.eId }.forEachIndexed { index, set ->
-            database.exerciseSetDao().update(set.copy(
-                setNumber = (exerciseSets.size + 1) + index
-            ))
-        }
+        existingSets
+            .filter { it.exerciseId == dbExercise?.eId }
+            .forEachIndexed { index, set ->
+                Timber.d("*** updating set ${set.reps}@${set.weightInPounds} at ${set.setNumber} to ${(exerciseSets.size + 1) + index}")
+                database.exerciseSetDao().update(set.copy(
+                    setNumber = (exerciseSets.size + 1) + index
+                ))
+            }
 
         val position = database.exercisePositionDao()
             .getPositionsInWorkoutWithExerciseId(dbWorkout.wId, dbExercise?.eId ?: 0L)

@@ -13,6 +13,7 @@ import com.catscoffeeandkitchen.domain.usecases.exercise.ChooseExerciseInGroupUs
 import com.catscoffeeandkitchen.domain.usecases.exercise.RemoveExerciseFromWorkoutUseCase
 import com.catscoffeeandkitchen.domain.usecases.exercise.ReplaceExerciseWithGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.exercise.UpdateExercisePositionUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercisegroup.UpdateExercisesInGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddExerciseSetUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddMultipleExerciseSetsUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.ReplaceExerciseForSetsUseCase
@@ -46,6 +47,7 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val replaceExerciseForSetsUseCase: ReplaceExerciseForSetsUseCase,
     private val updateSetUseCase: UpdateSetUseCase,
     private val updateExercisePositionUseCase: UpdateExercisePositionUseCase,
+    private val updateExercisesInGroupUseCase: UpdateExercisesInGroupUseCase,
     private val chooseExerciseInGroupUseCase: ChooseExerciseInGroupUseCase,
     private val replaceExerciseWithGroup: ReplaceExerciseWithGroupUseCase,
     private val getWorkoutByAddedDateUseCase: GetWorkoutByAddedDateUseCase,
@@ -71,7 +73,7 @@ class WorkoutDetailsViewModel @Inject constructor(
     val exercises: List<UiExercise>
         get() = (
                 workoutInstance?.sets.orEmpty().map { UiExercise(
-                        uniqueIdentifier = it.exercise.name,
+                        uniqueIdentifier = "${it.exercise.name}${it.exercise.positionInWorkout}",
                         name = it.exercise.name,
                         exercise = it.exercise,
                         position = it.exercise.positionInWorkout ?: 1
@@ -80,7 +82,9 @@ class WorkoutDetailsViewModel @Inject constructor(
                     .filter { workoutInstance?.sets.orEmpty().none { set ->
                         set.exercise.positionInWorkout == it.positionInWorkout } }
                     .map { UiExercise(
-                        uniqueIdentifier = it.exercise?.name ?: "${it.exerciseGroup?.id}${it.positionInWorkout}",
+                        uniqueIdentifier = if (it.exercise != null)
+                            "${it.exercise?.name}${it.exercise?.positionInWorkout}" else
+                                "${it.exerciseGroup?.id}${it.positionInWorkout}",
                         name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
                         exercise = it.exercise,
                         group = it.exerciseGroup,
@@ -92,6 +96,17 @@ class WorkoutDetailsViewModel @Inject constructor(
         get() = workoutInstance?.sets.orEmpty()
             .filter { it.isComplete }
             .map { UiExercise(
+                uniqueIdentifier = "${it.exercise.name}${it.exercise.positionInWorkout}",
+                name = it.exercise.name,
+                exercise = it.exercise,
+                position = it.exercise.positionInWorkout ?: 1
+            ) }
+            .sortedBy { (it.exercise?.positionInWorkout ?: 0) }
+            .distinctBy { it.uniqueIdentifier }
+
+    val cachedFinishedExercises: List<UiExercise>
+        get() = cachedWorkout?.sets.orEmpty()
+            .map { UiExercise(
                 uniqueIdentifier = it.exercise.name,
                 name = it.exercise.name,
                 exercise = it.exercise,
@@ -101,15 +116,24 @@ class WorkoutDetailsViewModel @Inject constructor(
             .distinctBy { it.uniqueIdentifier }
 
     val cachedExercises: List<UiExercise>
-        get() = cachedWorkout?.sets.orEmpty()
-            .sortedBy { (it.exercise.positionInWorkout ?: 0) }
-            .map { UiExercise(
-                uniqueIdentifier = it.exercise.name,
-                name = it.exercise.name,
-                exercise = it.exercise,
-                position = it.exercise.positionInWorkout ?: 1
-            ) }
-            .distinctBy { it.uniqueIdentifier }
+        get() = (
+                cachedWorkout?.sets.orEmpty().map { UiExercise(
+                    uniqueIdentifier = it.exercise.name,
+                    name = it.exercise.name,
+                    exercise = it.exercise,
+                    position = it.exercise.positionInWorkout ?: 1
+                ) } +
+                        cachedWorkout?.plan?.exercises.orEmpty()
+                            .filter { workoutInstance?.sets.orEmpty().none { set ->
+                                set.exercise.positionInWorkout == it.positionInWorkout } }
+                            .map { UiExercise(
+                                uniqueIdentifier = it.exercise?.name ?: "${it.exerciseGroup?.id}${it.positionInWorkout}",
+                                name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
+                                exercise = it.exercise,
+                                group = it.exerciseGroup,
+                                position = it.positionInWorkout
+                            ) }
+                ).sortedBy { it.position }.distinctBy { it.uniqueIdentifier }
 
     init {
         val workoutDate = savedStateHandle.get<Long>("workoutId")
@@ -224,6 +248,7 @@ class WorkoutDetailsViewModel @Inject constructor(
             updateWorkoutUseCase.run(updatedWorkout).collect { updated ->
                 if (updated is DataState.Success) {
                     cachedWorkout = updatedWorkout
+                    _workout.value = DataState.Success(updatedWorkout)
                 } else if (updated is DataState.Error) {
                     _workout.value = DataState.Error(updated.e)
                 }
@@ -295,7 +320,7 @@ class WorkoutDetailsViewModel @Inject constructor(
                 0L,
                 exercise = exercise,
                 reps = 0,
-                setNumber = 1
+                setNumber = 0
             )
         ).collect { state ->
             if (state is DataState.Success) {
@@ -416,6 +441,17 @@ class WorkoutDetailsViewModel @Inject constructor(
                     } else if (result is DataState.Error) {
                         Timber.e(result.e)
                     }
+            }
+        }
+    }
+
+    fun editGroup(
+        exerciseGroup: ExerciseGroup,
+        selectedExercises: List<String>,
+    ) = viewModelScope.launch {
+        updateExercisesInGroupUseCase.run(exerciseGroup, selectedExercises).collect { state ->
+            if (state is DataState.Success) {
+                getWorkout()
             }
         }
     }

@@ -70,7 +70,7 @@ fun SetDetailsInputs(
 
     var showOptionsMenu by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier) {
+    Box(modifier = Modifier.padding(bottom = 8.dp)) {
         ExerciseSetDropdownMenu(
             set = set,
             isVisible = showOptionsMenu,
