@@ -54,12 +54,12 @@ class ExerciseSetRepositoryImpl@Inject constructor(
 
         // use expected data, then last set, then whatever is coming in from exerciseSet
         val exerciseSetWithPreviousData = exerciseSet.copy(
-                reps = expectedSet?.reps ?: lastSet?.reps ?: exerciseSet.reps,
-                perceivedExertion = expectedSet?.perceivedExertion ?: lastSet?.perceivedExertion ?: exerciseSet.perceivedExertion,
-                repsInReserve = expectedSet?.rir ?: lastSet?.repsInReserve ?: exerciseSet.repsInReserve,
-                weightInPounds = lastSet?.weightInPounds ?: exerciseSet.weightInPounds,
-                weightInKilograms = lastSet?.weightInKilograms ?: exerciseSet.weightInKilograms,
-                seconds = lastSet?.seconds ?: exerciseSet.seconds,
+                reps = expectedSet?.reps?.takeIf { it > 0 } ?: lastSet?.reps?.takeIf { it > 0 } ?: exerciseSet.reps,
+                perceivedExertion = expectedSet?.perceivedExertion?.takeIf { it > 0 } ?: lastSet?.perceivedExertion?.takeIf { it > 0 } ?: exerciseSet.perceivedExertion,
+                repsInReserve = expectedSet?.rir?.takeIf { it > 0 } ?: lastSet?.repsInReserve?.takeIf { it > 0 } ?: exerciseSet.repsInReserve,
+                weightInPounds = lastSet?.weightInPounds?.takeIf { it > 0 } ?: exerciseSet.weightInPounds,
+                weightInKilograms = lastSet?.weightInKilograms?.takeIf { it > 0 } ?: exerciseSet.weightInKilograms,
+                seconds = lastSet?.seconds?.takeIf { it > 0 } ?: exerciseSet.seconds,
                 setNumber = if (exerciseSet.setNumber == 0)
                         (dbSets.maxOfOrNull { it.setNumber } ?: 0) + 1
                     else

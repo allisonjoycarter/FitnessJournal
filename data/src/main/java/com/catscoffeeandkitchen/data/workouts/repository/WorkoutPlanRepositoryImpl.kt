@@ -156,7 +156,9 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         val dbExerciseGoals = database.exerciseGoalDao().getGoalsInWorkout(
             dbWorkout.wpId,
         )
-        val goalToUpdate = dbExerciseGoals.find { it.goal.positionInWorkout == expectedSet.positionInWorkout }
+        val goalToUpdate = dbExerciseGoals.find { entry ->
+            entry.goal.positionInWorkout == expectedSet.positionInWorkout
+        }
         val movingDown = expectedSet.positionInWorkout < newSetNumber
 
         database.exerciseGoalDao().updateAll(dbExerciseGoals

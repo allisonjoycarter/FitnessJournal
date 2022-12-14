@@ -51,4 +51,10 @@ interface WorkoutRepository {
         position: Int,
         expectedSet: ExpectedSet?
     )
+
+    suspend fun replaceExerciseWithGroup(
+        workoutAddedAt: OffsetDateTime,
+        exercise: Exercise,
+        position: Int,
+    )
 }

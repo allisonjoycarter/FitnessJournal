@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutNameAndNoteSection(
     workoutName: String,
@@ -29,6 +28,8 @@ fun WorkoutNameAndNoteSection(
     updateNote: (String?) -> Unit = {},
 ) {
     var isEditing by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(workoutName) }
+    var note by remember { mutableStateOf(workoutNote) }
 
     Column(
         modifier = Modifier.padding(4.dp),
@@ -40,7 +41,10 @@ fun WorkoutNameAndNoteSection(
             ) {
                 FitnessJournalOutlinedTextField(
                     value = workoutName,
-                    onUpdate = { updateName(it) },
+                    onUpdate = { newName ->
+                        updateName(newName)
+                        name = newName
+                    },
                     singleLine = true,
                     label = "workout name",
                 )
@@ -55,7 +59,10 @@ fun WorkoutNameAndNoteSection(
             }
             FitnessJournalOutlinedTextField(
                 value = workoutNote.orEmpty(),
-                onUpdate = { updateNote(it.ifEmpty { null }) },
+                onUpdate = { newNote ->
+                    updateNote(newNote.ifEmpty { null })
+                    note = newNote.ifEmpty { null }
+                },
                 singleLine = false,
                 label = "note"
             )
@@ -64,7 +71,7 @@ fun WorkoutNameAndNoteSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    workoutName,
+                    name,
                     modifier = Modifier.padding(8.dp),
                     style = MaterialTheme.typography.headlineLarge
                 )
@@ -76,14 +83,14 @@ fun WorkoutNameAndNoteSection(
                 }
             }
 
-            if (workoutNote.isNullOrEmpty()) {
+            if (note.isNullOrEmpty()) {
                 Text(
                     "No Note",
                     modifier = Modifier.padding(horizontal = 12.dp),
                     style = MaterialTheme.typography.bodyMedium)
             } else {
                 Text(
-                    workoutNote,
+                    note ?: "",
                     modifier = Modifier.padding(horizontal = 12.dp),
                     style = MaterialTheme.typography.bodyMedium)
             }

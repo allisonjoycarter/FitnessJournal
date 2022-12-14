@@ -118,18 +118,27 @@ interface ExerciseDao {
     @Transaction
     @Query(
         """
-        SELECT *, 
+        SELECT
+            ExerciseEntity.name as exerciseName,
             COUNT(SetEntity.completedAt) AS amountPerformed,
+            (
+                SELECT COUNT(*)
+                FROM ExerciseEntity 
+                JOIN SetEntity ON SetEntity.exerciseId = ExerciseEntity.eId
+                WHERE name = :name
+                    AND SetEntity.type = "Working"
+                    AND SetEntity.completedAt BETWEEN :startOfWeek AND :currentTime
+            ) as amountCompletedThisWeek,
             MAX(SetEntity.completedAt) as lastCompletedAt,
             MAX(SetEntity.weightInKilograms) as highestWeightInKilograms,
             MAX(SetEntity.weightInPounds) as highestWeightInPounds
         FROM ExerciseEntity
         LEFT JOIN SetEntity ON SetEntity.exerciseId = ExerciseEntity.eId
-        WHERE name IN (:names)
+        WHERE name = :name AND SetEntity.type = "Working"
         GROUP BY ExerciseEntity.eId
     """
     )
-    suspend fun getExercisesWithStatsByName(names: List<String>): List<ExerciseWithStats>
+    suspend fun getExerciseWithStatsByName(name: String, startOfWeek: Long, currentTime: Long): ExerciseWithStats?
 
     @Query(
         """

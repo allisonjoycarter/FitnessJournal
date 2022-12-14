@@ -1,6 +1,5 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Text
@@ -24,12 +23,14 @@ fun PlateCalculator(
     }
 
     val plateHelper = PlateCalculatorHelper()
-    var plates by remember { mutableStateOf(plateHelper.calculatePlates(weight, settings)) }
+    var plates = plateHelper.calculatePlates(weight, settings)
 
     if (showPlateDialog) {
         PlateDialog(
             plateSettings = if (settings.amounts.isEmpty())
-                settings.copy(amounts = plates.amounts)
+                settings.copy(amounts = plates.amounts.mapValues { entry ->
+                    entry.value.takeIf { value -> value >= 0 } ?: 0 }
+                )
             else settings,
             onDismissRequest = { showPlateDialog = false },
             updatePlateSettings = { updatedSettings ->
@@ -44,7 +45,7 @@ fun PlateCalculator(
             verticalAlignment = Alignment.CenterVertically
         ) {
             PlateStackVertical(plates = plates.amounts)
-            FitnessJournalButton(text = "edit plates", onClick = { showPlateDialog = true })
+            FitnessJournalButton(text = "change plates", onClick = { showPlateDialog = true })
         }
 
         if (plates.leftoverWeight > 0) {

@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
+import com.catscoffeeandkitchen.domain.usecases.data.ExportToCsvDataUseCase
 import com.catscoffeeandkitchen.domain.usecases.data.ImportFromCsvDataUseCase
 import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
 import com.catscoffeeandkitchen.domain.util.DataState
@@ -27,6 +28,7 @@ class SettingsViewModel @Inject constructor(
     private val backupDataUseCase: BackupDataUseCase,
     private val restoreDataUseCase: RestoreDataUseCase,
     private val importFromCsvDataUseCase: ImportFromCsvDataUseCase,
+    private val exportToCsvDataUseCase: ExportToCsvDataUseCase,
     private val sharedPrefs: SharedPreferences,
 ): ViewModel() {
 
@@ -41,6 +43,9 @@ class SettingsViewModel @Inject constructor(
 
     private var _importStatus: MutableStateFlow<DataState<Double>> = MutableStateFlow(DataState.NotSent())
     val importStatus: Flow<DataState<Double>> = _importStatus
+
+    private var _exportStatus: MutableStateFlow<DataState<Int>> = MutableStateFlow(DataState.NotSent())
+    val exportStatus: Flow<DataState<Int>> = _exportStatus
 
     private var _lastBackup: MutableStateFlow<OffsetDateTime> = MutableStateFlow(OffsetDateTime.now())
     val lastBackup: Flow<OffsetDateTime> = _lastBackup
@@ -81,6 +86,15 @@ class SettingsViewModel @Inject constructor(
         importFromCsvDataUseCase.run(uri).collect { imported ->
             Timber.d("*** import state $imported")
             _importStatus.value = imported
+        }
+    }
+
+    fun exportToCsv(location: Uri) = viewModelScope.launch {
+        exportToCsvDataUseCase.run(location).collect { state ->
+            if (state is DataState.Error) {
+                Timber.e(state.e)
+            }
+            _exportStatus.value = state
         }
     }
 

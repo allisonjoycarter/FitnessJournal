@@ -20,6 +20,7 @@ interface ExerciseUiActions {
     fun addWarmupSets(workoutAddedAt: OffsetDateTime, exercise: Exercise,
                         sets: List<ExerciseSet>, unit: WeightUnit): Job
 
+    fun replaceWithGroup(exercisePosition: Int, exercise: Exercise): Job
     fun selectExerciseFromGroup(
         group: ExerciseGroup,
         exercise: Exercise,

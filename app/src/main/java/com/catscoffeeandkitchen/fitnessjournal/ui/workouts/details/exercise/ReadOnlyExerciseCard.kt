@@ -1,8 +1,9 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
@@ -42,12 +43,13 @@ fun ReadOnlyExerciseCard(
     var showExtrasDropdown by remember { mutableStateOf(false) }
 
     FitnessJournalCard(
-        modifier = Modifier.padding(horizontal = 8.dp)
+        modifier = Modifier.padding(horizontal = 8.dp),
+        columnItemSpacing = 0.dp,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(exercise.name, style = MaterialTheme.typography.headlineSmall)
+            Text(exercise.name, style = MaterialTheme.typography.titleMedium)
 
             Box(modifier = Modifier.weight(1f)) {
                 IconButton(
@@ -72,53 +74,111 @@ fun ReadOnlyExerciseCard(
         if (expectedSet != null) {
             Text(
                 "${expectedSet.sets}x${expectedSet.minReps} - " +
-                        "${expectedSet.maxReps}reps@${expectedSet.perceivedExertion}PE, " +
-                        "${expectedSet.rir}RIR",
+                        "${expectedSet.maxReps}" +
+                        if (expectedSet.perceivedExertion > 0 || expectedSet.rir > 0)
+                            "${expectedSet.perceivedExertion}PE, ${expectedSet.rir}RIR"
+                        else "",
                 modifier = Modifier.padding(4.dp),
                 style = MaterialTheme.typography.labelLarge
             )
             Divider()
         }
 
-        sets
+        val items = sets
             .filter { it.type == ExerciseSetType.Working }
-            .distinctBy { it.reps }
-            .distinctBy { if (unit == WeightUnit.Pounds) it.weightInPounds else it.weightInKilograms }
-            .forEach { set ->
-            Text(
-                buildAnnotatedString {
-                    withStyle(
-                        style = SpanStyle(fontWeight = FontWeight.Bold)
-                    ) {
-                        append(
-                            "${
-                                sets.count { counting ->
-                                    counting.reps == set.reps &&
-                                            (counting.weightInPounds == set.weightInPounds ||
-                                                    counting.weightInKilograms == set.weightInKilograms)
-                                }
-                            }x${set.reps}"
+            .distinctBy { set ->
+                "${set.reps}${if (unit == WeightUnit.Pounds)
+                    set.weightInPounds else set.weightInKilograms}"
+            }
+
+        Column(
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            items.forEach { set ->
+                Row(
+                    modifier = Modifier.padding(start = 8.dp).width(240.dp)
+                ) {
+                        Text(
+                            "${sets.count { counting ->
+                                counting.reps == set.reps &&
+                                        (counting.weightInPounds == set.weightInPounds ||
+                                                counting.weightInKilograms == set.weightInKilograms)
+                            }}x${set.reps}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        Text(if (unit == WeightUnit.Pounds) "${set.weightInPounds.toCleanString()}lbs" else
+                            "${set.weightInKilograms.toCleanString()}kg",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+
+
+                        if (set.perceivedExertion > 0) {
+                            Text("${set.perceivedExertion}PE",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            Text("", modifier = Modifier.weight(1f))
+                        }
+
+                        if (set.repsInReserve > 0) {
+                            Text("${set.repsInReserve}RIR",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            Text("", modifier = Modifier.weight(1f))
+                        }
                     }
-                    append("reps@")
-
-                    withStyle(
-                        style = SpanStyle(fontWeight = FontWeight.Bold)
-                    ) {
-                        append((if (unit == WeightUnit.Pounds) "${set.weightInPounds.toCleanString()}lbs" else
-                            "${set.weightInKilograms.toCleanString()}kg"))
-                    }
-
-                    append(
-                    ", ${set.perceivedExertion}PE, " +
-                    "${set.repsInReserve}RIR",
-                    )
-
-                },
-                modifier = Modifier.padding(4.dp),
-                style = MaterialTheme.typography.bodyLarge
-            )
+                }
         }
+//
+//        sets
+//            .filter { it.type == ExerciseSetType.Working }
+//            .distinctBy { set ->
+//                "${set.reps}${if (unit == WeightUnit.Pounds)
+//                    set.weightInPounds else set.weightInKilograms}"
+//            }
+//            .forEach { set ->
+//            Text(
+//                buildAnnotatedString {
+//                    withStyle(
+//                        style = SpanStyle(fontWeight = FontWeight.Bold)
+//                    ) {
+//                        append(
+//                            "${
+//                                sets.count { counting ->
+//                                    counting.reps == set.reps &&
+//                                            (counting.weightInPounds == set.weightInPounds ||
+//                                                    counting.weightInKilograms == set.weightInKilograms)
+//                                }
+//                            }x${set.reps}\t\t"
+//                        )
+//                    }
+//
+//                    withStyle(
+//                        style = SpanStyle(fontWeight = FontWeight.Bold)
+//                    ) {
+//                        append((if (unit == WeightUnit.Pounds) "${set.weightInPounds.toCleanString()}lbs" else
+//                            "${set.weightInKilograms.toCleanString()}kg"))
+//                    }
+//
+//                    if (set.perceivedExertion > 0) {
+//                        append("\t${set.perceivedExertion}PE")
+//                    }
+//
+//                    if (set.repsInReserve > 0) {
+//                        append("\t${set.repsInReserve}RIR")
+//                    }
+//
+//                },
+//                modifier = Modifier.padding(4.dp),
+//                style = MaterialTheme.typography.bodyLarge
+//            )
+//        }
 
     }
 }

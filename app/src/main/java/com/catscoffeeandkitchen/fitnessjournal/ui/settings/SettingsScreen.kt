@@ -26,9 +26,9 @@ fun SettingsScreen(
 ) {
     val weightUnit = viewModel.weightUnits.collectAsState(initial = WeightUnit.Pounds)
 
-    val backupStatus = viewModel.backupStatus.collectAsState(DataState.NotSent())
     val restoreStatus = viewModel.restoreStatus.collectAsState(DataState.NotSent())
     val importStatus = viewModel.importStatus.collectAsState(DataState.NotSent())
+    val exportStatus = viewModel.exportStatus.collectAsState(DataState.NotSent())
     val lastBackupDate = viewModel.lastBackup.collectAsState(initial = OffsetDateTime.now())
     val context = LocalContext.current
 
@@ -88,11 +88,15 @@ fun SettingsScreen(
         }
 
         item {
-            ImportFromCsvSection(
+            CsvSection(
                 importStatus = importStatus.value,
                 importFromCsv = { uri ->
                     viewModel.importFromCSV(uri)
                 },
+                exportStatus = exportStatus.value,
+                exportToCsv = { uri ->
+                    viewModel.exportToCsv(uri)
+                }
             )
         }
     }

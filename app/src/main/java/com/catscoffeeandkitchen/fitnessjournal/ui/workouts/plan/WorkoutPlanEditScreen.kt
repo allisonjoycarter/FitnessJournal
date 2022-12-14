@@ -22,6 +22,7 @@ import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.R
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.AddExerciseOrGroupButtons
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
@@ -62,7 +63,6 @@ fun WorkoutPlanEditScreen(
 
                 navController.currentBackStackEntry?.savedStateHandle
                     ?.getLiveData<Long?>("selectedGroup")?.observe(lifecycleOwner) { result ->
-                        Timber.d("*** selectedGroup = $result")
                         result?.let {
                             selectGroup(it)
                             navController.currentBackStackEntry?.savedStateHandle
@@ -243,32 +243,10 @@ fun LazyListScope.exercisePlanItems(
         )
     }
     item {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            FitnessJournalButton(
-                "Add Exercise",
-                onClick = {
-                    uiActions?.addExercise()
-                },
-                icon = {
-                    Icon(painterResource(id = R.drawable.fitness_center), "group")
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            FitnessJournalButton(
-                "Add Group",
-                icon = {
-                    Icon(painterResource(id = R.drawable.dataset), "group")
-                },
-                onClick = {
-                    uiActions?.addExerciseGroup()
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
+        AddExerciseOrGroupButtons(
+            addExercise = { uiActions?.addExercise() },
+            addGroup = { uiActions?.addExerciseGroup() }
+        )
     }
 
     item {

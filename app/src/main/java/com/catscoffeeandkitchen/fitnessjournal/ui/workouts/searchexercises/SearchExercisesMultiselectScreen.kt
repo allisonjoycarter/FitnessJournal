@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.input.pointer.pointerInput
@@ -82,11 +83,11 @@ fun SearchExercisesMultiSelectScreen(
                 onConfirm = { exercise ->
                     if (editingExercise == null) {
                         viewModel.createExercise(exercise) {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(
-                                "exerciseToAdd",
-                                exercise.name
-                            )
-                            navController.popBackStack()
+//                            navController.previousBackStackEntry?.savedStateHandle?.set(
+//                                "exerciseToAdd",
+//                                exercise.name
+//                            )
+//                            navController.popBackStack()
                         }
                     } else {
                         viewModel.updateExercise(exercise, refreshItems = { pagingItems.refresh() })
@@ -115,6 +116,30 @@ fun SearchExercisesMultiSelectScreen(
                         pagingItems.refresh()
                     }
                 )
+
+                if (selectedItems.value.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(vertical = 4.dp, horizontal = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .padding(2.dp)
+                        ) {
+                            Text(
+                                "${selectedItems.value.size} exercises selected",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             items(selectedItems.value) { exercise ->

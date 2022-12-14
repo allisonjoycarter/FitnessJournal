@@ -11,10 +11,12 @@ import com.catscoffeeandkitchen.domain.models.*
 import com.catscoffeeandkitchen.domain.usecases.*
 import com.catscoffeeandkitchen.domain.usecases.exercise.ChooseExerciseInGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.exercise.RemoveExerciseFromWorkoutUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.ReplaceExerciseWithGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.exercise.UpdateExercisePositionUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddExerciseSetUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddMultipleExerciseSetsUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.ReplaceExerciseForSetsUseCase
+import com.catscoffeeandkitchen.domain.usecases.workoutplan.AddSetToWorkoutPlanUseCase
 import com.catscoffeeandkitchen.domain.usecases.workoutplan.CreatePlanFromWorkoutUseCase
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.SharedPrefsConstants.WeightUnitKey
@@ -23,6 +25,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit.Pounds
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseUiActions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
@@ -37,12 +40,14 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val createPlanFromWorkoutUseCase: CreatePlanFromWorkoutUseCase,
     private val updateWorkoutUseCase: UpdateWorkoutUseCase,
     private val addSetUseCase: AddExerciseSetUseCase,
+    private val addSetToWorkoutPlan: AddSetToWorkoutPlanUseCase,
     private val addMultipleSetsUseCase: AddMultipleExerciseSetsUseCase,
     private val removeExerciseUseCase: RemoveExerciseFromWorkoutUseCase,
     private val replaceExerciseForSetsUseCase: ReplaceExerciseForSetsUseCase,
     private val updateSetUseCase: UpdateSetUseCase,
     private val updateExercisePositionUseCase: UpdateExercisePositionUseCase,
     private val chooseExerciseInGroupUseCase: ChooseExerciseInGroupUseCase,
+    private val replaceExerciseWithGroup: ReplaceExerciseWithGroupUseCase,
     private val getWorkoutByAddedDateUseCase: GetWorkoutByAddedDateUseCase,
     private val removeSetUseCase: RemoveSetUseCase,
     private val sharedPreferences: SharedPreferences,
@@ -62,6 +67,49 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val workoutInstance: Workout?
         get() =
             (_workout.value as? DataState.Success)?.data
+
+    val exercises: List<UiExercise>
+        get() = (
+                workoutInstance?.sets.orEmpty().map { UiExercise(
+                        uniqueIdentifier = it.exercise.name,
+                        name = it.exercise.name,
+                        exercise = it.exercise,
+                        position = it.exercise.positionInWorkout ?: 1
+                    ) } +
+                workoutInstance?.plan?.exercises.orEmpty()
+                    .filter { workoutInstance?.sets.orEmpty().none { set ->
+                        set.exercise.positionInWorkout == it.positionInWorkout } }
+                    .map { UiExercise(
+                        uniqueIdentifier = it.exercise?.name ?: "${it.exerciseGroup?.id}${it.positionInWorkout}",
+                        name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
+                        exercise = it.exercise,
+                        group = it.exerciseGroup,
+                        position = it.positionInWorkout
+                    ) }
+                ).sortedBy { it.position }.distinctBy { it.uniqueIdentifier }
+
+    val finishedExercises: List<UiExercise>
+        get() = workoutInstance?.sets.orEmpty()
+            .filter { it.isComplete }
+            .map { UiExercise(
+                uniqueIdentifier = it.exercise.name,
+                name = it.exercise.name,
+                exercise = it.exercise,
+                position = it.exercise.positionInWorkout ?: 1
+            ) }
+            .sortedBy { (it.exercise?.positionInWorkout ?: 0) }
+            .distinctBy { it.uniqueIdentifier }
+
+    val cachedExercises: List<UiExercise>
+        get() = cachedWorkout?.sets.orEmpty()
+            .sortedBy { (it.exercise.positionInWorkout ?: 0) }
+            .map { UiExercise(
+                uniqueIdentifier = it.exercise.name,
+                name = it.exercise.name,
+                exercise = it.exercise,
+                position = it.exercise.positionInWorkout ?: 1
+            ) }
+            .distinctBy { it.uniqueIdentifier }
 
     init {
         val workoutDate = savedStateHandle.get<Long>("workoutId")
@@ -339,6 +387,16 @@ class WorkoutDetailsViewModel @Inject constructor(
         ).collect { state ->
             if (state is DataState.Success) {
                 getWorkout()
+            }
+        }
+    }
+
+    override fun replaceWithGroup(exercisePosition: Int, exercise: Exercise): Job = viewModelScope.launch {
+        workoutInstance?.addedAt?.let { addedAt ->
+            replaceExerciseWithGroup.run(addedAt, exercise, exercisePosition).collect { state ->
+                if (state is DataState.Success) {
+                    getWorkout()
+                }
             }
         }
     }

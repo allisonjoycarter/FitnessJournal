@@ -1,14 +1,15 @@
 package com.catscoffeeandkitchen.data.workouts.repository
 
+import androidx.compose.ui.geometry.Offset
 import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
 import com.catscoffeeandkitchen.data.workouts.models.GroupExerciseXRef
-import com.catscoffeeandkitchen.data.workouts.util.toExercise
-import com.catscoffeeandkitchen.data.workouts.util.toExerciseGroup
 import com.catscoffeeandkitchen.domain.interfaces.ExerciseRepository
 import com.catscoffeeandkitchen.domain.models.*
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
-import com.catscoffeeandkitchen.data.workouts.util.toEntity
-import com.catscoffeeandkitchen.data.workouts.util.toStats
+import com.catscoffeeandkitchen.data.workouts.util.*
+import java.time.DayOfWeek
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 
@@ -58,11 +59,15 @@ class ExerciseRepositoryImpl @Inject constructor(
             )
         })
 
-        val stats = database.exerciseDao().getExercisesWithStatsByName(exerciseNames)
         return group.copy(exercises = exercises.map { exercise ->
-            val relevantStats = stats.firstOrNull { it.exercise.name == exercise.name }
+            val stats = database.exerciseDao().getExerciseWithStatsByName(
+                exercise.name,
+                startOfWeek = OffsetDateTime.now().inUTC().with(DayOfWeek.MONDAY).withHour(0)
+                    .toUTCEpochMilli(),
+                currentTime = OffsetDateTime.now().toUTCEpochMilli()
+            )
             exercise.toExercise(
-                stats = relevantStats?.toStats()
+                stats = stats?.toStats()
             )
         })
     }
@@ -73,19 +78,15 @@ class ExerciseRepositoryImpl @Inject constructor(
 
     override suspend fun getGroups(): List<ExerciseGroup> {
         return database.exerciseGroupDao().getGroups().map { entry ->
-            val stats = database.exerciseDao().getExercisesWithStatsByName(
-                entry.exercises.map { it.name })
-
             entry.group.toExerciseGroup(
                 exercises = entry.exercises.map { exercise ->
-                    val exerciseStats = stats.firstOrNull { it.exercise.name == exercise.name }
+                    val stats = database.exerciseDao().getExerciseWithStatsByName(
+                        exercise.name,
+                        startOfWeek = OffsetDateTime.now().inUTC().with(DayOfWeek.MONDAY).withHour(0).toUTCEpochMilli(),
+                        currentTime = OffsetDateTime.now().toUTCEpochMilli()
+                    )
                     exercise.toExercise(
-                        stats = ExerciseStats(
-                            lastCompletedAt = exerciseStats?.lastCompletedAt,
-                            amountCompleted = exerciseStats?.amountPerformed,
-                            highestWeightInKilograms = exerciseStats?.highestWeightInKilograms,
-                            highestWeightInPounds = exerciseStats?.highestWeightInPounds
-                        )
+                        stats = stats?.toStats()
                     )
                 }
             )

@@ -23,6 +23,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButto
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
+import java.time.Duration
 import java.time.OffsetDateTime
 
 @Composable
@@ -79,14 +80,19 @@ fun ExerciseGroupCard(
                         if (exercise.stats != null) {
                             val completed = exercise.stats?.lastCompletedAt
                             val completedAmount = exercise.stats?.amountCompleted
+                            val completedAmountThisWeek = exercise.stats?.amountCompletedThisWeek
 
                             if (completed != null) {
-                                Text(
-                                    "last completed " + DateUtils.getRelativeTimeSpanString(
+                                val formattedDate = when {
+                                    Duration.between(completed, OffsetDateTime.now()).toDays() < 2 -> DateUtils.getRelativeTimeSpanString(
                                         completed.toInstant().toEpochMilli(),
                                         OffsetDateTime.now().toInstant().toEpochMilli(),
                                         DateUtils.DAY_IN_MILLIS
-                                    ).toString().lowercase(),
+                                    ).toString().lowercase()
+                                    else -> completed.dayOfWeek.name.lowercase()
+                                }
+                                Text(
+                                    "last completed $formattedDate",
                                     style = MaterialTheme.typography.labelMedium
                                 )
                             } else {
@@ -96,9 +102,15 @@ fun ExerciseGroupCard(
                                 )
                             }
 
-                            if (completedAmount != null && completedAmount > 0) {
+                            if (completedAmountThisWeek != null && completedAmountThisWeek > 0) {
+                                Text("$completedAmountThisWeek " +
+                                        "${if (completedAmountThisWeek == 1) "set" else "sets"} " +
+                                        "this week",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            } else if (completedAmount != null && completedAmount > 0) {
                                 Text(
-                                    "Completed ${exercise.stats?.amountCompleted} times",
+                                    "completed ${exercise.stats?.amountCompleted} sets total, none this week",
                                     style = MaterialTheme.typography.labelMedium
                                 )
                             }

@@ -95,6 +95,7 @@ fun ExerciseWithStats.toStats(): ExerciseStats {
     return ExerciseStats(
         lastCompletedAt = this.lastCompletedAt,
         amountCompleted = this.amountPerformed,
+        amountCompletedThisWeek = this.amountCompletedThisWeek,
         highestWeightInKilograms = this.highestWeightInKilograms,
         highestWeightInPounds = this.highestWeightInPounds
     )

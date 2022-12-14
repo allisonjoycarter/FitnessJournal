@@ -17,6 +17,7 @@ fun ExerciseHeaderAndDropdownMenu(
     addWarmupSets: () -> Unit,
     remove: () -> Unit,
     swapExercise: () -> Unit,
+    chooseFromGroup: (() -> Unit)? = null,
     moveUp: (() -> Unit)? = null,
     moveDown: (() -> Unit)? = null,
 ) {
@@ -60,6 +61,16 @@ fun ExerciseHeaderAndDropdownMenu(
                         swapExercise()
                         showExtrasDropdown = false
                     })
+
+                if (chooseFromGroup != null) {
+                    DropdownMenuItem(
+                        leadingIcon = { Icon(painterResource(R.drawable.checklist), "show group") },
+                        text = { Text("choose from group") },
+                        onClick = {
+                            chooseFromGroup()
+                            showExtrasDropdown = false
+                        })
+                }
 
                 if (moveUp != null) {
                     DropdownMenuItem(

@@ -40,7 +40,7 @@ enum class InputToDisplay() {
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun EditSetGrid(
+fun SetDetailsInputs(
     set: ExerciseSet,
     unit: WeightUnit,
     useKeyboard: Boolean = false,
@@ -336,7 +336,7 @@ fun SetInput(
 @Composable
 fun SetItemGridPreview() {
     Card {
-        EditSetGrid(
+        SetDetailsInputs(
             set = ExerciseSet(
                 id = 0L,
                 exercise = Exercise(

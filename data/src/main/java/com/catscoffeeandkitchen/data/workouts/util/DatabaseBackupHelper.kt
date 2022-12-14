@@ -73,7 +73,7 @@ class DatabaseBackupHelper @Inject constructor(
             database.workoutDao().checkpoint(SimpleSQLiteQuery("pragma wal_checkpoint(full)"))
 
             sharedPreferences.edit()
-                .putLong("lastDataBackupAt", OffsetDateTime.now().toInstant().toEpochMilli())
+                .putLong("lastDataBackupAt", OffsetDateTime.now().toUTCEpochMilli())
                 .apply()
         } catch (e: Exception) {
             e.printStackTrace()

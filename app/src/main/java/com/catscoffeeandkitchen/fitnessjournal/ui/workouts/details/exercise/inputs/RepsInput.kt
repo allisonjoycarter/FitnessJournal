@@ -21,7 +21,7 @@ fun RepsInput(
 ) {
     Column(
         modifier = Modifier
-            .height(100.dp)
+            .height(70.dp)
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surface)

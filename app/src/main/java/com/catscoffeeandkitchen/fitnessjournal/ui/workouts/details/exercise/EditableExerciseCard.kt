@@ -9,19 +9,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.bicepCurlSets
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.exerciseBicepCurl
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.expectedSetBicepCurl
-import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates.PlateCalculator
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import java.time.OffsetDateTime
 
 
 @Composable
-fun InProgressExerciseCard(
+fun EditableExerciseCard(
     uiData: ExerciseUiData,
     uiActions: ExerciseUiActions?,
     navigableActions: ExerciseNavigableActions?,
@@ -66,6 +64,9 @@ fun InProgressExerciseCard(
             swapExercise = { navigableActions?.swapExercise(
                 uiData.exercise
             ) },
+            chooseFromGroup = if (!uiData.wasChosenFromGroup) null else ({
+                uiActions?.replaceWithGroup(uiData.exercise.positionInWorkout ?: 1, uiData.exercise)
+            }),
             moveUp = if (uiData.isFirstExercise) null else ({
                 val position = (uiData.exercise.positionInWorkout ?: 2) - 1
                 uiActions?.moveExerciseTo(uiData.exercise, position)
@@ -97,7 +98,7 @@ fun InProgressExerciseCard(
         }
 
         uiData.sets.forEach { completedSet ->
-            EditSetGrid(
+            SetDetailsInputs(
                 completedSet,
                 useKeyboard = uiData.useKeyboard,
                 updateValue = { field ->
@@ -135,7 +136,7 @@ fun InProgressExerciseCard(
 @Preview
 @Composable
 fun CurrentExerciseCardPreview() {
-    InProgressExerciseCard(
+    EditableExerciseCard(
         ExerciseUiData(
             workoutAddedAt = OffsetDateTime.now(),
             exercise = exerciseBicepCurl,

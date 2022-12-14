@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.data.workouts.repository
 
+import android.icu.text.DateFormat.HourCycle
 import androidx.paging.*
 import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
@@ -12,7 +13,9 @@ import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
 import com.catscoffeeandkitchen.domain.models.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.time.DayOfWeek
 import java.time.OffsetDateTime
+import java.time.ZoneId
 
 @OptIn(ExperimentalPagingApi::class)
 class WorkoutRepositoryImpl(
@@ -107,22 +110,19 @@ class WorkoutRepositoryImpl(
                     exercises = plan.goals.map { goal ->
                         val exercise = goal.exerciseId?.let { database.exerciseDao().getExerciseById(it) }
                         val group = goal.exerciseGroupId?.let { database.exerciseGroupDao().getGroupByIdWithExercises(it) }
-                        val relatedStats = database.exerciseDao().getExercisesWithStatsByName(
-                            group?.exercises?.map { it.name }.orEmpty()
-                        )
 
                         goal.toExpectedSet(
                             exercise = exercise?.toExercise(goal.positionInWorkout),
                             group = group?.group?.toExerciseGroup(group.exercises.map { entry ->
-                                val stats = relatedStats.firstOrNull { it.exercise.name == entry.name }
+                                val relatedStats = database.exerciseDao().getExerciseWithStatsByName(
+                                    entry.name,
+                                    startOfWeek = OffsetDateTime.now().inUTC()
+                                        .with(DayOfWeek.MONDAY).withHour(0).toUTCEpochMilli(),
+                                    currentTime = OffsetDateTime.now().toUTCEpochMilli()
+                                )
                                 entry.toExercise(
                                     position = goal.positionInWorkout,
-                                    stats = ExerciseStats(
-                                        stats?.lastCompletedAt,
-                                        stats?.amountPerformed,
-                                        stats?.highestWeightInKilograms,
-                                        stats?.highestWeightInPounds,
-                                    )
+                                    stats = relatedStats?.toStats()
                                 )
                             })
                         )
@@ -159,23 +159,22 @@ class WorkoutRepositoryImpl(
                         val relatedGroup = goal.exerciseGroupId?.let { id ->
                             database.exerciseGroupDao().getGroupByIdWithExercises(id)
                         }
-                        val relatedStats = database.exerciseDao().getExercisesWithStatsByName(
-                            relatedGroup?.exercises?.map { it.name }.orEmpty()
-                        )
 
                         goal.toExpectedSet(
                             exercise = relatedExercise?.toExercise(goal.positionInWorkout),
                             group = relatedGroup?.group?.toExerciseGroup(
                                 relatedGroup.exercises.map { entry ->
-                                    val stats = relatedStats.firstOrNull { it.exercise.name == entry.name }
+                                    val relatedStats = database.exerciseDao().getExerciseWithStatsByName(
+                                        relatedExercise?.name.orEmpty(),
+                                        startOfWeek = OffsetDateTime.now()
+                                            .inUTC()
+                                            .with(DayOfWeek.MONDAY).withHour(0)
+                                            .toUTCEpochMilli(),
+                                        currentTime = OffsetDateTime.now().toUTCEpochMilli()
+                                    )
                                     entry.toExercise(
                                         position = goal.positionInWorkout,
-                                        stats = ExerciseStats(
-                                            stats?.lastCompletedAt,
-                                            stats?.amountPerformed,
-                                            stats?.highestWeightInKilograms,
-                                            stats?.highestWeightInPounds,
-                                        )
+                                        stats = relatedStats?.toStats()
                                     ) }
                             )
                         )
@@ -206,16 +205,18 @@ class WorkoutRepositoryImpl(
                     val tmp = arrayListOf<DbExerciseSet>()
 
                     for (i in 0 until goal.sets) {
+                        val lastSet = database.exerciseSetDao().getLastCompletedSet(goal.exerciseId!!)
+
                         tmp.add(DbExerciseSet(
                             sId = 0L,
-                            exerciseId = goal.exerciseId!!,
+                            exerciseId = goal.exerciseId,
                             workoutId = workoutId,
                             positionId = positionIds[index],
-                            reps = goal.reps,
-                            weightInPounds = goal.weightInPounds,
-                            weightInKilograms = goal.weightInKilograms,
-                            repsInReserve = goal.repsInReserve,
-                            perceivedExertion = goal.perceivedExertion,
+                            reps = goal.reps.takeIf { it > 0 } ?: lastSet?.reps ?: 0,
+                            weightInPounds = goal.weightInPounds.takeIf { it > 0 } ?: lastSet?.weightInPounds ?: 0f,
+                            weightInKilograms = goal.weightInKilograms.takeIf { it > 0 } ?: lastSet?.weightInKilograms ?: 0f,
+                            repsInReserve = goal.repsInReserve.takeIf { it > 0 } ?: lastSet?.repsInReserve ?: 0,
+                            perceivedExertion = goal.perceivedExertion.takeIf { it > 0 } ?: lastSet?.perceivedExertion ?: 0,
                             setNumber = (i + 1),
                             seconds = 0,
                             modifier = goal.modifier,
@@ -438,6 +439,24 @@ class WorkoutRepositoryImpl(
                     ))
                 }
             }
+        }
+    }
+
+    override suspend fun replaceExerciseWithGroup(
+        workoutAddedAt: OffsetDateTime,
+        exercise: Exercise,
+        position: Int
+    ) {
+        val dbWorkout = database.workoutDao().getWorkoutByAddedAt(workoutAddedAt)
+        val dbPositions = database.exercisePositionDao().getPositionsInWorkout(dbWorkout.wId)
+
+        dbPositions.firstOrNull { it.position == position }?.let { pos ->
+            database.exercisePositionDao().update(pos.copy(
+                exerciseId = null,
+            ))
+
+            val dbSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)
+            database.exerciseSetDao().deleteAll(dbSets)
         }
     }
 }

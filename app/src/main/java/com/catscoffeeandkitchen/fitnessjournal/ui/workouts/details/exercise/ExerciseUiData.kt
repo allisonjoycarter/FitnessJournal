@@ -14,5 +14,6 @@ data class ExerciseUiData(
     val unit: WeightUnit,
     val isFirstExercise: Boolean = false,
     val isLastExercise: Boolean = false,
-    val useKeyboard: Boolean = false
+    val useKeyboard: Boolean = false,
+    val wasChosenFromGroup: Boolean = false,
 )

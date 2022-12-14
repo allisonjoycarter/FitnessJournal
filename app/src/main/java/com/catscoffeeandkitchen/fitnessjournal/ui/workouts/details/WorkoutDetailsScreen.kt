@@ -41,7 +41,6 @@ fun WorkoutDetailsScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 refreshWorkout()
 
-                // TODO: edit exercise group
                 navController.currentBackStackEntry?.savedStateHandle
                     ?.getLiveData<String>("exerciseToAdd")?.observe(lifecycleOwner) { result ->
                         val swapping = navController.currentBackStackEntry
@@ -77,6 +76,7 @@ fun WorkoutDetailsScreen(
                     WorkoutDetails(
                         listState,
                         workout = viewModel.cachedWorkout!!,
+                        sets = viewModel.cachedExercises,
                         unit = viewModel.weightUnit.value,
                         workoutActions = null,
                         exerciseUiActions = null,
@@ -90,6 +90,7 @@ fun WorkoutDetailsScreen(
                 WorkoutDetails(
                     listState,
                     workout = workoutState.data,
+                    sets = if (workoutState.data.completedAt != null) viewModel.finishedExercises else viewModel.exercises,
                     unit = viewModel.weightUnit.value,
                     workoutActions = object : WorkoutActions {
                         override fun updateName(name: String) {
@@ -116,6 +117,8 @@ fun WorkoutDetailsScreen(
                         override fun addExercise() {
                             navController.navigate(FitnessJournalScreen.SearchExercisesScreen.route)
                         }
+
+                        override fun addExerciseGroup() { }
 
                         override fun swapExercise(exercise: Exercise) {
                             navController.currentBackStackEntry?.savedStateHandle?.set("swappingExercise", exercise.positionInWorkout)

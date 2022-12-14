@@ -115,14 +115,6 @@ fun ExerciseGroupSummaryCard(
                     )
                 }
 
-                if (exercise.musclesWorked.any()) {
-                    Text(
-                        exercise.musclesWorked.joinToString(),
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 12.dp)
-                    )
-                }
-
                 exercise.stats?.amountCompleted?.let { amount ->
                     Text(
                         if (amount > 0) "completed $amount times" else "never completed",

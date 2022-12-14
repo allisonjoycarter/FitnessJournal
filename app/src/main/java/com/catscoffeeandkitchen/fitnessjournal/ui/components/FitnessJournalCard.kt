@@ -21,6 +21,7 @@ fun FitnessJournalCard(
     backgroundColor: Color? = null,
     columnPaddingHorizontal: Dp = 8.dp,
     columnPaddingVertical: Dp = 0.dp,
+    columnItemSpacing: Dp = 4.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -31,7 +32,7 @@ fun FitnessJournalCard(
             else CardDefaults.cardColors()
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(columnItemSpacing),
             modifier = Modifier.padding(
                 horizontal = columnPaddingHorizontal,
                 vertical = columnPaddingVertical

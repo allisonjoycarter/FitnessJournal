@@ -8,6 +8,7 @@ import java.time.OffsetDateTime
 
 interface ExerciseNavigableActions {
     fun addExercise()
+    fun addExerciseGroup()
     fun swapExercise(exercise: Exercise)
     fun editGroup(group: ExerciseGroup)
 }

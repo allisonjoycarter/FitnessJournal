@@ -75,12 +75,12 @@ fun ExercisePlanCard(
             }
         }
 
-        if (expectedSet.exercise != null) {
+        if (expectedSet.exercise?.musclesWorked != null) {
             Text(
                 expectedSet.exercise?.musclesWorked?.joinToString(", ").orEmpty(),
                 style = MaterialTheme.typography.labelSmall
             )
-        } else {
+        } else if (!expectedSet.exerciseGroup?.exercises.isNullOrEmpty()) {
             Text(
                 expectedSet.exerciseGroup?.exercises?.joinToString { it.name } ?: "Group",
                 style = MaterialTheme.typography.labelSmall
