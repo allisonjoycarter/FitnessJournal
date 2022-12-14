@@ -10,9 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import java.time.OffsetDateTime
@@ -57,9 +60,9 @@ fun SettingsScreen(
                 showAppClosingDialog = restoreStatus.value is DataState.Success,
                 lastBackupDate.value,
                 modifier = modifier,
-                backupData = { file ->
-                    if (file != null) {
-                        viewModel.backupDataToExternalFile(file)
+                backupData = { uri ->
+                    if (uri != null) {
+                        viewModel.backupDataToExternalFile(uri)
                     } else {
                         viewModel.backupData()
                     }},
@@ -98,6 +101,20 @@ fun SettingsScreen(
                     viewModel.exportToCsv(uri)
                 }
             )
+        }
+
+        item {
+            val uriHandler = LocalUriHandler.current
+            val privacyPolicyUrl = stringResource(id = R.string.privacy_policy_url)
+
+            TextButton(
+                modifier = Modifier.padding(start = 8.dp),
+                onClick = {
+                    uriHandler.openUri(privacyPolicyUrl)
+                }
+            ) {
+                Text("View Privacy Policy")
+            }
         }
     }
 }

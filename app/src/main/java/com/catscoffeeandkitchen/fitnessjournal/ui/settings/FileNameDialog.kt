@@ -35,7 +35,7 @@ fun FileNameDialog(
                     label = { Text("backup file name")}
                 )
                 Text(
-                    ".fjbackup",
+                    ".llbackup",
                     style = MaterialTheme.typography.labelSmall,
                     overflow = TextOverflow.Visible,
                     modifier = Modifier
@@ -48,7 +48,7 @@ fun FileNameDialog(
             TextButton(onClick = {
                 val fileToDownloadTo = File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    "${fileName.trim()}.fjbackup"
+                    "${fileName.trim()}.llbackup"
                 )
                 backupData(fileToDownloadTo)
             }) {

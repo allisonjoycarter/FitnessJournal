@@ -32,7 +32,7 @@
                 <data android:scheme="file" />
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.fjbackup" />
+                <data android:pathPattern=".*\\.llbackup" />
             </intent-filter>
 
         </activity>

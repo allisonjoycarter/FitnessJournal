@@ -20,9 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
@@ -30,9 +28,10 @@ import timber.log.Timber
 import java.io.File
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.time.format.FormatStyle
-import kotlin.math.roundToInt
+import kotlin.io.path.createTempFile
+import kotlin.io.path.extension
+import kotlin.io.path.outputStream
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +39,7 @@ import kotlin.math.roundToInt
 fun BackupAndRestoreSection(
     showAppClosingDialog: Boolean,
     lastBackupDate: OffsetDateTime,
-    backupData: (file: File?) -> Unit,
+    backupData: (uri: Uri?) -> Unit,
     restoreData: (file: File?) -> Unit,
     closeApp: () -> Unit,
     modifier: Modifier = Modifier,
@@ -66,16 +65,15 @@ fun BackupAndRestoreSection(
                 val inputStream = context.contentResolver.openInputStream(uri)
                 if (inputStream != null) {
                     val file = createTempFile(
-                        directory = context.cacheDir,
-                        prefix = "backup",
-                        suffix = ".fjbackup"
+                        "backup",
+                        suffix = ".llbackup"
                     )
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         FileUtils.copy(inputStream, file.outputStream())
                     }
                     inputStream.close()
-                    if (file.extension == "fjbackup") {
-                        restoreData(file)
+                    if (file.extension == "llbackup") {
+                        restoreData(file.toFile())
                     } else {
                         Toast.makeText(context, "Not a backup file.", Toast.LENGTH_SHORT).show()
                     }
@@ -97,13 +95,18 @@ fun BackupAndRestoreSection(
         }
     }
 
-    if (showFileNameDialog) {
-        FileNameDialog(
-            onCancel = { showFileNameDialog = false },
-            backupData = { f ->
+    val chooseSaveLocationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("*/*")
+    ) { uri ->
+        if (uri != null) {
+            try {
                 showFileNameDialog = false
-                backupData(f) },
-        )
+                backupData(uri)
+            } catch (ex: Exception) {
+                Toast.makeText(context, "There was a problem getting that location.", Toast.LENGTH_SHORT).show()
+                Timber.e(ex)
+            }
+        }
     }
 
     if (showAppClosingDialog) {
@@ -144,18 +147,23 @@ fun BackupAndRestoreSection(
             "Backup Data",
             fullWidth = true,
             onClick = {
+                val permission = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> "READ_MEDIA_IMAGES"
+                    else -> "WRITE_EXTERNAL_STORAGE"
+                }
+
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
                         context,
-                        "android.permission.WRITE_EXTERNAL_STORAGE"
+                        "android.permission.$permission"
                     ) -> {
-                        showFileNameDialog = true
+                        chooseSaveLocationLauncher.launch("lifting_log_backup.llbackup")
                     }
                     else -> {
                         // You can directly ask for the permission.
                         // The registered ActivityResultCallback gets the result of this request.
                         requestPermissionLauncher.launch(
-                            "android.permission.WRITE_EXTERNAL_STORAGE"
+                            "android.permission.$permission"
                         )
                     }
                 }
@@ -166,10 +174,15 @@ fun BackupAndRestoreSection(
             "Restore Data",
             fullWidth = true,
             onClick = {
+                val permission = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> "READ_MEDIA_IMAGES"
+                    else -> "READ_EXTERNAL_STORAGE"
+                }
+
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(
                         context,
-                        "android.permission.READ_EXTERNAL_STORAGE"
+                        "android.permission.$permission"
                     ) -> {
                         chooseFileLauncher.launch("*/*")
                     }
@@ -177,7 +190,7 @@ fun BackupAndRestoreSection(
                         // You can directly ask for the permission.
                         // The registered ActivityResultCallback gets the result of this request.
                         requestReadPermissionLauncher.launch(
-                            "android.permission.READ_EXTERNAL_STORAGE"
+                            "android.permission.$permission"
                         )
                     }
                 }

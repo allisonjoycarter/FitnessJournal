@@ -2,7 +2,9 @@
 
 package com.catscoffeeandkitchen.fitnessjournal.ui.navigation
 
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -28,6 +31,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list.WorkoutPlan
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises.SearchExercisesMultiSelectScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises.SearchExercisesScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.stats.StatsScreen
+import com.github.mikephil.charting.animation.Easing
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -39,12 +43,18 @@ fun Navigation() {
 
     AnimatedNavHost(
         navController,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         startDestination = FitnessJournalScreen.WorkoutPlansScreen.route,
+        enterTransition = { fadeIn(initialAlpha = .3f, animationSpec = tween(easing = FastOutSlowInEasing)) },
+        exitTransition = { fadeOut(animationSpec = tween(easing = FastOutSlowInEasing)) },
     ) {
         composable(
             FitnessJournalScreen.WorkoutsScreen.route
         ) {
             Scaffold(
+                topBar = { FitnessJournalTopAppBar {
+                    navController.navigate(FitnessJournalScreen.Settings.route)
+                }},
                 bottomBar = {
                     FitnessJournalBottomNavigationBar(navController = navController)
                 },
@@ -67,7 +77,7 @@ fun Navigation() {
         }
 
         composable(
-            FitnessJournalScreen.WorkoutPlansScreen.route
+            FitnessJournalScreen.WorkoutPlansScreen.route,
         ) {
             Scaffold(
                 topBar = { FitnessJournalTopAppBar {
@@ -141,6 +151,9 @@ fun Navigation() {
             FitnessJournalScreen.StatsScreen.route
         ) {
             Scaffold(
+                topBar = { FitnessJournalTopAppBar {
+                    navController.navigate(FitnessJournalScreen.Settings.route)
+                }},
                 bottomBar = {
                     FitnessJournalBottomNavigationBar(navController = navController)
                 }
@@ -223,6 +236,9 @@ fun Navigation() {
             val selectable = backStackEntry.arguments?.getBoolean("selectable")
 
             Scaffold(
+                topBar = if (selectable == true) ({}) else ({ FitnessJournalTopAppBar {
+                    navController.navigate(FitnessJournalScreen.Settings.route)
+                }}),
                 bottomBar = if (selectable == true) ({}) else ({
                     FitnessJournalBottomNavigationBar(
                         navController = navController

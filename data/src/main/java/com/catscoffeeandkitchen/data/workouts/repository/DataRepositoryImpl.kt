@@ -44,8 +44,16 @@ class DataRepositoryImpl @Inject constructor(
     )
 
 
-    override fun backupData(file: File?) {
-        backupHelper.backup(file)
+    override fun backupData(uri: Uri?) {
+        if (uri == null) {
+            backupHelper.backup(null)
+        } else {
+            val fileDescriptor = context.contentResolver.openFileDescriptor(uri, "w") ?: return
+
+            backupHelper.backup(FileOutputStream(fileDescriptor.fileDescriptor))
+
+            fileDescriptor.close()
+        }
     }
 
     override fun restoreData(file: File?) {

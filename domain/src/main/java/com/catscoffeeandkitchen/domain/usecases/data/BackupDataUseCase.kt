@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.domain.usecases.data
 
+import android.net.Uri
 import com.catscoffeeandkitchen.domain.interfaces.DataRepository
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
 import com.catscoffeeandkitchen.domain.models.Exercise
@@ -17,9 +18,9 @@ class BackupDataUseCase @Inject constructor(
     private val repository: DataRepository
 ) {
 
-    fun run(file: File? = null): Flow<DataState<Boolean>> = flow {
+    fun run(uri: Uri? = null): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
-        repository.backupData(file)
+        repository.backupData(uri)
         emit(DataState.Success(true))
     }
         .catch { ex ->

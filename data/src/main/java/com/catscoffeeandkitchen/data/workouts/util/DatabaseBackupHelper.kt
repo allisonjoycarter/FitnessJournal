@@ -24,16 +24,16 @@ class DatabaseBackupHelper @Inject constructor(
         const val MAX_BACKUP_FILES = 5
     }
 
-    fun backup(file: File?) {
+    fun backup(outputStream: FileOutputStream?) {
         val databaseName = database.openHelper.databaseName
 
         database.workoutDao().checkpoint(SimpleSQLiteQuery("pragma wal_checkpoint(full)"))
         val dbFile: File = context.getDatabasePath(databaseName)
 
-        val saveFile = when (file) {
+        val saveFileOutputStream = when (outputStream) {
             null -> {
                 val saveDir = File(context.filesDir.path, "backup")
-                val fileName: String = FILE_NAME + System.currentTimeMillis().toString() + ".fjbackup"
+                val fileName: String = FILE_NAME + System.currentTimeMillis().toString() + ".llbackup"
 
                 if (!saveDir.exists()) {
                     saveDir.mkdirs()
@@ -43,33 +43,31 @@ class DatabaseBackupHelper @Inject constructor(
                         val fileToDelete = saveDir.listFiles()
                             ?.minByOrNull { it.name
                                 .replace(FILE_NAME, "")
-                                .replace(".fjbackup", "")
+                                .replace(".llbackup", "")
                                 .toLongOrNull() ?: 0L }
                         fileToDelete?.delete()
                     }
                 }
 
-                File(saveDir, fileName)
+                val backupFile = File(saveDir, fileName)
+                if (!backupFile.exists()) { backupFile.createNewFile() }
+
+                backupFile.outputStream()
             }
-            else -> file
+            else -> outputStream
         }
 
         try {
-            if (!saveFile.exists()) {
-                saveFile.createNewFile()
-            }
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                copy(dbFile.inputStream(), saveFile.outputStream())
+                copy(dbFile.inputStream(), saveFileOutputStream)
             } else {
                 dbFile.inputStream().use { input ->
-                    saveFile.outputStream().use { output ->
+                    saveFileOutputStream.use { output ->
                         input.copyTo(output)
                     }
                 }
             }
 
-            Timber.d("*** Wrote backup to save file: ${saveFile.absolutePath}")
             database.workoutDao().checkpoint(SimpleSQLiteQuery("pragma wal_checkpoint(full)"))
 
             sharedPreferences.edit()

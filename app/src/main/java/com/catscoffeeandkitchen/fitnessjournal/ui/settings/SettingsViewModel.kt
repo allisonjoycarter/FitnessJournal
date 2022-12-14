@@ -70,8 +70,8 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun backupDataToExternalFile(file: File) = viewModelScope.launch {
-        backupDataUseCase.run(file).collect { state ->
+    fun backupDataToExternalFile(uri: Uri) = viewModelScope.launch {
+        backupDataUseCase.run(uri).collect { state ->
             _backupStatus.value = state
         }
     }
