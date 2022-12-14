@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <meta-data android:name="android.max_aspect" android:value="2.4" />
+
     <application
         android:name=".FitnessJournalApplication"
         android:allowBackup="true"
@@ -16,6 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FitnessJournal">
         <activity
+            android:maxAspectRatio="2.4"
+            android:screenOrientation="sensorPortrait"
             android:name=".MainActivity"
             android:exported="true">
 
