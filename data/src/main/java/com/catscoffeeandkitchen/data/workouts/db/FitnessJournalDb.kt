@@ -21,7 +21,7 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionIn
         RemoteKeys::class,
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class FitnessJournalDb: RoomDatabase() {
