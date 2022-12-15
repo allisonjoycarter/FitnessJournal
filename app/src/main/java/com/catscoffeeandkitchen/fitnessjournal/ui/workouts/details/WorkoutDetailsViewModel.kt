@@ -349,6 +349,7 @@ class WorkoutDetailsViewModel @Inject constructor(
         updateSetUseCase.run(
             set = set,
         ).collect { state ->
+            Timber.d("*** updated set $state")
             if (state is DataState.Success) {
                 (workout.value as? DataState.Success)?.data?.let { wkot ->
                     _workout.value = DataState.Loading()
@@ -363,6 +364,12 @@ class WorkoutDetailsViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    override fun updateSets(sets: List<ExerciseSet>) = viewModelScope.launch {
+        sets.forEach { set ->
+            updateSet(set)
         }
     }
 

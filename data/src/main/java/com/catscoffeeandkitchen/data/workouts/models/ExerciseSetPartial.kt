@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.data.workouts.models
 
+import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import java.time.OffsetDateTime
 
@@ -12,5 +13,6 @@ data class ExerciseSetPartial(
     val perceivedExertion: Int = 0,
     val setNumber: Int = 1,
     val completedAt: OffsetDateTime? = null,
-    val type: ExerciseSetType = ExerciseSetType.Working
+    val type: ExerciseSetType = ExerciseSetType.Working,
+    val modifier: ExerciseSetModifier? = null,
 )

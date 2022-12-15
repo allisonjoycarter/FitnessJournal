@@ -33,7 +33,8 @@ class ExerciseSetRepositoryImpl@Inject constructor(
                 perceivedExertion = exerciseSet.perceivedExertion,
                 setNumber = exerciseSet.setNumber,
                 type = exerciseSet.type,
-                completedAt = exerciseSet.completedAt
+                completedAt = exerciseSet.completedAt,
+                modifier = exerciseSet.modifier,
             )
         )
 

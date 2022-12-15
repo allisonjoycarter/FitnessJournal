@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import timber.log.Timber
@@ -148,6 +149,19 @@ fun ColumnScope.exerciseMenuItems(
                 dismissMenu()
             })
     }
+
+    val hasSingleLimbModifier = uiData.sets.all { it.modifier == ExerciseSetModifier.SingleLimb }
+    DropdownMenuItem(
+        leadingIcon = { Icon(Icons.Default.Check, "mark as single arm/leg") },
+        text = { Text("${if (hasSingleLimbModifier) "un" else ""}mark as single arm/leg") },
+        onClick = {
+            if (hasSingleLimbModifier) {
+                uiActions?.updateSets(uiData.sets.map { it.copy(modifier = null) })
+            } else {
+                uiActions?.updateSets(uiData.sets.map { it.copy(modifier = ExerciseSetModifier.SingleLimb) })
+            }
+            dismissMenu()
+        })
 
     if (!uiData.isFirstExercise) {
         DropdownMenuItem(

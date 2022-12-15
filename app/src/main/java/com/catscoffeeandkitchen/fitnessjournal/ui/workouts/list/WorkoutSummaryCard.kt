@@ -50,10 +50,6 @@ fun WorkoutSummaryCard(
             Surface(
                 modifier = Modifier.padding(vertical = 4.dp),
                 shape = SuggestionChipDefaults.shape,
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.onBackground.copy(alpha = .5f),
-                ),
                 tonalElevation = 4.dp
             ) {
                 Text(

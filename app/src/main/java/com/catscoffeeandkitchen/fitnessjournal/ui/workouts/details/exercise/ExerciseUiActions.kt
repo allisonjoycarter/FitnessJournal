@@ -16,6 +16,7 @@ interface ExerciseUiActions {
 
     fun removeSet(setId: Long): Job
     fun updateSet(set: ExerciseSet): Job
+    fun updateSets(sets: List<ExerciseSet>): Job
     fun addExerciseSet(exerciseName: String, workoutAddedAt: OffsetDateTime): Job
     fun addWarmupSets(workoutAddedAt: OffsetDateTime, exercise: Exercise,
                         sets: List<ExerciseSet>, unit: WeightUnit): Job

@@ -1,6 +1,7 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
+import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import java.time.OffsetDateTime
 
@@ -11,6 +12,7 @@ sealed class ExerciseSetField(val value: Any?) {
     class RepsInReserve(value: Int): ExerciseSetField(value)
     class PerceivedExertion(value: Int): ExerciseSetField(value)
     class Type(value: ExerciseSetType): ExerciseSetField(value)
+    class ExerciseModifier(value: ExerciseSetModifier?): ExerciseSetField(value)
     class Complete(value: OffsetDateTime?): ExerciseSetField(value)
 
     fun copySetWithNewValue(
@@ -41,6 +43,7 @@ sealed class ExerciseSetField(val value: Any?) {
             is Complete -> {
                 set.copy(completedAt = value as OffsetDateTime?, isComplete = value != null)
             }
+            is ExerciseModifier -> set.copy(modifier = value as ExerciseSetModifier?)
             is Type -> set.copy(type = value as ExerciseSetType)
         }
     }
