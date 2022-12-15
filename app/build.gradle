@@ -75,6 +75,9 @@ dependencies {
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
 
+    // Lifecycle Service for timer
+    implementation "androidx.lifecycle:lifecycle-service:2.5.1"
+
     // Material Design
     implementation 'com.google.android.material:material:1.6.0'
     implementation "androidx.compose.material:material:$compose_version"

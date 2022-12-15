@@ -59,7 +59,7 @@ fun ExerciseGroupSummaryCard(
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             Text(group.name.ifEmpty { "Group" },
-                style = MaterialTheme.typography.headlineSmall)
+                style = MaterialTheme.typography.titleLarge)
 
             Box(modifier = Modifier.weight(1f)) {
                 IconButton(
@@ -99,18 +99,18 @@ fun ExerciseGroupSummaryCard(
         group.exercises.forEach { exercise ->
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 Text(
                     exercise.name,
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 exercise.stats?.lastCompletedAt?.let { lastCompleted ->
                     Text(
                         "last completed ${lastCompleted.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 }

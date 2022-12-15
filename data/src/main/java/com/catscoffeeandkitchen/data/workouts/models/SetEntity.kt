@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
+import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import java.time.OffsetDateTime
@@ -29,11 +30,18 @@ import java.time.OffsetDateTime
             parentColumns = ["epId"],
             childColumns = ["positionId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ExerciseGroupEntity::class,
+            parentColumns = ["gId"],
+            childColumns = ["groupId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         Index("exerciseId"),
         Index("workoutId"),
+        Index("positionId"),
     ]
 )
 data class SetEntity(
@@ -41,6 +49,7 @@ data class SetEntity(
     val exerciseId: Long,
     val workoutId: Long,
     val positionId: Long,
+    val groupId: Long? = null,
     val reps: Int = 1,
     val weightInPounds: Float = 0f,
     val weightInKilograms: Float = 0f,

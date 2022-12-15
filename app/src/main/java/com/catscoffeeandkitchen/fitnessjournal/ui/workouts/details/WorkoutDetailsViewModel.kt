@@ -1,5 +1,7 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
+import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -20,13 +22,15 @@ import com.catscoffeeandkitchen.domain.usecases.exerciseset.ReplaceExerciseForSe
 import com.catscoffeeandkitchen.domain.usecases.workoutplan.AddSetToWorkoutPlanUseCase
 import com.catscoffeeandkitchen.domain.usecases.workoutplan.CreatePlanFromWorkoutUseCase
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.services.TimerService
+import com.catscoffeeandkitchen.fitnessjournal.services.TimerServiceConnection
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.SharedPrefsConstants.WeightUnitKey
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit.Pounds
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseUiActions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
@@ -53,9 +57,12 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val getWorkoutByAddedDateUseCase: GetWorkoutByAddedDateUseCase,
     private val removeSetUseCase: RemoveSetUseCase,
     private val sharedPreferences: SharedPreferences,
+    val timerServiceConnection: TimerServiceConnection,
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext val context: Context,
 ): ViewModel(), ExerciseUiActions {
     var cachedWorkout: Workout? = null
+    private var connectionIsBound = false
 
     private var _workout: MutableState<DataState<Workout>> = mutableStateOf(DataState.NotSent())
     val workout: State<DataState<Workout>> = _workout
@@ -73,18 +80,21 @@ class WorkoutDetailsViewModel @Inject constructor(
     val exercises: List<UiExercise>
         get() = (
                 workoutInstance?.sets.orEmpty().map { UiExercise(
-                        uniqueIdentifier = "${it.exercise.name}${it.exercise.positionInWorkout}",
+                        uniqueIdentifier = "${it.exercise.name}-${it.exercise.positionInWorkout}",
                         name = it.exercise.name,
                         exercise = it.exercise,
                         position = it.exercise.positionInWorkout ?: 1
                     ) } +
                 workoutInstance?.plan?.exercises.orEmpty()
-                    .filter { workoutInstance?.sets.orEmpty().none { set ->
-                        set.exercise.positionInWorkout == it.positionInWorkout } }
+                    .filterNot { expected ->
+                        workoutInstance?.sets.orEmpty().any { set ->
+                            set.chosenFromGroup != null &&
+                                set.chosenFromGroup == expected.exerciseGroup?.id }
+                    }
                     .map { UiExercise(
                         uniqueIdentifier = if (it.exercise != null)
-                            "${it.exercise?.name}${it.exercise?.positionInWorkout}" else
-                                "${it.exerciseGroup?.id}${it.positionInWorkout}",
+                            "${it.exercise?.name}-${it.positionInWorkout}" else
+                                "group${it.exerciseGroup?.id}-${it.positionInWorkout}",
                         name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
                         exercise = it.exercise,
                         group = it.exerciseGroup,
@@ -458,5 +468,22 @@ class WorkoutDetailsViewModel @Inject constructor(
 
     private fun round(value: Double, nearest: Int): Int {
         return (value / nearest).roundToInt() * nearest
+    }
+
+    fun startTimerNotification(seconds: Long) {
+        timerServiceConnection.timerService?.cancelTimer()
+
+        val intent = Intent(context, TimerService::class.java)
+        intent.putExtra("seconds", seconds)
+
+        context.startForegroundService(intent)
+        connectionIsBound = context.bindService(intent, timerServiceConnection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onCleared() {
+        if (connectionIsBound) {
+            context.unbindService(timerServiceConnection)
+        }
+        super.onCleared()
     }
 }

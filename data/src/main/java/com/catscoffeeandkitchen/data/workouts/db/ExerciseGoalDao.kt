@@ -3,12 +3,10 @@ package com.catscoffeeandkitchen.data.workouts.db
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
-import com.catscoffeeandkitchen.data.workouts.models.GoalAndExerciseCombined
 
 @Dao
 interface ExerciseGoalDao {
@@ -47,5 +45,12 @@ interface ExerciseGoalDao {
         FROM ExerciseGoal
         WHERE ExerciseGoal.workoutPlanId = :wId
     """)
-    fun getGoalsInWorkout(wId: Long): List<ExerciseGoalWithExercises>
+    fun getGoalsInWorkoutWithExercises(wId: Long): List<ExerciseGoalWithExercises>
+
+    @Query("""
+        SELECT *
+        FROM ExerciseGoal
+        WHERE ExerciseGoal.workoutPlanId = :wId
+    """)
+    fun getGoalsInWorkout(wId: Long): List<ExerciseGoal>
 }

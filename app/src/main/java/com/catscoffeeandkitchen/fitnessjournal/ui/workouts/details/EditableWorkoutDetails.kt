@@ -1,8 +1,9 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,17 +12,22 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.Workout
 import com.catscoffeeandkitchen.fitnessjournal.R
-import com.catscoffeeandkitchen.fitnessjournal.ui.components.AddExerciseOrGroupButtons
+import com.catscoffeeandkitchen.fitnessjournal.services.TimerServiceConnection
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.*
+import timber.log.Timber
 import java.time.OffsetDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -34,8 +40,29 @@ fun WorkoutDetails(
     workoutActions: WorkoutActions?,
     exerciseUiActions: ExerciseUiActions?,
     exerciseNavigableActions: ExerciseNavigableActions?,
+    startTimer: (Long) -> Unit = {},
+    connection: TimerServiceConnection? = null,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
     var useKeyboard by rememberSaveable { mutableStateOf(false) }
+    var timeSinceKey by remember { mutableStateOf(null as OffsetDateTime?) }
+    var selectedTimer by remember { mutableStateOf(30L) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val seconds = connection?.timerService?.seconds
+                if (seconds != null) {
+                    timeSinceKey = OffsetDateTime.now().minusSeconds(seconds - 1)
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LazyColumn(
         state = scrollState,
@@ -48,6 +75,41 @@ fun WorkoutDetails(
                 updateName = { workoutActions?.updateName(it) },
                 updateNote = { workoutActions?.updateNote(it) },
             )
+        }
+
+        if (workout.completedAt == null) {
+            stickyHeader {
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                        .padding(8.dp)
+                ) {
+                    Text("Start a Timer", style = MaterialTheme.typography.titleSmall)
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    ) {
+                        listOf(30L, 60L, 90L).forEach { amount ->
+                            TimerButton(amount) { time ->
+                                timeSinceKey = time
+                                selectedTimer = amount
+
+                                startTimer(amount)
+                            }
+                        }
+                    }
+
+                    timeSinceKey?.let { time ->
+                        TimeSinceText(
+                            startTime = time,
+                            totalTime = connection?.timerService?.startingSeconds ?: selectedTimer,
+                        )
+                    }
+                }
+            }
         }
 
         if (workout.completedAt != null) {
@@ -99,7 +161,8 @@ fun WorkoutDetails(
                 ),
                 uiActions = exerciseUiActions,
                 navigableActions = exerciseNavigableActions,
-                modifier = Modifier.animateItemPlacement()
+                onCompleteSet = { },
+                modifier = Modifier.animateItemPlacement(),
             )
         }
 
@@ -141,6 +204,20 @@ fun WorkoutDetails(
                     .padding(bottom = 12.dp))
             }
         }
+    }
+}
+
+@Composable
+fun TimerButton(
+    seconds: Long,
+    onClick: (OffsetDateTime) -> Unit
+) {
+    TextButton(
+        onClick = {
+            onClick(OffsetDateTime.now().minusSeconds(seconds - 1))
+        }
+    ) {
+        Text("${seconds}s")
     }
 }
 

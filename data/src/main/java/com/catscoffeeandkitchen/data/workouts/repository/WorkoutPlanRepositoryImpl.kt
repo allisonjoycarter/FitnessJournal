@@ -150,42 +150,32 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     override suspend fun updateExpectedSetPosition(
         workout: WorkoutPlan,
         expectedSet: ExpectedSet,
-        newSetNumber: Int
+        newPosition: Int
     ) {
         val dbWorkout = database.workoutPlanDao().getWorkoutPlanByAddedAt(workout.addedAt)
         val dbExerciseGoals = database.exerciseGoalDao().getGoalsInWorkout(
             dbWorkout.wpId,
         )
         val goalToUpdate = dbExerciseGoals.find { entry ->
-            entry.goal.positionInWorkout == expectedSet.positionInWorkout
+            entry.positionInWorkout == expectedSet.positionInWorkout
         }
-        val movingDown = expectedSet.positionInWorkout < newSetNumber
-
-        database.exerciseGoalDao().updateAll(dbExerciseGoals
-            .filter { goal ->
-                if (movingDown) {
-                    goal.goal.positionInWorkout >= newSetNumber
-                } else {
-                    goal.goal.positionInWorkout <= newSetNumber
-                }
-            }
-            .map { item ->
-                val updatedSetNumber = if (movingDown)
-                    item.goal.positionInWorkout - 1
-                else
-                    item.goal.positionInWorkout + 1
-                item.goal.copy(
-                    positionInWorkout = updatedSetNumber
+        val movingUp = expectedSet.positionInWorkout > newPosition
+        dbExerciseGoals.find { it.positionInWorkout == newPosition }?.let { item ->
+            database.exerciseGoalDao().update(
+                item.copy(
+                    positionInWorkout = if (movingUp) (item.positionInWorkout + 1)
+                                        else (item.positionInWorkout - 1)
                 )
-        })
+            )
+        }
 
         goalToUpdate?.let { goal ->
             database.exerciseGoalDao().update(
                 expectedSet.toGoal(
-                    goal.exercise.eId,
-                    goal.goal.exerciseGroupId,
+                    goal.exerciseId,
+                    goal.exerciseGroupId,
                     dbWorkout.wpId,
-                ).copy(positionInWorkout = newSetNumber)
+                ).copy(positionInWorkout = newPosition)
             )
         }
     }

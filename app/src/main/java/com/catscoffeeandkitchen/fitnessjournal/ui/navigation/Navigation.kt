@@ -44,7 +44,7 @@ fun Navigation() {
     AnimatedNavHost(
         navController,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        startDestination = FitnessJournalScreen.WorkoutPlansScreen.route,
+        startDestination = FitnessJournalScreen.WorkoutsScreen.route,
         enterTransition = { fadeIn(initialAlpha = .3f, animationSpec = tween(easing = FastOutSlowInEasing)) },
         exitTransition = { fadeOut(animationSpec = tween(easing = FastOutSlowInEasing)) },
     ) {
@@ -297,6 +297,13 @@ fun FitnessJournalBottomNavigationBar(
 ) {
     NavigationBar() {
         NavigationBarItem(
+            selected = navController.currentDestination?.route?.contains("workout") == true,
+            onClick = { navController.navigate(FitnessJournalScreen.WorkoutsScreen.route) },
+            icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutsScreen) },
+            label = { Text("Workouts") }
+        )
+
+        NavigationBarItem(
             selected = navController.currentDestination?.route?.contains("plans") == true,
             onClick = { navController.navigate(FitnessJournalScreen.WorkoutPlansScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutPlansScreen) },
@@ -308,13 +315,6 @@ fun FitnessJournalBottomNavigationBar(
             onClick = { navController.navigate(FitnessJournalScreen.ExerciseGroupScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.ExerciseGroupScreen) },
             label = { Text("Groups") },
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route?.contains("workout") == true,
-            onClick = { navController.navigate(FitnessJournalScreen.WorkoutsScreen.route) },
-            icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutsScreen) },
-            label = { Text("Workouts") }
         )
 
         NavigationBarItem(

@@ -15,17 +15,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
-import androidx.navigation.NavOptionsBuilder
-import androidx.navigation.Navigator
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.ExerciseNavigableActions
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Composable
 fun WorkoutDetailsScreen(
@@ -146,6 +140,8 @@ fun WorkoutDetailsScreen(
                                         "selectedExercises=${group.exercises.joinToString("|") { it.name }}")
                         }
                     },
+                    startTimer = { viewModel.startTimerNotification(it) },
+                    connection = viewModel.timerServiceConnection
                 )
             }
             is DataState.Error -> {

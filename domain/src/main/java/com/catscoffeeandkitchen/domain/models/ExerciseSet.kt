@@ -4,6 +4,7 @@ import java.time.OffsetDateTime
 
 data class ExerciseSet(
     val id: Long,
+    val chosenFromGroup: Long? = null,
     val reps: Int,
     val exercise: Exercise,
     val setNumber: Int = 1,

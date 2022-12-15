@@ -56,6 +56,19 @@ fun SettingsScreen(
         }
 
         item {
+            CsvSection(
+                importStatus = importStatus.value,
+                importFromCsv = { uri ->
+                    viewModel.importFromCSV(uri)
+                },
+                exportStatus = exportStatus.value,
+                exportToCsv = { uri ->
+                    viewModel.exportToCsv(uri)
+                }
+            )
+        }
+
+        item {
             BackupAndRestoreSection(
                 showAppClosingDialog = restoreStatus.value is DataState.Success,
                 lastBackupDate.value,
@@ -86,19 +99,6 @@ fun SettingsScreen(
                         context.finishAndRemoveTask()
                     }
                     exitProcess(0)
-                }
-            )
-        }
-
-        item {
-            CsvSection(
-                importStatus = importStatus.value,
-                importFromCsv = { uri ->
-                    viewModel.importFromCSV(uri)
-                },
-                exportStatus = exportStatus.value,
-                exportToCsv = { uri ->
-                    viewModel.exportToCsv(uri)
                 }
             )
         }

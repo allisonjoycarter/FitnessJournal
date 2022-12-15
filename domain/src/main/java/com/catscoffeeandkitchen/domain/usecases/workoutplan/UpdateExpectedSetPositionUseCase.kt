@@ -18,6 +18,7 @@ class UpdateExpectedSetPositionUseCase @Inject constructor(
 ) {
     fun run(workout: WorkoutPlan, expectedSet: ExpectedSet, newSetNumber: Int): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
+        Timber.d("*** updating expected set at ${expectedSet.positionInWorkout} to $newSetNumber")
         repository.updateExpectedSetPosition(workout, expectedSet, newSetNumber)
         emit(DataState.Success(true))
     }

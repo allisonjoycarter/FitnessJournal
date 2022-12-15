@@ -108,13 +108,18 @@ class WorkoutPlanViewModel @Inject constructor(
     }
 
     fun addExercise(name: String) = viewModelScope.launch {
-        Timber.d("*** adding exercise $name to plan")
         val workout = (workoutPlan.value as? DataState.Success)?.data
         if (workout != null) {
             addSetToWorkoutPlan.run(
                 workout,
                 ExpectedSet(
-                    exercise = Exercise(name, musclesWorked = emptyList())
+                    exercise = Exercise(name, musclesWorked = emptyList()),
+                    sets = 3,
+                    reps = 10,
+                    minReps = 8,
+                    maxReps = 12,
+                    perceivedExertion = 8,
+                    rir = 2
                 )
             ).collect { result ->
                 if (result is DataState.Success) {

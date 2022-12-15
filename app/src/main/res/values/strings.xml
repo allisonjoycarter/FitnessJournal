@@ -12,4 +12,5 @@
     <string name="search_exercises_multi">Select Multiple Exercises</string>
     <string name="exercise_groups">Exercise Groups</string>
     <string name="privacy_policy_url">https://www.freeprivacypolicy.com/live/76250092-c861-411f-a986-98a055fd8b24</string>
+    <string name="x_seconds_on_timer">%1ss on timer</string>
 </resources>

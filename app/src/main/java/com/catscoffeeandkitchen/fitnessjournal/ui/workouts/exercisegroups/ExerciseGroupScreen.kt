@@ -4,6 +4,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -17,6 +18,7 @@ import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
@@ -28,10 +30,14 @@ fun ExerciseGroupScreen(
     viewModel: ExerciseGroupsViewModel = hiltViewModel(),
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     ) {
-    val groupState = viewModel.exerciseGroups.collectAsState()
+    val localScope = rememberCoroutineScope()
     val createGroup by rememberUpdatedState(viewModel::createGroup)
     val updateGroupExercises by rememberUpdatedState(viewModel::updateGroupExercises)
+
     var editingGroup by remember { mutableStateOf(null as ExerciseGroup?) }
+
+    val groupState = viewModel.exerciseGroups.collectAsState()
+    val listState = rememberLazyListState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -42,8 +48,18 @@ fun ExerciseGroupScreen(
                         if (editingGroup == null) {
                             // create a group from those exercises
                             createGroup(result.split("|"))
+                            (groupState.value as? DataState.Success)?.data?.let { groups ->
+                                localScope.launch {
+                                    listState.scrollToItem(groups.lastIndex)
+                                }
+                            }
                         } else {
                             updateGroupExercises(editingGroup!!, result.split("|"))
+                            (groupState.value as? DataState.Success)?.data?.let { groups ->
+                                localScope.launch {
+                                    listState.scrollToItem(groups.indexOfFirst { it.id == editingGroup?.id })
+                                }
+                            }
                             editingGroup = null
                         }
 
@@ -65,7 +81,7 @@ fun ExerciseGroupScreen(
             state.e.localizedMessage?.let { Text(it, modifier = modifier) }
         }
         is DataState.Success -> {
-            LazyColumn(modifier = modifier) {
+            LazyColumn(state = listState, modifier = modifier) {
                 items(state.data) { group ->
                     ExerciseGroupSummaryCard(
                         group,

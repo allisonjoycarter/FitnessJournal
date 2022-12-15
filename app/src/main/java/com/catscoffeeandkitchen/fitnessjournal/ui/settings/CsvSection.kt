@@ -257,5 +257,11 @@ fun CsvSection(
                 }
             }
         )
+
+
+        Text(
+            "Importing and exporting CSVs will only affect workouts, NOT plans or exercise groups.",
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }

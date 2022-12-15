@@ -16,11 +16,10 @@ import java.time.OffsetDateTime
 fun ColumnScope.editableExerciseCardContent(
     uiData: ExerciseUiData,
     uiActions: ExerciseUiActions?,
-    onCompleteExercise: () -> Unit,
+    onCompleteExercise: (OffsetDateTime?) -> Unit,
     onFocus: () -> Unit = {},
     onBlur: () -> Unit = {},
 ) {
-    var timeSinceKey by remember { mutableStateOf(uiData.sets.lastOrNull { it.completedAt != null }?.completedAt) }
 
     if (uiData.expectedSet != null) {
         Text(
@@ -31,37 +30,13 @@ fun ColumnScope.editableExerciseCardContent(
         )
     }
 
-    AnimatedVisibility(
-        uiData.sets.any { it.isComplete } && timeSinceKey != null,
-        enter = expandVertically(),
-        exit = shrinkVertically()
-    ) {
-        TimeSinceText(
-            startTime = timeSinceKey ?: OffsetDateTime.now(),
-            modifier = Modifier.padding(2.dp)
-        )
-    }
-
     uiData.sets.forEach { completedSet ->
         SetDetailsInputs(
             completedSet,
             useKeyboard = uiData.useKeyboard,
             updateValue = { field ->
                 if (field is ExerciseSetField.Complete) {
-                    timeSinceKey = if (field.value != null) {
-                        field.value as OffsetDateTime
-                    } else {
-                        uiData.sets.sortedBy { it.setNumber }.lastOrNull { set ->
-                            set.setNumber != completedSet.setNumber &&
-                                    set.completedAt != null }?.completedAt
-                    }
-
-                    val unfinishedSets = uiData.sets.filter { !it.isComplete }
-                    if (unfinishedSets.size == 1 &&
-                        unfinishedSets.all { it.setNumber == completedSet.setNumber } &&
-                        field.value != null) {
-                        onCompleteExercise()
-                    }
+                    onCompleteExercise(field.value as OffsetDateTime?)
                 }
                 uiActions?.updateSet(
                     field.copySetWithNewValue(completedSet)

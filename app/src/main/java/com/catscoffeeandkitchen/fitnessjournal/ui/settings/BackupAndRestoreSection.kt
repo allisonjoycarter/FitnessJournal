@@ -47,16 +47,6 @@ fun BackupAndRestoreSection(
     val context = LocalContext.current
     var showFileNameDialog by remember { mutableStateOf(false) }
 
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            showFileNameDialog = true
-        } else {
-            backupData(null)
-        }
-    }
-
     val chooseFileLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -102,10 +92,21 @@ fun BackupAndRestoreSection(
             try {
                 showFileNameDialog = false
                 backupData(uri)
+                Toast.makeText(context, "Successfully backed up data.", Toast.LENGTH_SHORT).show()
             } catch (ex: Exception) {
                 Toast.makeText(context, "There was a problem getting that location.", Toast.LENGTH_SHORT).show()
                 Timber.e(ex)
             }
+        }
+    }
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            chooseSaveLocationLauncher.launch("lifting_log_backup")
+        } else {
+            backupData(null)
         }
     }
 
@@ -199,7 +200,7 @@ fun BackupAndRestoreSection(
         )
 
         Text(
-            "last backup: ${lastBackupDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))}",
+            "This method of backup will keep all your plans and exercise groups.",
             style = MaterialTheme.typography.labelLarge
         )
     }

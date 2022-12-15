@@ -402,12 +402,13 @@ class WorkoutRepositoryImpl(
                                 sId = 0L,
                                 exerciseId = dbExercise.eId,
                                 workoutId = dbWorkout.wId,
+                                groupId = group.id,
                                 positionId = pos.epId,
                                 reps = expectedSet.reps,
                                 repsInReserve = expectedSet.rir,
                                 perceivedExertion = expectedSet.perceivedExertion,
                                 type = expectedSet.type,
-                                setNumber = number
+                                setNumber = number,
                             )
                         }
                     )
@@ -416,6 +417,7 @@ class WorkoutRepositoryImpl(
                         sId = 0L,
                         exerciseId = dbExercise.eId,
                         workoutId = dbWorkout.wId,
+                        groupId = group.id,
                         positionId = pos.epId
                     ))
                 }

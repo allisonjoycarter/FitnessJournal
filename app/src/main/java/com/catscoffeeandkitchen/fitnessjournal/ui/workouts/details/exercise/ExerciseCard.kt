@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import timber.log.Timber
+import java.time.OffsetDateTime
 
 enum class ExerciseCardState {
     Group,
@@ -26,6 +27,7 @@ fun ExerciseCard(
     uiData: ExerciseUiData,
     uiActions: ExerciseUiActions?,
     navigableActions: ExerciseNavigableActions?,
+    onCompleteSet: (OffsetDateTime?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var editingExercise by remember { mutableStateOf(null as String?) }
@@ -65,7 +67,6 @@ fun ExerciseCard(
                             uiActions?.selectExerciseFromGroup(
                                 uiData.group, selected, uiData.position, uiData.expectedSet)
                             uiData.exercise = selected
-//                            cardState = ExerciseCardState.Exercise
                         })
                     }
                 }
@@ -78,8 +79,8 @@ fun ExerciseCard(
                 editableExerciseCardContent(
                     uiData,
                     uiActions,
-                    onCompleteExercise = {
-//                        cardState = ExerciseCardState.FinishedExercise
+                    onCompleteExercise = { time ->
+                        onCompleteSet(time)
                     }
                 )
             }
@@ -89,7 +90,6 @@ fun ExerciseCard(
                         text = { Text("edit") },
                         onClick = {
                             editingExercise = uiData.exercise?.name
-//                            cardState = ExerciseCardState.Exercise
                             dismissMenu()
                         })
                 }

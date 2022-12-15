@@ -3,16 +3,17 @@ package com.catscoffeeandkitchen.data.workouts.util
 import com.catscoffeeandkitchen.data.workouts.models.CombinedSetData
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity
 import com.catscoffeeandkitchen.domain.models.*
-import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity as DbExerciseGroup
 
-fun DbExerciseSet.toExerciseSet(exercise: Exercise): ExerciseSet {
+fun SetEntity.toExerciseSet(exercise: Exercise): ExerciseSet {
     return ExerciseSet(
         this.sId,
         exercise = exercise,
+        chosenFromGroup = this.groupId,
         reps = this.reps,
         weightInKilograms = this.weightInKilograms,
         weightInPounds = this.weightInPounds,
@@ -39,26 +40,6 @@ fun ExerciseGoal.toExpectedSet(exercise: Exercise? = null, group: ExerciseGroup?
         rir = this.repsInReserve,
         positionInWorkout = this.positionInWorkout,
         note = this.note,
-    )
-}
-
-fun CombinedSetData.toExerciseSet(): ExerciseSet {
-    return ExerciseSet(
-        this.sId,
-        exercise = Exercise(
-            name = this.name,
-            musclesWorked = this.musclesWorked,
-            category = this.category,
-            thumbnailUrl = this.thumbnailUrl,
-            equipmentType = this.equipmentType,
-        ),
-        reps = this.reps,
-        weightInKilograms = this.weightInKilograms,
-        weightInPounds = this.weightInPounds,
-        setNumber = this.setNumber,
-        isComplete = this.completedAt != null,
-        completedAt = this.completedAt,
-        type = this.type
     )
 }
 

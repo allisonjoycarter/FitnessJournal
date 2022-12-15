@@ -2,9 +2,9 @@ package com.catscoffeeandkitchen.data.workouts.util
 
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithStats
 import com.catscoffeeandkitchen.domain.models.*
-import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity as DbWorkoutPlan
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
@@ -13,13 +13,15 @@ import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
 fun ExerciseSet.toDbExerciseSet(
     exerciseId: Long,
     workoutId: Long,
-    positionId: Long
-): DbExerciseSet {
-    return DbExerciseSet(
+    positionId: Long,
+    chosenFromGroup: Long? = null
+): SetEntity {
+    return SetEntity(
         this.id,
         exerciseId = exerciseId,
         workoutId = workoutId,
         positionId = positionId,
+        groupId = chosenFromGroup,
         reps = this.reps,
         weightInKilograms = this.weightInKilograms,
         weightInPounds = this.weightInPounds,
