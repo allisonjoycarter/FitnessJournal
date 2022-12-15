@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs
 
+import android.util.DisplayMetrics
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
@@ -23,6 +27,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import timber.log.Timber
 import java.time.*
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
@@ -35,6 +40,10 @@ fun MPExerciseLineGraph(
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
     val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
     val tertiaryColor = MaterialTheme.colorScheme.tertiary.toArgb()
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
+
     AndroidView(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,7 +74,7 @@ fun MPExerciseLineGraph(
             xAxis.textColor = Color.White.toArgb()
             xAxis.setDrawAxisLine(false)
             xAxis.setDrawGridLines(true)
-            xAxis.granularity = 1f
+            xAxis.granularity = .5f
             xAxis.setDrawLabels(true)
             xAxis.setCenterAxisLabels(false)
 
@@ -74,7 +83,7 @@ fun MPExerciseLineGraph(
                     val date = unitToUse.addTo(earliest, value.toLong())
                     return if (date == null) "" else
                         date
-                            .toZonedDateTime()
+                            .atZoneSameInstant(ZoneId.of("UTC"))
                             .withZoneSameInstant(ZoneId.systemDefault())
                             .format(dateFormatter)
                 }
@@ -105,17 +114,30 @@ fun MPExerciseLineGraph(
                 val groupedEntries = entries.groupBy { it.date.format(groupingFormatter) }
                 Timber.d("*** entries = ${entries.size}, grouped into ${groupedEntries.size}, groups = ${groupedEntries.map { it.key }.joinToString(", ")}")
                 groupedEntries.forEach { entry ->
-                    val value = earliest.until(entry.value.first().date, unitToUse)
+                    val set = entry.value.maxByOrNull { it.repMax }!!
+
+                    val earliestInUnit = when (unitToUse) {
+                        ChronoUnit.HOURS -> earliest.withMinute(1)
+                        ChronoUnit.MONTHS -> earliest.withDayOfMonth(1)
+                        else -> earliest.withMonth(1).withDayOfMonth(1)
+                    }
+
+                    val setDateInUnit = when (unitToUse) {
+                        ChronoUnit.HOURS -> set.date.withMinute(1)
+                        ChronoUnit.MONTHS -> set.date.withDayOfMonth(1)
+                        else -> set.date.withMonth(1).withDayOfMonth(1)
+                    }
+
                     repMaxEntries.add(
                         Entry(
-                            value.toFloat(),
+                            earliestInUnit.until(setDateInUnit, unitToUse).toFloat(),
                             entry.value.maxOfOrNull { it.repMax } ?: 0f
                         )
                     )
 
                     repEntries.add(
                         Entry(
-                            value.toFloat(),
+                            earliestInUnit.until(setDateInUnit, unitToUse).toFloat(),
                             entry.value.maxOfOrNull { it.reps } ?: 0f
                         )
                     )
@@ -151,6 +173,7 @@ fun MPExerciseLineGraph(
                 setCircleColor(primaryColor)
                 circleHoleColor = primaryColor
             }
+            Timber.d("*** rep max entries = ${repMaxEntries.size}")
 
             val highestWeightDataSet = LineDataSet(highestWeightEntries, "Highest Weight Lifted").apply {
                 color = tertiaryColor
@@ -218,6 +241,18 @@ fun MPExerciseLineGraph(
                 else -> LineData(repMaxDataSet, highestWeightDataSet, trendDataSet)
             }
             chart.data = lineData
+
+            Timber.d("*** best sets = ${entries.joinToString("\n") { "${it.bestSet.reps}x ${it.bestSet.weightInPounds}lbs, completedAt ${it.bestSet.completedAt?.format(
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME)}" }}")
+            val markerView = SetMarkerView(
+                context,
+                (screenWidth * .9).roundToInt(),
+                unitToUse,
+                earliest,
+                entries.map { it.bestSet }
+            )
+            chart.marker = markerView
+
             chart.legend.apply {
                 textColor = Color.White.toArgb()
             }

@@ -33,12 +33,12 @@ fun StatsScreen(
     val selectedExercise = viewModel.selectedExerciseRequest.collectAsState(initial = null as String?)
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 8.dp),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Text("Stats", style = MaterialTheme.typography.headlineLarge)
+            Text("Stats", style = MaterialTheme.typography.titleLarge)
         }
 
         when (val state = viewModel.sets.value) {
@@ -61,6 +61,7 @@ fun StatsScreen(
                             }
                             StatsData(
                                 date = grouping.key ?: OffsetDateTime.now(),
+                                bestSet = sortedGroup.first(),
                                 repMax = (sortedGroup.first().weightInPounds / (1.0278 - 0.0278 * sortedGroup.first().reps)).toFloat(),
                                 totalVolume = grouping.value.maxOf { it.weightInPounds * it.reps },
                                 highestWeight = grouping.value.maxOf { it.weightInPounds },
@@ -75,6 +76,15 @@ fun StatsScreen(
                     } else {
                         Text("No sets to graph.")
                     }
+                }
+
+                item {
+                    // TODO: stats recap
+                    // 12 month change
+                    // 6 month change
+                    // 3 month change
+
+                    // average sets performed per week
                 }
             }
         }
