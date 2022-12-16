@@ -1,5 +1,9 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
+import android.app.Activity
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -12,10 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -27,7 +34,6 @@ import com.catscoffeeandkitchen.fitnessjournal.services.TimerServiceConnection
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.*
-import timber.log.Timber
 import java.time.OffsetDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,6 +50,8 @@ fun WorkoutDetails(
     connection: TimerServiceConnection? = null,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
+    val context = LocalContext.current
+    var showNotificationRationaleDialog by remember { mutableStateOf(false) }
     var useKeyboard by rememberSaveable { mutableStateOf(false) }
     var timeSinceKey by remember { mutableStateOf(null as OffsetDateTime?) }
     var selectedTimer by remember { mutableStateOf(30L) }
@@ -63,6 +71,32 @@ fun WorkoutDetails(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        startTimer(selectedTimer)
+    }
+
+    if (showNotificationRationaleDialog) {
+        AlertDialog(
+            modifier = Modifier.fillMaxWidth(.7f),
+            onDismissRequest = { showNotificationRationaleDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showNotificationRationaleDialog = false
+                        permissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
+                    }
+                ) { Text("OK") }
+            },
+            text = {
+                Text("Notifications are only shown to" +
+                        " display seconds left on a timer you start.")
+            }
+        )
+    }
+
 
     LazyColumn(
         state = scrollState,
@@ -92,12 +126,29 @@ fun WorkoutDetails(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        listOf(30L, 60L, 90L).forEach { amount ->
+                        listOf(30L, 60L, 90L, 120L).forEach { amount ->
                             TimerButton(amount) { time ->
                                 timeSinceKey = time
                                 selectedTimer = amount
 
-                                startTimer(amount)
+                                when {
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        "android.permission.POST_NOTIFICATIONS"
+                                    ) == PackageManager.PERMISSION_GRANTED -> {
+                                        startTimer(amount)
+                                    }
+                                    shouldShowRequestPermissionRationale(
+                                        context as Activity,
+                                        "android.permission.POST_NOTIFICATIONS"
+                                    ) -> {
+                                        showNotificationRationaleDialog = true
+                                    }
+                                    else -> {
+                                        permissionLauncher
+                                            .launch("android.permission.POST_NOTIFICATIONS")
+                                    }
+                                }
                             }
                         }
                     }

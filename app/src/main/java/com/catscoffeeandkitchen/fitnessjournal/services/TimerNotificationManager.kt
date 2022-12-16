@@ -16,7 +16,7 @@ class TimerNotificationManager {
         const val notificationId = 1
     }
 
-    fun createNotification(context: Context, seconds: Long): Notification {
+    fun createNotification(context: Context, seconds: Long, startingSeconds: Long): Notification {
         val notificationIntent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
@@ -24,13 +24,15 @@ class TimerNotificationManager {
             .setContentTitle(context.getString(R.string.x_seconds_on_timer, seconds.toString()))
             .setSmallIcon(R.drawable.fitness_center)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationManager.IMPORTANCE_MIN)
+            .setSilent(seconds > 0)
+            .setProgress(startingSeconds.toInt(), seconds.toInt(), false)
+            .setPriority(NotificationManager.IMPORTANCE_LOW)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
     }
 
-    fun updateNotification(context: Context, seconds: Long) {
-        val notification = createNotification(context, seconds)
+    fun updateNotification(context: Context, seconds: Long, startingSeconds: Long) {
+        val notification = createNotification(context, seconds, startingSeconds)
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(TimerService.notificationId, notification)

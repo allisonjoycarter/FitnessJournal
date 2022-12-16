@@ -57,7 +57,7 @@ class TimerService: LifecycleService() {
         startingSeconds = secondsInIntent
 
         val notificationManager = TimerNotificationManager()
-        val notification = notificationManager.createNotification(this, secondsInIntent)
+        val notification = notificationManager.createNotification(this, secondsInIntent, secondsInIntent)
 
         startForeground(notificationId, notification)
 
@@ -69,7 +69,7 @@ class TimerService: LifecycleService() {
                     val remaining = secondsInIntent - sec
                     seconds = remaining
 
-                    notificationManager.updateNotification(this@TimerService, remaining)
+                    notificationManager.updateNotification(this@TimerService, remaining, secondsInIntent)
                     if (remaining == 0L) {
                         val player = MediaPlayer.create(this@TimerService, R.raw.alert_chime)
                         player.start()
