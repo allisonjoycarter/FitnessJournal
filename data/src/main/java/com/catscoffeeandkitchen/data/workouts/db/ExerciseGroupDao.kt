@@ -42,6 +42,7 @@ interface ExerciseGroupDao {
     )
     suspend fun getGroupByIdWithExercises(id: Long): GroupWithExercises
 
+    @Transaction
     @Query(
         """
         SELECT *

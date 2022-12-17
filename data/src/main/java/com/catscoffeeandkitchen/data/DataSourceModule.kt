@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
 import com.catscoffeeandkitchen.data.workouts.db.*
+import com.catscoffeeandkitchen.data.workouts.db.migrations.Migration_3_4
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
 import com.catscoffeeandkitchen.data.workouts.repository.*
 import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
@@ -19,6 +20,8 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import timber.log.Timber
+import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -80,7 +83,9 @@ class DataSourceModule {
     //region Database DAO
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext appContext: Context): FitnessJournalDb {
+    fun provideAppDatabase(
+        @ApplicationContext appContext: Context,
+    ): FitnessJournalDb {
         return Room.databaseBuilder(
             appContext,
             FitnessJournalDb::class.java,
@@ -90,6 +95,7 @@ class DataSourceModule {
 //            .setQueryCallback({ sqlQuery, bindArgs ->
 //                Timber.d("+++\n SQL Query $sqlQuery \n SQL Args $bindArgs \n +++")
 //            }, Executors.newSingleThreadExecutor())
+            .addMigrations(Migration_3_4)
             .build()
     }
 

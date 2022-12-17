@@ -1,10 +1,6 @@
 package com.catscoffeeandkitchen.data.workouts.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
 
@@ -40,6 +36,7 @@ interface ExerciseGoalDao {
     )
     fun getExerciseGoalByWorkoutAndSetNumber(workoutId: Long, position: Int): ExerciseGoal
 
+    @Transaction
     @Query("""
         SELECT *
         FROM ExerciseGoal
@@ -53,4 +50,12 @@ interface ExerciseGoalDao {
         WHERE ExerciseGoal.workoutPlanId = :wId
     """)
     fun getGoalsInWorkout(wId: Long): List<ExerciseGoal>
+
+
+    @Query("""
+        SELECT *
+        FROM ExerciseGoal
+        WHERE ExerciseGoal.workoutPlanId = :planId AND ExerciseGoal.positionId = :positionId
+    """)
+    suspend fun getByPlanAndPositionId(planId: Long, positionId: Long): ExerciseGoal
 }

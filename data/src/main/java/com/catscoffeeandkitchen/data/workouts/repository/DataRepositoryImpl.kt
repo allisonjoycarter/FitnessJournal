@@ -4,7 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
-import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
 import com.catscoffeeandkitchen.data.workouts.util.populateWeight
 import com.catscoffeeandkitchen.domain.interfaces.DataRepository
@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -215,7 +214,7 @@ class DataRepositoryImpl @Inject constructor(
                                     database.exerciseDao().update(exerciseToUpdate)
                                 }
 
-                                val positionToInsert = ExercisePositionInWorkout(
+                                val positionToInsert = ExercisePositionEntity(
                                     epId = 0L,
                                     exerciseId = exerciseId,
                                     workoutId = workoutId,
@@ -403,7 +402,7 @@ class DataRepositoryImpl @Inject constructor(
                                 }
 
                                 val positions = database.exercisePositionDao().getPositionsInWorkout(workoutId)
-                                val positionToInsert = ExercisePositionInWorkout(
+                                val positionToInsert = ExercisePositionEntity(
                                     epId = 0L,
                                     exerciseId = exerciseId,
                                     workoutId = workoutId,

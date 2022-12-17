@@ -28,7 +28,7 @@ fun SetEntity.toExerciseSet(exercise: Exercise): ExerciseSet {
     )
 }
 
-fun ExerciseGoal.toExpectedSet(exercise: Exercise? = null, group: ExerciseGroup? = null): ExpectedSet {
+fun ExerciseGoal.toExpectedSet(position: Int, exercise: Exercise? = null, group: ExerciseGroup? = null): ExpectedSet {
     return ExpectedSet(
         exercise = exercise,
         exerciseGroup = group,
@@ -38,12 +38,12 @@ fun ExerciseGoal.toExpectedSet(exercise: Exercise? = null, group: ExerciseGroup?
         minReps = this.repRangeMin,
         perceivedExertion = this.perceivedExertion,
         rir = this.repsInReserve,
-        positionInWorkout = this.positionInWorkout,
+        positionInWorkout = position,
         note = this.note,
     )
 }
 
-fun ExerciseGoalWithExercises.toExpectedSet(exercise: Exercise): ExpectedSet {
+fun ExerciseGoalWithExercises.toExpectedSet(position: Int, exercise: Exercise): ExpectedSet {
     return ExpectedSet(
         exercise = exercise,
         reps = this.goal.reps,
@@ -52,7 +52,7 @@ fun ExerciseGoalWithExercises.toExpectedSet(exercise: Exercise): ExpectedSet {
         minReps = this.goal.repRangeMin,
         perceivedExertion = this.goal.perceivedExertion,
         rir = this.goal.repsInReserve,
-        positionInWorkout = this.goal.positionInWorkout,
+        positionInWorkout = position,
         note = this.goal.note,
         type = this.goal.type,
     )

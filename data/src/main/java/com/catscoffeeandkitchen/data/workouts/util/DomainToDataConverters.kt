@@ -66,13 +66,13 @@ fun Workout.toDbWorkout(id: Long = 0L, planId: Long? = null): DbWorkout {
     )
 }
 
-fun ExpectedSet.toGoal(exerciseId: Long?, groupId: Long?, planId: Long): ExerciseGoal {
+fun ExpectedSet.toGoal(exerciseId: Long?, groupId: Long?, planId: Long, positionId: Long): ExerciseGoal {
     return ExerciseGoal(
         exerciseId = exerciseId,
         exerciseGroupId = groupId,
         workoutPlanId = planId,
+        positionId = positionId,
         sets = this.sets,
-        positionInWorkout = this.positionInWorkout,
         reps = this.reps,
         repRangeMax = this.maxReps,
         repRangeMin = this.minReps,

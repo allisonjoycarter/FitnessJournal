@@ -13,7 +13,6 @@ interface ExerciseUiActions {
     fun swapExercise(exercisePosition: Int, exercise: Exercise): Job
     fun removeExercise(exercise: Exercise): Job
     fun moveExerciseTo(exercise: Exercise, newPosition: Int): Job
-
     fun removeSet(setId: Long): Job
     fun updateSet(set: ExerciseSet): Job
     fun updateSets(sets: List<ExerciseSet>): Job

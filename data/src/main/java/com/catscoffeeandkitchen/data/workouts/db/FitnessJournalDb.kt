@@ -1,13 +1,11 @@
 package com.catscoffeeandkitchen.data.workouts.db
 
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room.*
+import androidx.room.migration.AutoMigrationSpec
 import com.catscoffeeandkitchen.data.util.Converters
 import com.catscoffeeandkitchen.data.workouts.models.*
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
-import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 
 @Database(
     entities = [
@@ -15,16 +13,17 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionIn
         ExerciseGroupEntity::class,
         GroupExerciseXRef::class,
         SetEntity::class,
-        ExercisePositionInWorkout::class,
+        ExercisePositionEntity::class,
         WorkoutEntity::class,
         WorkoutPlanEntity::class,
         ExerciseGoal::class,
         RemoteKeys::class,
     ],
-    version = 2,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3, spec = FitnessJournalDb.Migration2To3::class)
     ]
 )
 @TypeConverters(Converters::class)
@@ -37,4 +36,10 @@ abstract class FitnessJournalDb: RoomDatabase() {
     abstract fun exerciseGroupDao(): ExerciseGroupDao
     abstract fun exercisePositionDao(): ExercisePositionDao
     abstract fun remoteKeysDao(): RemoteKeysDao
+
+    @RenameTable(
+        fromTableName = "ExercisePositionInWorkout",
+        toTableName = "ExercisePositionEntity"
+    )
+    class Migration2To3: AutoMigrationSpec
 }

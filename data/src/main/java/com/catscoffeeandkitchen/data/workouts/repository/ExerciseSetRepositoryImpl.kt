@@ -1,7 +1,7 @@
 package com.catscoffeeandkitchen.data.workouts.repository
 
 import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
-import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseSetPartial
 import com.catscoffeeandkitchen.data.workouts.util.populateWeight
 import com.catscoffeeandkitchen.data.workouts.util.toDbExerciseSet
@@ -75,7 +75,7 @@ class ExerciseSetRepositoryImpl@Inject constructor(
         if (positionId == null) {
             val allPositions = database.exercisePositionDao().getPositionsInWorkout(dbWorkout.wId)
             positionId = database.exercisePositionDao().insert(
-                ExercisePositionInWorkout(
+                ExercisePositionEntity(
                 epId = 0L,
                 exerciseId = dbExercise.eId,
                 workoutId = dbWorkout.wId,

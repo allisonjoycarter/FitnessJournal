@@ -24,8 +24,6 @@ fun ColumnScope.editableExerciseCardContent(
     onFocus: () -> Unit = {},
     onBlur: () -> Unit = {},
 ) {
-    var exerciseModifier by remember { mutableStateOf(uiData.sets.firstOrNull { it.modifier != null }?.modifier) }
-
     if (uiData.expectedSet != null) {
         Text(
             "${uiData.expectedSet.sets}x${uiData.expectedSet.minReps} - " +

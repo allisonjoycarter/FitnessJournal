@@ -3,7 +3,7 @@ package com.catscoffeeandkitchen.data.workouts.models
 import androidx.room.Embedded
 import androidx.room.Relation
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
-import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 
 data class SetWithExerciseAndPosition(
     @Embedded var set: SetEntity,
@@ -15,9 +15,9 @@ data class SetWithExerciseAndPosition(
     val exercise: ExerciseEntity,
     @Relation(
         parentColumn = "positionId",
-        entity = ExercisePositionInWorkout::class,
+        entity = ExercisePositionEntity::class,
         entityColumn = "epId",
     )
-    val positionInWorkout: ExercisePositionInWorkout
+    val positionInWorkout: ExercisePositionEntity
 )
 

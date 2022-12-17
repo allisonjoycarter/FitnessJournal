@@ -5,8 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
-import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionInWorkout
-import com.catscoffeeandkitchen.domain.models.ExerciseGroup
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 import java.time.OffsetDateTime
@@ -26,7 +25,7 @@ import java.time.OffsetDateTime
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = ExercisePositionInWorkout::class,
+            entity = ExercisePositionEntity::class,
             parentColumns = ["epId"],
             childColumns = ["positionId"],
             onDelete = ForeignKey.CASCADE
@@ -42,6 +41,7 @@ import java.time.OffsetDateTime
         Index("exerciseId"),
         Index("workoutId"),
         Index("positionId"),
+        Index("groupId"),
     ]
 )
 data class SetEntity(

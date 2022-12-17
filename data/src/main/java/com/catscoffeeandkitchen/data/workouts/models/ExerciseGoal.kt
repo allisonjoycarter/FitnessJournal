@@ -4,11 +4,12 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
 
 @Entity(
-    primaryKeys = ["workoutPlanId", "positionInWorkout"],
+    primaryKeys = ["workoutPlanId", "positionId"],
     foreignKeys = [
         ForeignKey(
             entity = ExerciseEntity::class,
@@ -27,16 +28,25 @@ import com.catscoffeeandkitchen.domain.models.ExerciseSetType
             parentColumns = ["wpId"],
             childColumns = ["workoutPlanId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ExercisePositionEntity::class,
+            parentColumns = ["epId"],
+            childColumns = ["positionId"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
         Index(value = ["workoutPlanId"]),
+        Index(value = ["exerciseGroupId"]),
+        Index(value = ["exerciseId"]),
     ]
 )
 data class ExerciseGoal(
     val exerciseId: Long? = null,
     val exerciseGroupId: Long? = null,
     val workoutPlanId: Long,
+    val positionId: Long,
     val sets: Int,
     val positionInWorkout: Int = 0,
     val reps: Int,

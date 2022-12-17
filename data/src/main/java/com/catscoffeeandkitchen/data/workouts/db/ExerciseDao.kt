@@ -34,9 +34,9 @@ interface ExerciseDao {
 
     @Query(
         """
-        SELECT *, COUNT(ExercisePositionInWorkout.exerciseId) AS amountPerformed
+        SELECT *, COUNT(ExercisePositionEntity.exerciseId) AS amountPerformed
         FROM ExerciseEntity
-        LEFT JOIN ExercisePositionInWorkout ON ExercisePositionInWorkout.exerciseId = ExerciseEntity.eId
+        LEFT JOIN ExercisePositionEntity ON ExercisePositionEntity.exerciseId = ExerciseEntity.eId
         GROUP BY ExerciseEntity.eId
         HAVING amountPerformed > 0
         ORDER BY amountPerformed DESC
@@ -45,7 +45,6 @@ interface ExerciseDao {
     suspend fun getAllExercises(): List<ExerciseWithPositionCount>
 
     @Transaction
-    @RewriteQueriesToDropUnusedColumns
     @Query(
         """
         SELECT *, COUNT(SetEntity.sId) AS NumberOfSets

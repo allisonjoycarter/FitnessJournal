@@ -2,6 +2,7 @@ package com.catscoffeeandkitchen.data.workouts.models
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
 
@@ -20,6 +21,10 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity
             onDelete = ForeignKey.CASCADE
         ),
     ],
+    indices = [
+        Index("exerciseId"),
+        Index("groupId"),
+    ]
 )
 data class GroupExerciseXRef(
     @PrimaryKey(autoGenerate = true) val egxrId: Long,

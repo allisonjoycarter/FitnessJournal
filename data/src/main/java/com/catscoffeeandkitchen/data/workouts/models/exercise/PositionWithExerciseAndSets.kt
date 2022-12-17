@@ -6,7 +6,7 @@ import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
 import com.catscoffeeandkitchen.data.workouts.models.SetEntity
 
 data class PositionWithExerciseAndSets(
-    @Embedded var position: ExercisePositionInWorkout,
+    @Embedded var position: ExercisePositionEntity,
     @Relation(
         parentColumn = "exerciseId",
         entity = ExerciseEntity::class,
