@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
@@ -14,8 +15,9 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
 
 @Composable
 fun PlateCalculator(
+    barbell: BarbellType,
     weight: Double,
-    unit: WeightUnit
+    unit: WeightUnit,
     ) {
     var showPlateDialog by remember { mutableStateOf(false) }
     var settings by remember {
@@ -23,7 +25,7 @@ fun PlateCalculator(
     }
 
     val plateHelper = PlateCalculatorHelper()
-    var plates = plateHelper.calculatePlates(weight, settings)
+    var plates = plateHelper.calculatePlates(barbell, weight, settings)
 
     if (showPlateDialog) {
         PlateDialog(
@@ -35,12 +37,12 @@ fun PlateCalculator(
             onDismissRequest = { showPlateDialog = false },
             updatePlateSettings = { updatedSettings ->
                 settings = updatedSettings
-                plates = plateHelper.calculatePlates(weight, updatedSettings)
+                plates = plateHelper.calculatePlates(barbell, weight, updatedSettings)
             }
         )
     }
 
-    Column() {
+    Column {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {

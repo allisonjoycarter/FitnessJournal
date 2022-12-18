@@ -173,7 +173,7 @@ fun WorkoutDetails(
             }
         }
 
-        if (workout.sets.any { !it.isComplete }) {
+        if (workout.entries.any { it.sets.any { set -> !set.isComplete } }) {
             item {
                 Row(
                     modifier = Modifier
@@ -191,24 +191,17 @@ fun WorkoutDetails(
             }
         }
 
-        itemsIndexed(sets) { index, exercise ->
+        itemsIndexed(workout.entries) { index, entry ->
             ExerciseCard(
                 ExerciseUiData(
                     workout.addedAt,
-                    exercise = exercise.exercise,
-                    group = exercise.group,
-                    position = exercise.position,
-                    sets = workout.sets.filter { it.exercise.name == exercise.name },
-                    expectedSet = workout.plan?.exercises?.firstOrNull { exercise.position == it.positionInWorkout },
+                    entry,
                     unit = unit,
                     isFirstExercise = index == 0,
                     isLastExercise = index == sets.lastIndex,
                     useKeyboard = useKeyboard,
-                    wasChosenFromGroup = workout.plan?.exercises?.any { expectedSet ->
-                        expectedSet.positionInWorkout == exercise.position &&
-                            expectedSet.exerciseGroup?.exercises.orEmpty()
-                                .any { ex -> ex.name == exercise.name }
-                    } == true
+                    wasChosenFromGroup = entry.exercise != null &&
+                            entry.expectedSet?.exerciseGroup != null
                 ),
                 uiActions = exerciseUiActions,
                 navigableActions = exerciseNavigableActions,
@@ -297,7 +290,6 @@ fun AddWorkoutFormPreview() {
         workout = workoutState,
         sets = workoutState.sets.map { set ->
             UiExercise(
-                uniqueIdentifier = set.exercise.name,
                 name = set.exercise.name,
                 exercise = set.exercise,
                 group = null,

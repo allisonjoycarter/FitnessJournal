@@ -1,7 +1,6 @@
 package com.catscoffeeandkitchen.domain.interfaces
 
 import androidx.paging.PagingData
-import androidx.paging.PagingSource
 import com.catscoffeeandkitchen.domain.models.*
 import kotlinx.coroutines.flow.Flow
 import java.time.OffsetDateTime
@@ -29,18 +28,19 @@ interface WorkoutRepository {
     fun getPagedExercises(search: String?, muscle: String?, category: String?): Flow<PagingData<Exercise>>
 
     suspend fun createExercise(exercise: Exercise): Exercise
+    suspend fun addEntry(workoutEntry: WorkoutEntry, workoutAddedAt: OffsetDateTime): WorkoutEntry
 
     suspend fun updateExercise(exercise: Exercise, workout: Workout? = null)
 
-    suspend fun removeExerciseFromWorkout(exercise: Exercise, workoutAddedAt: OffsetDateTime)
+    suspend fun removeEntryFromWorkout(entry: WorkoutEntry, workoutAddedAt: OffsetDateTime)
 
     suspend fun updateCompletedSet(workout: Workout, exerciseSet: ExerciseSet)
 
     suspend fun deleteSet(setId: Long)
 
-    suspend fun swapExercisePosition(
+    suspend fun swapEntryPosition(
         workoutAddedAt: OffsetDateTime,
-        exercise: Exercise,
+        entry: WorkoutEntry,
         newPosition: Int
     )
 
@@ -54,7 +54,6 @@ interface WorkoutRepository {
 
     suspend fun replaceExerciseWithGroup(
         workoutAddedAt: OffsetDateTime,
-        exercise: Exercise,
-        position: Int,
-    )
+        entry: WorkoutEntry,
+    ): WorkoutEntry
 }

@@ -23,6 +23,9 @@ interface ExerciseSetDao {
     @Update(entity = SetEntity::class)
     suspend fun updatePartial(exerciseSet: ExerciseSetPartial)
 
+    @Update(entity = SetEntity::class)
+    suspend fun updateAllPartial(sets: List<ExerciseSetPartial>)
+
     @Update
     suspend fun updateAll(exerciseSet: List<SetEntity>)
 

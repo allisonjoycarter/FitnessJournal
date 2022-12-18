@@ -3,6 +3,7 @@ package com.catscoffeeandkitchen.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.catscoffeeandkitchen.data.workouts.db.*
 import com.catscoffeeandkitchen.data.workouts.db.migrations.Migration_3_4
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
@@ -91,11 +92,14 @@ class DataSourceModule {
             FitnessJournalDb::class.java,
             "FitnessJournalDb"
         )
-            // uncomment for query logging
-//            .setQueryCallback({ sqlQuery, bindArgs ->
-//                Timber.d("+++\n SQL Query $sqlQuery \n SQL Args $bindArgs \n +++")
-//            }, Executors.newSingleThreadExecutor())
             .addMigrations(Migration_3_4)
+            // uncomment for query logging
+//            .setQueryCallback(object : RoomDatabase.QueryCallback {
+//                override fun onQuery(sqlQuery: String, bindArgs: List<Any?>) {
+//                    Timber.d("+++\n SQL Query $sqlQuery \n SQL Args $bindArgs \n +++")
+//                }
+//
+//            }, Executors.newSingleThreadExecutor())
             .build()
     }
 

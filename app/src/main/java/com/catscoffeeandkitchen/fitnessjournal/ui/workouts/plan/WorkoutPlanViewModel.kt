@@ -3,7 +3,6 @@ package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -60,7 +59,7 @@ class WorkoutPlanViewModel @Inject constructor(
                     getWorkoutByAddedDateUseCase.run(
                         OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
                     ).collect { wo ->
-                        Timber.d("*** ${(wo as? DataState.Success)?.data?.exercises}")
+                        Timber.d("*** ${(wo as? DataState.Success)?.data?.entries}")
                         _workoutPlan.value = wo
                     }
                 }
@@ -70,7 +69,7 @@ class WorkoutPlanViewModel @Inject constructor(
 
     fun updateExercisePlan(setNumber: Int, field: ExercisePlanField, value: Int) = viewModelScope.launch {
         (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
-            val setFromWorkout = workout.exercises.find { it.positionInWorkout == setNumber }
+            val setFromWorkout = workout.entries.find { it.positionInWorkout == setNumber }
             if (setFromWorkout != null) {
                 updateExpectedSet.run(
                     workout,
@@ -89,7 +88,7 @@ class WorkoutPlanViewModel @Inject constructor(
 
     fun updateExercisePosition(originalSetNumber: Int, newSetNumber: Int) = viewModelScope.launch {
         (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
-            val setFromWorkout = workout.exercises.find { it.positionInWorkout == originalSetNumber }
+            val setFromWorkout = workout.entries.find { it.positionInWorkout == originalSetNumber }
             setFromWorkout?.let { set ->
                 updateExercisePositionUseCase.run(
                     workout,

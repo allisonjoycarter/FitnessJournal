@@ -16,8 +16,13 @@ class PlateCalculatorHelper {
     private val poundPlates = listOf(45.0, 35.0, 25.0, 10.0, 5.0, 2.5)
     private val kgPlates = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25)
 
-    fun calculatePlates(weight: Double, settings: PlateSettings): PlateResults {
-        val barWeight = if (settings.unit == WeightUnit.Pounds) 45 else 20
+    fun calculatePlates(barbellType: BarbellType, weight: Double, settings: PlateSettings): PlateResults {
+        val barWeight = when {
+            barbellType == BarbellType.None -> 0
+            barbellType == BarbellType.Standard && settings.unit == WeightUnit.Pounds -> 45
+            barbellType == BarbellType.Standard && settings.unit == WeightUnit.Kilograms -> 20
+            else -> 0
+        }
         val plates = if (settings.unit == WeightUnit.Pounds) poundPlates else kgPlates
 
         val oneSidedWeight = (weight - barWeight) / 2

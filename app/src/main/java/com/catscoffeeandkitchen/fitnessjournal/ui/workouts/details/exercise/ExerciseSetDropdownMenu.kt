@@ -2,6 +2,7 @@ package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -18,6 +19,7 @@ fun ExerciseSetDropdownMenu(
     isVisible: Boolean,
     onDismiss: () -> Unit = {},
     removeSet: () -> Unit = {},
+    showPlateCalculator: () -> Unit = {},
     updateValue: (ExerciseSetField) -> Unit
 ) {
     DropdownMenu(expanded = isVisible, onDismissRequest = { onDismiss() }) {
@@ -28,6 +30,7 @@ fun ExerciseSetDropdownMenu(
                     text = { Text("make warmup set") },
                     onClick = {
                         updateValue(ExerciseSetField.Type(ExerciseSetType.WarmUp))
+                        onDismiss()
                     },
                 )
             }
@@ -38,6 +41,7 @@ fun ExerciseSetDropdownMenu(
                         Text("make working set") },
                     onClick = {
                         updateValue(ExerciseSetField.Type(ExerciseSetType.Working))
+                        onDismiss()
                     },
                 )
             }
@@ -46,7 +50,18 @@ fun ExerciseSetDropdownMenu(
         DropdownMenuItem(
             leadingIcon = { Icon(Icons.Default.Delete, "remove set") },
             text = { Text("remove") },
-            onClick = { removeSet() })
+            onClick = {
+                removeSet()
+                onDismiss()
+            })
+
+        DropdownMenuItem(
+            leadingIcon = { Icon(Icons.Default.Info, "show plates") },
+            text = { Text("show plate calculator") },
+            onClick = {
+                showPlateCalculator()
+                onDismiss()
+            })
 
     }
 

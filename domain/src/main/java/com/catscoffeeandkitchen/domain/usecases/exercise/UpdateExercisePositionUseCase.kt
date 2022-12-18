@@ -15,9 +15,9 @@ import javax.inject.Inject
 class UpdateExercisePositionUseCase @Inject constructor(
     private val repository: WorkoutRepository
 ) {
-    fun run(workoutAddedAt: OffsetDateTime, exercise: Exercise, newSetNumber: Int): Flow<DataState<Boolean>> = flow {
+    fun run(workoutAddedAt: OffsetDateTime, entry: WorkoutEntry, newPosition: Int): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
-        repository.swapExercisePosition(workoutAddedAt, exercise, newSetNumber)
+        repository.swapEntryPosition(workoutAddedAt, entry, newPosition)
         emit(DataState.Success(true))
     }
         .catch { ex ->

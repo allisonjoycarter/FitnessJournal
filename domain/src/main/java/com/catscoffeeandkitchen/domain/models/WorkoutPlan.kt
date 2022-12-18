@@ -6,5 +6,5 @@ data class WorkoutPlan(
     val addedAt: OffsetDateTime,
     val name: String = "New Workout Plan",
     val note: String? = null,
-    val exercises: List<ExpectedSet> = emptyList(),
+    val entries: List<ExpectedSet> = emptyList(),
 )

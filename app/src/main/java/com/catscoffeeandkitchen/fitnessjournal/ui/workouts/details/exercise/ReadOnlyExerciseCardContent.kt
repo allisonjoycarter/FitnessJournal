@@ -41,7 +41,8 @@ fun ColumnScope.readOnlyExerciseCardContent(
 //        )
 //    }
 
-    if (uiData.sets.any { it.modifier == ExerciseSetModifier.SingleLimb }) {
+    val isSingleSide = uiData.entry.sets.any { it.modifier == ExerciseSetModifier.SingleSide }
+    if (isSingleSide) {
         Surface(
             modifier = Modifier.padding(bottom = 4.dp),
             shape = SuggestionChipDefaults.shape,
@@ -52,7 +53,7 @@ fun ColumnScope.readOnlyExerciseCardContent(
     }
 
 
-    val items = uiData.sets
+    val items = uiData.entry.sets
         .filter { it.type == ExerciseSetType.Working }
         .distinctBy { set ->
             "${set.reps}${
@@ -70,7 +71,7 @@ fun ColumnScope.readOnlyExerciseCardContent(
             ) {
                 Text(
                     "${
-                        uiData.sets.count { counting ->
+                        uiData.entry.sets.count { counting ->
                             counting.reps == set.reps &&
                                     (counting.weightInPounds == set.weightInPounds ||
                                             counting.weightInKilograms == set.weightInKilograms)

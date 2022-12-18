@@ -3,6 +3,7 @@ package com.catscoffeeandkitchen.data.workouts.db
 import androidx.room.*
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanWithGoals
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanWithGoalsAndPosition
 import java.time.OffsetDateTime
 
 @Dao
@@ -54,7 +55,6 @@ interface WorkoutPlanDao {
     )
     suspend fun getWorkoutPlanByAddedAt(addedAt: OffsetDateTime): WorkoutPlanEntity
 
-//        LEFT JOIN ExerciseGoal ON ExerciseGoal.workoutPlanId = WorkoutPlan.wpId
     @Transaction
     @Query(
         """
@@ -63,7 +63,16 @@ interface WorkoutPlanDao {
         WHERE WorkoutPlanEntity.addedAt = :addedAt
     """
     )
-    fun getWorkoutPlanWithGoalsByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoals
+    fun getWithGoalsByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoals
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.addedAt = :addedAt
+    """
+    )
+    fun getWithGoalAndPositionByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoalsAndPosition
 
     @Transaction
     @Query(

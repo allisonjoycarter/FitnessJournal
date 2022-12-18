@@ -1,7 +1,6 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -33,47 +32,31 @@ fun ExerciseCard(
 ) {
     var editingExercise by remember { mutableStateOf(null as String?) }
 
-    val individualSets = uiData.sets.sortedBy { it.setNumber }
-    val cardState = when {
-        uiData.exercise != null &&
-                (editingExercise == uiData.exercise?.name || individualSets.any { !it.isComplete })
-        -> ExerciseCardState.Exercise
-        uiData.exercise != null -> ExerciseCardState.FinishedExercise
-        uiData.group != null -> ExerciseCardState.Group
-        else -> ExerciseCardState.Invalid
-    }
-//    var cardState by remember { mutableStateOf(initialState) }
-
     FitnessJournalCard(
         modifier = modifier.padding(horizontal = 8.dp),
         columnItemSpacing = 0.dp,
     ) {
-        when (cardState) {
-            ExerciseCardState.Group -> {
-                CardHeaderRow(title = uiData.group!!.name.ifEmpty { "Select from group" }) { onDismiss ->
+        val exercise = uiData.entry.exercise
+        val individualSets = uiData.entry.sets.sortedBy { it.setNumber }
+        val exerciseIsFinished = exercise != null &&
+                (editingExercise == uiData.entry.name || individualSets.all { it.isComplete })
+        val expectedGroup = uiData.entry.expectedSet?.exerciseGroup
+
+        when {
+            exerciseIsFinished -> {
+                CardHeaderRow(title = uiData.entry.exercise?.name.orEmpty()) { dismissMenu ->
                     DropdownMenuItem(
-                        text = { Text("edit group") },
+                        text = { Text("edit") },
                         onClick = {
-                            onDismiss()
-                            navigableActions?.editGroup(uiData.group)
+                            editingExercise = uiData.entry.exercise?.name
+                            dismissMenu()
                         })
                 }
 
-                Column(
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    uiData.group.exercises.forEach { exercise ->
-                        GroupExerciseItem(exercise, onSelect = { selected ->
-                            uiActions?.selectExerciseFromGroup(
-                                uiData.group, selected, uiData.position, uiData.expectedSet)
-                            uiData.exercise = selected
-                        })
-                    }
-                }
+                readOnlyExerciseCardContent(uiData)
             }
-            ExerciseCardState.Exercise -> {
-                CardHeaderRow(title = uiData.exercise?.name.orEmpty()) { dismissMenu ->
+            exercise != null -> {
+                CardHeaderRow(title = uiData.entry.exercise?.name.orEmpty()) { dismissMenu ->
                     exerciseMenuItems(uiData, uiActions, navigableActions, dismissMenu)
                 }
 
@@ -85,20 +68,33 @@ fun ExerciseCard(
                     }
                 )
             }
-            ExerciseCardState.FinishedExercise -> {
-                CardHeaderRow(title = uiData.exercise?.name.orEmpty()) { dismissMenu ->
+            expectedGroup != null -> {
+                CardHeaderRow(
+                    title = (uiData.entry.expectedSet?.exerciseGroup?.name ?: "")
+                        .ifEmpty { "Select from group" })
+                { onDismiss ->
                     DropdownMenuItem(
-                        text = { Text("edit") },
+                        text = { Text("edit group") },
                         onClick = {
-                            editingExercise = uiData.exercise?.name
-                            dismissMenu()
+                            onDismiss()
+                            uiData.entry.expectedSet?.exerciseGroup?.let {
+                                navigableActions?.editGroup(it) }
                         })
                 }
 
-                readOnlyExerciseCardContent(uiData)
-            }
-            ExerciseCardState.Invalid -> {
-                Box() {}
+                Column(
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiData.entry.expectedSet?.exerciseGroup?.exercises?.forEach { exercise ->
+                        GroupExerciseItem(exercise, onSelect = { selected ->
+                            uiActions?.selectExerciseFromGroup(
+                                uiData.entry.expectedSet?.exerciseGroup!!,
+                                selected,
+                                uiData.entry.position, uiData.entry.expectedSet)
+                        })
+                    }
+                }
             }
         }
     }
@@ -117,8 +113,7 @@ fun ColumnScope.exerciseMenuItems(
         onClick = {
             uiActions?.addWarmupSets(
                 uiData.workoutAddedAt,
-                uiData.exercise!!,
-                uiData.sets,
+                uiData.entry,
                 uiData.unit
             )
             dismissMenu()
@@ -127,7 +122,7 @@ fun ColumnScope.exerciseMenuItems(
         leadingIcon = { Icon(Icons.Default.Delete, "remove exercise") },
         text = { Text("remove") },
         onClick = {
-            uiActions?.removeExercise(uiData.exercise!!)
+            uiActions?.removeEntry(uiData.entry)
             dismissMenu()
         })
 
@@ -135,7 +130,7 @@ fun ColumnScope.exerciseMenuItems(
         leadingIcon = { Icon(Icons.Default.Refresh, "swap exercise") },
         text = { Text("swap") },
         onClick = {
-            navigableActions?.swapExercise(uiData.exercise!!)
+            navigableActions?.swapExerciseAt(uiData.entry.position)
             dismissMenu()
         })
 
@@ -144,21 +139,20 @@ fun ColumnScope.exerciseMenuItems(
             leadingIcon = { Icon(painterResource(R.drawable.checklist), "show group") },
             text = { Text("choose from group") },
             onClick = {
-                Timber.d("*** choosing from group where exercise was ${uiData.exercise?.name} at ${uiData.position}")
-                uiActions?.replaceWithGroup(uiData.position, uiData.exercise!!)
+                uiActions?.replaceWithGroup(uiData.entry)
                 dismissMenu()
             })
     }
 
-    val hasSingleLimbModifier = uiData.sets.all { it.modifier == ExerciseSetModifier.SingleLimb }
+    val hasSingleSideModifier = uiData.entry.sets.all { it.modifier == ExerciseSetModifier.SingleSide }
     DropdownMenuItem(
         leadingIcon = { Icon(Icons.Default.Check, "mark as single arm/leg") },
-        text = { Text("${if (hasSingleLimbModifier) "un" else ""}mark as single arm/leg") },
+        text = { Text("${if (hasSingleSideModifier) "un" else ""}mark as single arm/leg") },
         onClick = {
-            if (hasSingleLimbModifier) {
-                uiActions?.updateSets(uiData.sets.map { it.copy(modifier = null) })
+            if (hasSingleSideModifier) {
+                uiActions?.updateSets(uiData.entry.sets.map { it.copy(modifier = null) })
             } else {
-                uiActions?.updateSets(uiData.sets.map { it.copy(modifier = ExerciseSetModifier.SingleLimb) })
+                uiActions?.updateSets(uiData.entry.sets.map { it.copy(modifier = ExerciseSetModifier.SingleSide) })
             }
             dismissMenu()
         })
@@ -168,7 +162,7 @@ fun ColumnScope.exerciseMenuItems(
             leadingIcon = { Icon(Icons.Default.KeyboardArrowUp, "move up") },
             text = { Text("move up") },
             onClick = {
-                uiActions?.moveExerciseTo(uiData.exercise!!, uiData.position - 1)
+                uiActions?.moveEntryTo(uiData.entry, uiData.entry.position - 1)
                 dismissMenu()
             })
     }
@@ -178,7 +172,7 @@ fun ColumnScope.exerciseMenuItems(
             leadingIcon = { Icon(Icons.Default.KeyboardArrowDown, "move down") },
             text = { Text("move down") },
             onClick = {
-                uiActions?.moveExerciseTo(uiData.exercise!!, uiData.position + 1)
+                uiActions?.moveEntryTo(uiData.entry, uiData.entry.position + 1)
                 dismissMenu()
             })
     }

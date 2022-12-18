@@ -18,7 +18,8 @@ android {
             annotationProcessorOptions {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString(),
                               "room.incremental":"true",
-                              "room.expandProjection":"true"]
+                              "room.expandProjection":"true",
+                ]
             }
         }
     }
@@ -36,6 +37,11 @@ android {
     }
     kotlinOptions {
         jvmTarget = '11'
+
+        // TODO: Remove this
+        freeCompilerArgs += [
+                "-Xjvm-default=all",
+        ]
     }
     namespace 'com.catscoffeeandkitchen.data'
 }

@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 4,
-    "identityHash": "d2ad16ce2735cff863a374f40c4f7979",
+    "version": 5,
+    "identityHash": "9a7c1f173f395cbaecaee88d1ceceda6",
     "entities": [
       {
         "tableName": "ExerciseEntity",
@@ -717,7 +717,35 @@
             "egId"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_ExerciseGoal_workoutPlanId",
+            "unique": false,
+            "columnNames": [
+              "workoutPlanId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_workoutPlanId` ON `${TABLE_NAME}` (`workoutPlanId`)"
+          },
+          {
+            "name": "index_ExerciseGoal_exerciseGroupId",
+            "unique": false,
+            "columnNames": [
+              "exerciseGroupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_exerciseGroupId` ON `${TABLE_NAME}` (`exerciseGroupId`)"
+          },
+          {
+            "name": "index_ExerciseGoal_exerciseId",
+            "unique": false,
+            "columnNames": [
+              "exerciseId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_exerciseId` ON `${TABLE_NAME}` (`exerciseId`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "ExerciseEntity",
@@ -801,7 +829,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd2ad16ce2735cff863a374f40c4f7979')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9a7c1f173f395cbaecaee88d1ceceda6')"
     ]
   }
 }

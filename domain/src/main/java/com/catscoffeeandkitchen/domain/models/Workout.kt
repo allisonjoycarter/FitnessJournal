@@ -9,4 +9,5 @@ data class Workout(
     val completedAt: OffsetDateTime? = null,
     val plan: WorkoutPlan? = null,
     val sets: List<ExerciseSet> = emptyList(),
+    val entries: List<WorkoutEntry> = emptyList(),
 )

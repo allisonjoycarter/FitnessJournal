@@ -1,26 +1,23 @@
 package com.catscoffeeandkitchen.domain.interfaces
 
-import com.catscoffeeandkitchen.domain.models.Exercise
-import com.catscoffeeandkitchen.domain.models.ExerciseSet
-import com.catscoffeeandkitchen.domain.models.ExpectedSet
-import com.catscoffeeandkitchen.domain.models.Workout
+import com.catscoffeeandkitchen.domain.models.*
 import java.time.OffsetDateTime
 
 interface ExerciseSetRepository {
     suspend fun updateExerciseSet(exerciseSet: ExerciseSet): ExerciseSet
+    suspend fun updateMultipleSets(sets: List<ExerciseSet>)
 
     suspend fun addExerciseSetWithPopulatedData(
-        workoutAddedAt: OffsetDateTime,
-        exerciseName: String,
+        entry: WorkoutEntry,
         exerciseSet: ExerciseSet,
-        expectedSet: ExpectedSet?
-    ): ExerciseSet
+        workoutAddedAt: OffsetDateTime,
+    ): WorkoutEntry
 
     suspend fun addExerciseSets(
         workoutAddedAt: OffsetDateTime,
-        exercise: Exercise,
+        entry: WorkoutEntry,
         exerciseSets: List<ExerciseSet>
-    )
+    ): WorkoutEntry
 
     suspend fun getCompletedSetsForExercise(name: String): List<ExerciseSet>
 

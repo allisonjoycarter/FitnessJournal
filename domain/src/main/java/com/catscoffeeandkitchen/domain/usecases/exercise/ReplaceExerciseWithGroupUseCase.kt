@@ -17,12 +17,11 @@ class ReplaceExerciseWithGroupUseCase @Inject constructor(
 ) {
     fun run(
         workoutAddedAt: OffsetDateTime,
-        exercise: Exercise,
-        position: Int,
-    ): Flow<DataState<Boolean>> = flow {
+        entry: WorkoutEntry,
+    ): Flow<DataState<WorkoutEntry>> = flow {
         emit(DataState.Loading())
-        repository.replaceExerciseWithGroup(workoutAddedAt, exercise, position)
-        emit(DataState.Success(true))
+        val result = repository.replaceExerciseWithGroup(workoutAddedAt, entry)
+        emit(DataState.Success(result))
     }
         .catch { ex ->
             Timber.e(ex)

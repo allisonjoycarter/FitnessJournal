@@ -66,14 +66,13 @@ fun DbExerciseGroup.toExerciseGroup(exercises: List<Exercise>): ExerciseGroup {
     )
 }
 
-fun DbExercise.toExercise(position: Int? = null, amountOfSets: Int? = null, stats: ExerciseStats? = null): Exercise {
+fun DbExercise.toExercise(amountOfSets: Int? = null, stats: ExerciseStats? = null): Exercise {
     return Exercise(
         name = this.name,
         musclesWorked = this.musclesWorked,
         category = this.category,
         thumbnailUrl = this.thumbnailUrl,
         equipmentType = this.equipmentType,
-        positionInWorkout = position,
         amountOfSets = amountOfSets,
         stats = stats,
     )

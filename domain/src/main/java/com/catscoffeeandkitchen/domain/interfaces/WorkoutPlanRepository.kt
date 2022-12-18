@@ -22,5 +22,5 @@ interface WorkoutPlanRepository {
     suspend fun removeExpectedSetFromWorkout(workout: WorkoutPlan, expectedSet: ExpectedSet)
 
     suspend fun updateExpectedSet(workout: WorkoutPlan, expectedSet: ExpectedSet)
-    suspend fun updateExpectedSetPosition(workout: WorkoutPlan, expectedSet: ExpectedSet, newSetNumber: Int)
+    suspend fun updateExpectedSetPosition(workout: WorkoutPlan, expectedSet: ExpectedSet, newPosition: Int)
 }

@@ -126,11 +126,12 @@ fun WorkoutDetailsScreen(
 
                         override fun addExerciseGroup() { }
 
-                        override fun swapExercise(exercise: Exercise) {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("swappingExercise", exercise.positionInWorkout)
+                        override fun swapExerciseAt(position: Int) {
+                            val entry = workoutState.data.entries.first { it.position == position }
+                            navController.currentBackStackEntry?.savedStateHandle?.set("swappingExercise", entry.position)
                             navController.navigate("${FitnessJournalScreen.SearchExercisesScreen.route}?" +
-                                    "category=${exercise.category}&" +
-                                    "muscle=${exercise.musclesWorked.firstOrNull().orEmpty()}")
+                                    "category=${entry.exercise?.category.orEmpty()}&" +
+                                    "muscle=${entry.exercise?.musclesWorked?.firstOrNull().orEmpty()}")
                         }
 
                         override fun editGroup(group: ExerciseGroup) {

@@ -11,10 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catscoffeeandkitchen.domain.models.*
 import com.catscoffeeandkitchen.domain.usecases.*
-import com.catscoffeeandkitchen.domain.usecases.exercise.ChooseExerciseInGroupUseCase
-import com.catscoffeeandkitchen.domain.usecases.exercise.RemoveExerciseFromWorkoutUseCase
-import com.catscoffeeandkitchen.domain.usecases.exercise.ReplaceExerciseWithGroupUseCase
-import com.catscoffeeandkitchen.domain.usecases.exercise.UpdateExercisePositionUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.*
 import com.catscoffeeandkitchen.domain.usecases.exercisegroup.UpdateExercisesInGroupUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddExerciseSetUseCase
 import com.catscoffeeandkitchen.domain.usecases.exerciseset.AddMultipleExerciseSetsUseCase
@@ -45,11 +42,12 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val createPlanFromWorkoutUseCase: CreatePlanFromWorkoutUseCase,
     private val updateWorkoutUseCase: UpdateWorkoutUseCase,
     private val addSetUseCase: AddExerciseSetUseCase,
-    private val addSetToWorkoutPlan: AddSetToWorkoutPlanUseCase,
     private val addMultipleSetsUseCase: AddMultipleExerciseSetsUseCase,
+    private val addEntryUseCase: AddWorkoutEntryUseCase,
     private val removeExerciseUseCase: RemoveExerciseFromWorkoutUseCase,
     private val replaceExerciseForSetsUseCase: ReplaceExerciseForSetsUseCase,
     private val updateSetUseCase: UpdateSetUseCase,
+    private val updateMultipleSetsUseCase: UpdateMultipleSetsUseCase,
     private val updateExercisePositionUseCase: UpdateExercisePositionUseCase,
     private val updateExercisesInGroupUseCase: UpdateExercisesInGroupUseCase,
     private val chooseExerciseInGroupUseCase: ChooseExerciseInGroupUseCase,
@@ -78,72 +76,44 @@ class WorkoutDetailsViewModel @Inject constructor(
             (_workout.value as? DataState.Success)?.data
 
     val exercises: List<UiExercise>
-        get() = (
-                workoutInstance?.sets.orEmpty().map { UiExercise(
-                        uniqueIdentifier = "${it.exercise.name}-${it.exercise.positionInWorkout}",
-                        name = it.exercise.name,
-                        exercise = it.exercise,
-                        position = it.exercise.positionInWorkout ?: 1
-                    ) } +
-                workoutInstance?.plan?.exercises.orEmpty()
-                    .filterNot { expected ->
-                        workoutInstance?.sets.orEmpty().any { set ->
-                            set.chosenFromGroup != null &&
-                                set.chosenFromGroup == expected.exerciseGroup?.id }
-                    }
-                    .map { UiExercise(
-                        uniqueIdentifier = if (it.exercise != null)
-                            "${it.exercise?.name}-${it.positionInWorkout}" else
-                                "group${it.exerciseGroup?.id}-${it.positionInWorkout}",
-                        name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
-                        exercise = it.exercise,
-                        group = it.exerciseGroup,
-                        position = it.positionInWorkout
-                    ) }
-                ).sortedBy { it.position }.distinctBy { it.uniqueIdentifier }
+        get() = workoutInstance?.entries.orEmpty().map { entry ->
+                    UiExercise(
+                        name = entry.name,
+                        position = entry.position,
+                        exercise = entry.exercise ?: entry.expectedSet?.exercise,
+                        group = entry.expectedSet?.exerciseGroup,
+                    )
+                }.sortedBy { it.position }
 
     val finishedExercises: List<UiExercise>
-        get() = workoutInstance?.sets.orEmpty()
-            .filter { it.isComplete }
+        get() = workoutInstance?.entries.orEmpty()
+            .filter { it.sets.any { set -> set.isComplete } }
             .map { UiExercise(
-                uniqueIdentifier = "${it.exercise.name}${it.exercise.positionInWorkout}",
-                name = it.exercise.name,
+                name = it.name,
                 exercise = it.exercise,
-                position = it.exercise.positionInWorkout ?: 1
+                position = it.position
             ) }
-            .sortedBy { (it.exercise?.positionInWorkout ?: 0) }
-            .distinctBy { it.uniqueIdentifier }
+            .sortedBy { it.position }
 
     val cachedFinishedExercises: List<UiExercise>
-        get() = cachedWorkout?.sets.orEmpty()
+        get() = cachedWorkout?.entries.orEmpty()
+            .filter { it.sets.any { set -> set.isComplete } }
             .map { UiExercise(
-                uniqueIdentifier = it.exercise.name,
-                name = it.exercise.name,
+                name = it.name,
                 exercise = it.exercise,
-                position = it.exercise.positionInWorkout ?: 1
+                position = it.position
             ) }
-            .sortedBy { (it.exercise?.positionInWorkout ?: 0) }
-            .distinctBy { it.uniqueIdentifier }
+            .sortedBy { it.position }
 
     val cachedExercises: List<UiExercise>
-        get() = (
-                cachedWorkout?.sets.orEmpty().map { UiExercise(
-                    uniqueIdentifier = it.exercise.name,
-                    name = it.exercise.name,
-                    exercise = it.exercise,
-                    position = it.exercise.positionInWorkout ?: 1
-                ) } +
-                        cachedWorkout?.plan?.exercises.orEmpty()
-                            .filter { workoutInstance?.sets.orEmpty().none { set ->
-                                set.exercise.positionInWorkout == it.positionInWorkout } }
-                            .map { UiExercise(
-                                uniqueIdentifier = it.exercise?.name ?: "${it.exerciseGroup?.id}${it.positionInWorkout}",
-                                name = it.exercise?.name ?: it.exerciseGroup?.name ?: "Unknown Exercise",
-                                exercise = it.exercise,
-                                group = it.exerciseGroup,
-                                position = it.positionInWorkout
-                            ) }
-                ).sortedBy { it.position }.distinctBy { it.uniqueIdentifier }
+        get() = cachedWorkout?.entries.orEmpty().map { entry ->
+                    UiExercise(
+                        name = entry.name,
+                        position = entry.position,
+                        exercise = entry.exercise ?: entry.expectedSet?.exercise,
+                        group = entry.expectedSet?.exerciseGroup,
+                    )
+                }.sortedBy { it.position }
 
     init {
         val workoutDate = savedStateHandle.get<Long>("workoutId")
@@ -181,7 +151,7 @@ class WorkoutDetailsViewModel @Inject constructor(
         workoutInstance?.let { currentWorkout ->
             viewModelScope.launch {
                 getWorkoutByAddedDateUseCase.run(currentWorkout.addedAt).collect { wo ->
-                    Timber.d("*** workout sets = ${(wo as? DataState.Success)?.data}")
+                    Timber.d("*** workout entries = ${(wo as? DataState.Success)?.data?.entries}")
                     _workout.value = wo
                     cachedWorkout = (wo as? DataState.Success)?.data
                 }
@@ -195,9 +165,8 @@ class WorkoutDetailsViewModel @Inject constructor(
     ) = viewModelScope.launch {
         val instance = workoutInstance
         if (instance != null) {
-            // TODO: only remove group of sets, not all instances of that exercise
-            val relatedSets = instance.sets
-                .filter { it.exercise.positionInWorkout == exercisePosition }
+            val relatedSets = instance.entries
+                .filter { it.position == exercisePosition }.flatMap { it.sets }
 
             replaceExerciseForSetsUseCase.run(
                 relatedSets.map { it.id },
@@ -210,7 +179,7 @@ class WorkoutDetailsViewModel @Inject constructor(
                         sets = instance.sets.map { set ->
                             if (relatedSets.any { it.id == set.id }) set.copy(exercise = state.data)
                             else set
-                        }
+                        }.sortedBy { it.setNumber }
                     )
                     _workout.value = DataState.Success(updatedWorkout)
                 }
@@ -220,18 +189,19 @@ class WorkoutDetailsViewModel @Inject constructor(
 
     override fun addExercise(name: String) = viewModelScope.launch {
         (workout.value as? DataState.Success)?.data?.let { currentWorkout ->
-            addSetUseCase.run(
-                set = ExerciseSet(
-                    id = 0L,
-                    reps = 0,
-                    exercise = Exercise(name = name),
-                    setNumber = 0,
+            addEntryUseCase.run(
+                entry = WorkoutEntry(
+                    position = currentWorkout.entries.size + 1,
+                    exercise = Exercise(name = name)
                 ),
-                exerciseName = name,
                 workoutAddedAt = currentWorkout.addedAt,
             ).collect { state ->
                 if (state is DataState.Success) {
-                    getWorkout()
+                    workoutInstance?.let {
+                        _workout.value = DataState.Success(
+                            it.copy(entries = it.entries + state.data)
+                        )
+                    }
                 }
             }
         }
@@ -284,28 +254,28 @@ class WorkoutDetailsViewModel @Inject constructor(
     fun createPlanFromWorkout() = viewModelScope.launch {
         (workout.value as? DataState.Success)?.data?.let { wkot ->
             createPlanFromWorkoutUseCase.run(wkot).collect { dataState ->
-                _createdPlanAddedAt.value = dataState
-            }
-        }
-    }
-
-    override fun removeExercise(exercise: Exercise) = viewModelScope.launch {
-        (workout.value as? DataState.Success)?.data?.let { wkot ->
-            removeExerciseUseCase.run(exercise, wkot.addedAt).collect { state ->
-                if (state is DataState.Success) {
-                    _workout.value = DataState.Success(
-                        wkot.copy(sets = wkot.sets.filter { it.exercise.name != exercise.name })
-                    )
+                if (dataState is DataState.Success) {
+                    getWorkout()
                 }
             }
         }
     }
 
-    override fun moveExerciseTo(exercise: Exercise, newPosition: Int) = viewModelScope.launch {
-        (workout.value as? DataState.Success)?.data?.let { workout ->
+    override fun removeEntry(entry: WorkoutEntry) = viewModelScope.launch {
+        (workout.value as? DataState.Success)?.data?.let { wkot ->
+            removeExerciseUseCase.run(entry, wkot.addedAt).collect { state ->
+                if (state is DataState.Success) {
+                    getWorkout()
+                }
+            }
+        }
+    }
+
+    override fun moveEntryTo(entry: WorkoutEntry, newPosition: Int) = viewModelScope.launch {
+        workoutInstance?.let { instance ->
             updateExercisePositionUseCase.run(
-                workout.addedAt,
-                exercise,
+                instance.addedAt,
+                entry,
                 newPosition,
             ).collect { result ->
                 if (result is DataState.Success) {
@@ -316,19 +286,15 @@ class WorkoutDetailsViewModel @Inject constructor(
     }
 
     override fun addExerciseSet(
-        name: String,
+        entry: WorkoutEntry,
         workoutAddedAt: OffsetDateTime
     ) = viewModelScope.launch {
-        val exercise = Exercise(
-            name,
-        )
-
         addSetUseCase.run(
-            exerciseName = name,
+            entry,
             workoutAddedAt = workoutAddedAt,
             set = ExerciseSet(
                 0L,
-                exercise = exercise,
+                exercise = entry.exercise!!,
                 reps = 0,
                 setNumber = 0
             )
@@ -336,7 +302,12 @@ class WorkoutDetailsViewModel @Inject constructor(
             if (state is DataState.Success) {
                 (workout.value as? DataState.Success)?.data?.let { wkot ->
                     _workout.value = DataState.Success(
-                        wkot.copy(sets = wkot.sets + state.data)
+                        wkot.copy(entries = wkot.entries.map { entry ->
+                            if (entry.position == state.data.position)
+                                state.data
+                            else
+                                entry
+                        })
                     )
                 }
             }
@@ -349,17 +320,17 @@ class WorkoutDetailsViewModel @Inject constructor(
         updateSetUseCase.run(
             set = set,
         ).collect { state ->
-            Timber.d("*** updated set $state")
             if (state is DataState.Success) {
-                (workout.value as? DataState.Success)?.data?.let { wkot ->
-                    _workout.value = DataState.Loading()
+                workoutInstance?.let { instance ->
                     _workout.value = DataState.Success(
-                        wkot.copy(sets = wkot.sets.map { set ->
-                            if (set.id == state.data.id) {
-                                state.data
-                            } else {
-                                set
-                            }
+                        instance.copy(entries = instance.entries.map { entry ->
+                            entry.copy(sets = entry.sets.map { set ->
+                                if (set.id == state.data.id) {
+                                    state.data
+                                } else {
+                                    set
+                                }
+                            }.sortedBy { it.setNumber })
                         })
                     )
                 }
@@ -368,8 +339,20 @@ class WorkoutDetailsViewModel @Inject constructor(
     }
 
     override fun updateSets(sets: List<ExerciseSet>) = viewModelScope.launch {
-        sets.forEach { set ->
-            updateSet(set)
+        updateMultipleSetsUseCase.run(sets).collect { state ->
+            if (state is DataState.Success) {
+                workoutInstance?.let { instance ->
+                    _workout.value = DataState.Success(
+                        instance.copy(entries = instance.entries.map { entry ->
+                            entry.copy(sets = entry.sets.map { set ->
+                                val setToUse = sets.find { it.id == set.id }
+                                Timber.d("*** setToUse = ${setToUse?.setNumber} (${setToUse?.id}), reps = ${setToUse?.reps}, pounds = ${setToUse?.weightInPounds}")
+                                setToUse ?: set
+                            }.sortedBy { it.setNumber })
+                        })
+                    )
+                }
+            }
         }
     }
 
@@ -377,25 +360,31 @@ class WorkoutDetailsViewModel @Inject constructor(
         setId: Long
     ) = viewModelScope.launch {
         removeSetUseCase.run(setId).collect { dataState ->
-            Timber.d("removing set $dataState")
             if (dataState is DataState.Error) {
                 Timber.e(dataState.e)
             }
             if (dataState is DataState.Success) {
-                Timber.d("removed set")
+                // filter out the set from the workout
+                workoutInstance?.let { currentWorkout ->
+                    _workout.value = DataState.Success(currentWorkout.copy(
+                        entries = currentWorkout.entries.map { entry ->
+                            entry.copy(sets = entry.sets.filterNot { set -> set.id == setId }
+                                .sortedBy { it.setNumber })
+                        }
+                    )
+                )}
             }
         }
     }
 
     override fun addWarmupSets(
         workoutAddedAt: OffsetDateTime,
-        exercise: Exercise,
-        sets: List<ExerciseSet>,
+        entry: WorkoutEntry,
         unit: WeightUnit
     ) = viewModelScope.launch {
         val highWeight = if (unit == WeightUnit.Pounds)
-            sets.maxOf { it.weightInPounds } else
-            sets.maxOf { it.weightInKilograms }
+            entry.sets.maxOf { it.weightInPounds } else
+            entry.sets.maxOf { it.weightInKilograms }
 
         val increments = mapOf(
             .25 to 12,
@@ -411,7 +400,7 @@ class WorkoutDetailsViewModel @Inject constructor(
             setsToAdd.add(
                 ExerciseSet(
                     0L,
-                    exercise = exercise,
+                    exercise = entry.exercise ?: entry.expectedSet?.exercise ?: Exercise(name = "Unknown Exercise"),
                     reps = warmupSet.value,
                     setNumber = nextSetNumber,
                     weightInPounds = round(warmupSet.key * highWeight, 5).toFloat(),
@@ -423,21 +412,34 @@ class WorkoutDetailsViewModel @Inject constructor(
         }
 
         addMultipleSetsUseCase.run(
-            exercise = exercise,
+            entry = entry,
             workoutAddedAt = workoutAddedAt,
             sets = setsToAdd
         ).collect { state ->
             if (state is DataState.Success) {
-                getWorkout()
+                workoutInstance?.let { wo ->
+                    _workout.value = DataState.Success(
+                        wo.copy(entries = wo.entries.map { item ->
+                            if (entry.position == item.position) state.data.copy(
+                                sets = state.data.sets.sortedBy { it.setNumber })
+                            else item
+                        })
+                    )}
             }
         }
     }
 
-    override fun replaceWithGroup(exercisePosition: Int, exercise: Exercise): Job = viewModelScope.launch {
-        workoutInstance?.addedAt?.let { addedAt ->
-            replaceExerciseWithGroup.run(addedAt, exercise, exercisePosition).collect { state ->
+    override fun replaceWithGroup(entry: WorkoutEntry): Job = viewModelScope.launch {
+        workoutInstance?.let { wo ->
+            replaceExerciseWithGroup.run(wo.addedAt, entry).collect { state ->
                 if (state is DataState.Success) {
-                    getWorkout()
+                    _workout.value = DataState.Success(wo.copy(entries = wo.entries.map { item ->
+                        if (item.position == entry.position) {
+                            state.data
+                        } else {
+                            item
+                        }
+                    }))
                 }
             }
         }
@@ -468,7 +470,19 @@ class WorkoutDetailsViewModel @Inject constructor(
     ) = viewModelScope.launch {
         updateExercisesInGroupUseCase.run(exerciseGroup, selectedExercises).collect { state ->
             if (state is DataState.Success) {
-                getWorkout()
+                workoutInstance?.let { _workout.value = DataState.Success(it.copy(
+                    entries = it.entries.map { entry ->
+                        if (entry.expectedSet?.exerciseGroup?.id == exerciseGroup.id) {
+                            entry.copy(
+                                expectedSet = entry.expectedSet?.copy(
+                                    exerciseGroup = state.data
+                                )
+                            )
+                        } else {
+                            entry
+                        }
+                    }
+                )) }
             }
         }
     }

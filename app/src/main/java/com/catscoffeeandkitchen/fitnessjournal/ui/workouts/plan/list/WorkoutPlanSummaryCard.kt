@@ -1,10 +1,8 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,11 +36,11 @@ fun WorkoutPlanSummaryCard(
         }
 
         Text(
-            workout.exercises.size.toString() + " exercises",
+            workout.entries.size.toString() + " exercises",
             style = MaterialTheme.typography.labelLarge
         )
 
-        val musclesWorkedDescriptor = MusclesWorkedDescriptor(workout.exercises)
+        val musclesWorkedDescriptor = MusclesWorkedDescriptor(workout.entries)
 
         if (musclesWorkedDescriptor.mostCommonMuscleWorked?.trim()?.isNotEmpty() == true) {
             Text(
@@ -58,7 +56,7 @@ fun WorkoutPlanSummaryCard(
             )
         }
 
-        workout.exercises.forEach { set ->
+        workout.entries.forEach { set ->
             val exerciseName = set.exercise?.name ?: set.exerciseGroup?.name ?: set.note.ifEmpty { " Unknown Exercise" }
             Text(
                 "${set.sets}x${set.reps} $exerciseName",

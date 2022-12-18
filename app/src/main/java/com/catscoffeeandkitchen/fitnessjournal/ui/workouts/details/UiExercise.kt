@@ -6,7 +6,6 @@ import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 
 data class UiExercise(
-    val uniqueIdentifier: String,
     val name: String,
     val exercise: Exercise? = null,
     val group: ExerciseGroup? = null,

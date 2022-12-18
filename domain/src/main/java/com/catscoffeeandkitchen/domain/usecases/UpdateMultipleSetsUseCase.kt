@@ -1,11 +1,10 @@
-package com.catscoffeeandkitchen.domain.usecases.exerciseset
+package com.catscoffeeandkitchen.domain.usecases
 
 import com.catscoffeeandkitchen.domain.interfaces.ExerciseSetRepository
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.Workout
-import com.catscoffeeandkitchen.domain.models.WorkoutEntry
 import com.catscoffeeandkitchen.domain.util.DataState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,17 +12,16 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
-import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
-class AddMultipleExerciseSetsUseCase @Inject constructor(
-    private val repository: ExerciseSetRepository
+class UpdateMultipleSetsUseCase @Inject constructor(
+    private val exerciseSetRepository: ExerciseSetRepository
 ) {
-    fun run(sets: List<ExerciseSet>, entry: WorkoutEntry, workoutAddedAt: OffsetDateTime): Flow<DataState<WorkoutEntry>> = flow {
+    fun run(sets: List<ExerciseSet>): Flow<DataState<List<ExerciseSet>>> = flow {
         emit(DataState.Loading())
-        val result = repository.addExerciseSets(exerciseSets = sets, entry = entry, workoutAddedAt = workoutAddedAt)
-        emit(DataState.Success(result))
+        exerciseSetRepository.updateMultipleSets(sets)
+        emit(DataState.Success(sets))
     }
         .catch { ex ->
             Timber.e(ex)

@@ -1,6 +1,7 @@
-package com.catscoffeeandkitchen.domain.usecases.exerciseset
+package com.catscoffeeandkitchen.domain.usecases.exercise
 
 import com.catscoffeeandkitchen.domain.interfaces.ExerciseSetRepository
+import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
 import com.catscoffeeandkitchen.domain.models.*
 import com.catscoffeeandkitchen.domain.util.DataState
 import kotlinx.coroutines.Dispatchers
@@ -13,19 +14,17 @@ import java.time.OffsetDateTime
 import javax.inject.Inject
 
 
-class AddExerciseSetUseCase @Inject constructor(
-    private val repository: ExerciseSetRepository
+class AddWorkoutEntryUseCase @Inject constructor(
+    private val repository: WorkoutRepository
 ) {
     fun run(
         entry: WorkoutEntry,
-        set: ExerciseSet,
         workoutAddedAt: OffsetDateTime,
     ): Flow<DataState<WorkoutEntry>> = flow {
         emit(DataState.Loading())
-        val result = repository.addExerciseSetWithPopulatedData(
-            entry = entry,
-            exerciseSet = set,
-            workoutAddedAt = workoutAddedAt,
+        val result = repository.addEntry(
+            entry,
+            workoutAddedAt,
         )
         emit(DataState.Success(result))
     }

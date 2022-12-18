@@ -10,9 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -21,12 +19,10 @@ import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
 import com.catscoffeeandkitchen.domain.util.DataState
-import com.catscoffeeandkitchen.fitnessjournal.R
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.AddExerciseOrGroupButtons
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
-import timber.log.Timber
 
 @Composable
 fun WorkoutPlanEditScreen(
@@ -148,7 +144,7 @@ fun WorkoutPlanEditScreen(
             is DataState.Success -> {
                 exercisePlanItems(
                     plan = workoutState.data,
-                    expectedSets = workoutState.data.exercises,
+                    expectedSets = workoutState.data.entries,
                     uiActions = object : ExercisePlanUiActions {
 
                         override fun updateWorkoutName(name: String) {
