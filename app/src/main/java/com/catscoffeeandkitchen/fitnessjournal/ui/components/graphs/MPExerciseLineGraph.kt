@@ -152,7 +152,9 @@ fun MPExerciseLineGraph(
                 Entry(repMaxEntries.last().x, repMaxEntries.takeLast(take).map { it.y }.average().toFloat())
             )
 
-            val repMaxDataSet = LineDataSet(repMaxEntries, "Estimated 1RM").apply {
+            val repMaxDataSet = LineDataSet(repMaxEntries.sortedWith(compareBy({ it.x }, { it.y }))
+                .distinctBy { it.x }, "Estimated 1RM")
+                .apply {
                 color = primaryColor
                 axisDependency = YAxis.AxisDependency.LEFT;
                 lineWidth = 1.5f
@@ -173,9 +175,10 @@ fun MPExerciseLineGraph(
                 setCircleColor(primaryColor)
                 circleHoleColor = primaryColor
             }
-            Timber.d("*** rep max entries = ${repMaxEntries.size}")
+            Timber.d("*** rep max entries = ${repMaxEntries.joinToString("\n")}")
 
-            val highestWeightDataSet = LineDataSet(highestWeightEntries, "Highest Weight Lifted").apply {
+            val highestWeightDataSet = LineDataSet(highestWeightEntries.sortedWith(compareBy({ it.x }, { it.y }))
+                .distinctBy { it.x }, "Highest Weight Lifted").apply {
                 color = tertiaryColor
                 axisDependency = YAxis.AxisDependency.LEFT;
                 lineWidth = 1.5f
@@ -198,7 +201,8 @@ fun MPExerciseLineGraph(
                 highLightColor = Color.White.toArgb()
             }
 
-            val repsDataSet = LineDataSet(repEntries, "Reps").apply {
+            val repsDataSet = LineDataSet(repEntries.sortedWith(compareBy({ it.x }, { it.y }))
+                .distinctBy { it.x }, "Reps").apply {
                 color = primaryColor
                 axisDependency = YAxis.AxisDependency.LEFT;
                 lineWidth = 1.5f
@@ -220,7 +224,7 @@ fun MPExerciseLineGraph(
                 circleHoleColor = primaryColor
             }
 
-            val trendDataSet = LineDataSet(trendEntries, "Trend").apply {
+            val trendDataSet = LineDataSet(trendEntries.distinctBy { it.x }, "Trend").apply {
                 color = secondaryColor
                 axisDependency = YAxis.AxisDependency.LEFT;
                 lineWidth = 1f
