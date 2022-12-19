@@ -7,10 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
 import com.catscoffeeandkitchen.fitnessjournal.R
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import timber.log.Timber
 import java.time.OffsetDateTime
@@ -31,17 +33,17 @@ fun ExerciseCard(
     modifier: Modifier = Modifier,
 ) {
     var editingExercise by remember { mutableStateOf(null as String?) }
+    val exercise = uiData.entry.exercise
+    val individualSets = uiData.entry.sets.sortedBy { it.setNumber }
+    val exerciseIsFinished = exercise != null &&
+            editingExercise != exercise.name &&
+            individualSets.all { it.isComplete }
+    val expectedGroup = uiData.entry.expectedSet?.exerciseGroup
 
     FitnessJournalCard(
         modifier = modifier.padding(horizontal = 8.dp),
         columnItemSpacing = 0.dp,
     ) {
-        val exercise = uiData.entry.exercise
-        val individualSets = uiData.entry.sets.sortedBy { it.setNumber }
-        val exerciseIsFinished = exercise != null &&
-                (editingExercise == uiData.entry.name || individualSets.all { it.isComplete })
-        val expectedGroup = uiData.entry.expectedSet?.exerciseGroup
-
         when {
             exerciseIsFinished -> {
                 CardHeaderRow(title = uiData.entry.exercise?.name.orEmpty()) { dismissMenu ->
@@ -83,7 +85,9 @@ fun ExerciseCard(
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                        .testTag(TestTags.ChooseExerciseFromGroup),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     uiData.entry.expectedSet?.exerciseGroup?.exercises?.forEach { exercise ->

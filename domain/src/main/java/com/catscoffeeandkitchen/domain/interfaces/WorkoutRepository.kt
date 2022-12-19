@@ -13,6 +13,8 @@ interface WorkoutRepository {
 
     suspend fun getCompletedWorkouts(): List<Workout>
 
+    suspend fun getWorkoutCompletedDates(monthsBack: Int): List<OffsetDateTime>
+
     suspend fun getWorkoutByAddedDate(addedAt: OffsetDateTime): Workout
 
     suspend fun createWorkout(workout: Workout, planAddedAt: OffsetDateTime?): Workout

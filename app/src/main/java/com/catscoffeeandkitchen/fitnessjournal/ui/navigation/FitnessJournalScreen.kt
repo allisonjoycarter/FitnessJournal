@@ -5,22 +5,68 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import com.catscoffeeandkitchen.fitnessjournal.R
 
 sealed class FitnessJournalScreen(
     val route: String,
     @StringRes val resourceId: Int,
     @DrawableRes val iconId: Int = R.drawable.fitness_center,
-    val icon: ImageVector? = null
+    val icon: ImageVector? = null,
+    val testTag: String = "NavItem"
 ) {
-    object Settings : FitnessJournalScreen("settings", R.string.settings, icon = Icons.Default.Settings)
-    object WorkoutsScreen : FitnessJournalScreen("workouts", R.string.workouts)
-    object WorkoutPlansScreen : FitnessJournalScreen("plans", R.string.workout_plans, R.drawable.checklist)
-    object WorkoutDetails : FitnessJournalScreen("workouts", R.string.workout_details)
-    object NewWorkoutScreen : FitnessJournalScreen("workouts/new", R.string.new_workout)
-    object StatsScreen : FitnessJournalScreen("stats", R.string.stats, R.drawable.bar_chart)
-    object SearchExercisesScreen : FitnessJournalScreen("exercises", R.string.search_exercises)
-    object SearchExercisesMultiSelectScreen : FitnessJournalScreen("exercises/multiselect", R.string.search_exercises_multi)
-    object WorkoutPlanEditScreen : FitnessJournalScreen("plans", R.string.workout_plan)
-    object ExerciseGroupScreen : FitnessJournalScreen("exercises/groups", R.string.exercise_groups, R.drawable.dataset)
+    object Settings : FitnessJournalScreen(
+        route = "settings",
+        resourceId = R.string.settings,
+        icon = Icons.Default.Settings,
+        testTag = "SettingsNavItem"
+    )
+    object WorkoutsScreen : FitnessJournalScreen(
+        route = "workouts",
+        resourceId = R.string.workouts,
+        testTag = "WorkoutsNavItem"
+    )
+    object WorkoutPlansScreen : FitnessJournalScreen(
+        route = "plans",
+        resourceId = R.string.workout_plans,
+        iconId = R.drawable.checklist,
+        testTag = "WorkoutPlansNavItem"
+    )
+    object WorkoutDetails : FitnessJournalScreen(
+        route = "workouts",
+        resourceId = R.string.workout_details,
+        testTag = "WorkoutDetailsNavItem"
+    )
+    object NewWorkoutScreen : FitnessJournalScreen(
+        route = "workouts/new",
+        resourceId =  R.string.new_workout,
+        testTag = "NewWorkoutNavItem"
+    )
+    object StatsScreen : FitnessJournalScreen(
+        route = "stats",
+        resourceId = R.string.stats,
+        iconId = R.drawable.bar_chart,
+        testTag = "StatsNavItem"
+    )
+    object SearchExercisesScreen : FitnessJournalScreen(
+        route = "exercises",
+        resourceId = R.string.search_exercises,
+        testTag = "SearchExercisesNavItem"
+    )
+    object SearchExercisesMultiSelectScreen : FitnessJournalScreen(
+        route = "exercises/multiselect",
+        resourceId = R.string.search_exercises_multi,
+        testTag = "SelectMultipleExercisesNavItem"
+    )
+    object WorkoutPlanEditScreen : FitnessJournalScreen(
+        route = "plans",
+        resourceId = R.string.workout_plan,
+        testTag = "WorkoutPlanEditNavItem"
+    )
+    object ExerciseGroupScreen : FitnessJournalScreen(
+        route = "exercises/groups",
+        resourceId = R.string.exercise_groups,
+        iconId = R.drawable.dataset,
+        testTag = "ExerciseGroupNavItem"
+    )
 }

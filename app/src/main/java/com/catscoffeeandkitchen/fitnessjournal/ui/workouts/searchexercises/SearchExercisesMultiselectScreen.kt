@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +28,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.util.capitalizeWords
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
@@ -61,13 +63,16 @@ fun SearchExercisesMultiSelectScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                navController.previousBackStackEntry?.savedStateHandle?.set<String>(
-                    "selectedExercises",
-                    selectedItems.value.joinToString("|") { it.name }
-                )
-                navController.popBackStack()
-            }) {
+            FloatingActionButton(
+                onClick = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set<String>(
+                        "selectedExercises",
+                        selectedItems.value.joinToString("|") { it.name }
+                    )
+                    navController.popBackStack()
+                },
+                modifier = Modifier.testTag(TestTags.FAB)
+            ) {
                 Icon(Icons.Default.Check, contentDescription = "finished selecting")
             }
         }
@@ -82,13 +87,7 @@ fun SearchExercisesMultiSelectScreen(
                 onDismiss = { showCreateExerciseDialog = false },
                 onConfirm = { exercise ->
                     if (editingExercise == null) {
-                        viewModel.createExercise(exercise) {
-//                            navController.previousBackStackEntry?.savedStateHandle?.set(
-//                                "exerciseToAdd",
-//                                exercise.name
-//                            )
-//                            navController.popBackStack()
-                        }
+                        viewModel.createExercise(exercise) { }
                     } else {
                         viewModel.updateExercise(exercise, refreshItems = { pagingItems.refresh() })
                     }
@@ -215,6 +214,7 @@ fun SearchExercisesMultiSelectScreen(
 fun SelectableExerciseItem(
     exercise: Exercise,
     isSelected: Boolean,
+    modifier: Modifier = Modifier.testTag(TestTags.ExerciseSearchResult),
     onTap: () -> Unit = {},
     onLongPress: () -> Unit = {},
     darkTheme: Boolean = isSystemInDarkTheme(),

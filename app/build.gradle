@@ -15,7 +15,7 @@ android {
         versionCode 7
         versionName "0.1.5"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.catscoffeeandkitchen.fitnessjournal.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -137,4 +137,12 @@ dependencies {
 
     // Image Loading - Glide https://bumptech.github.io/glide/int/compose.html
     implementation "com.github.bumptech.glide:compose:1.0.0-alpha.1"
+
+    implementation 'androidx.test.espresso:espresso-idling-resource:3.5.0'
+
+    /////////// Tests //////////////////////
+    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 }

@@ -65,6 +65,16 @@ interface WorkoutDao {
 
     @Query(
         """
+        SELECT completedAt
+        FROM WorkoutEntity
+        WHERE completedAt IS NOT NULL AND completedAt >= :earliestDateInEpochMilli
+        ORDER BY completedAt DESC
+    """
+    )
+    suspend fun getAllCompletedWorkoutDates(earliestDateInEpochMilli: Long): List<OffsetDateTime>
+
+    @Query(
+        """
         SELECT *
         FROM WorkoutEntity
         WHERE completedAt IS NOT NULL

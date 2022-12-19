@@ -16,27 +16,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-
-            } else {
-            }
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        StrictMode.setThreadPolicy(
-//            ThreadPolicy.Builder()
-//                .detectAll()
-//                .penaltyLog()
-//                .build()
-//        )
-
-//        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
-//        }
+        }
 
         setContent {
             FitnessJournalTheme {

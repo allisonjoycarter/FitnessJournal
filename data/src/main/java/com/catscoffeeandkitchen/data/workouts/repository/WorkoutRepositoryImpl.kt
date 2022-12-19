@@ -87,6 +87,11 @@ class WorkoutRepositoryImpl(
         }
     }
 
+    override suspend fun getWorkoutCompletedDates(monthsBack: Int): List<OffsetDateTime> {
+        val earliest = OffsetDateTime.now().minusMonths(monthsBack.toLong())
+        return database.workoutDao().getAllCompletedWorkoutDates(earliest.toUTCEpochMilli())
+    }
+
     override suspend fun getWorkoutByAddedDate(addedAt: OffsetDateTime): Workout {
         val dbWorkout = database.workoutDao().getWorkoutByAddedAt(addedAt)
         val sets = database.exercisePositionDao()
@@ -331,6 +336,7 @@ class WorkoutRepositoryImpl(
                     workoutId = workoutEntity.wId,
                     positionId = insertedPositionId,
                     setNumber = 1,
+                    completedAt = null,
                 ) ?:
                 SetEntity(
                     sId = 0L,
@@ -338,6 +344,7 @@ class WorkoutRepositoryImpl(
                     workoutId = workoutEntity.wId,
                     positionId = insertedPositionId,
                     setNumber = 1,
+                    completedAt = null,
                 )
             database.exerciseSetDao().insert(insertedSet)
         }

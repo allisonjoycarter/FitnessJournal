@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,10 +24,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.util.capitalizeWords
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises.create.CreateOrChangeExerciseDialog
@@ -50,7 +54,6 @@ fun SearchExercisesScreen(
 
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(coroutineScope) {
-        Timber.d("*** launchedEffect muscle = $muscle, category = $category")
         if (pagingItems.itemSnapshotList.isEmpty()) {
             viewModel.searchExercises(searchState.value)
         }
@@ -158,12 +161,13 @@ fun SearchExercisesScreen(
 @Composable
 fun ExerciseItem(
     exercise: Exercise,
+    modifier: Modifier = Modifier.testTag(TestTags.ExerciseSearchResult),
     onTap: () -> Unit = {},
     onLongPress: () -> Unit = {},
     darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
     FitnessJournalCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .combinedClickable(

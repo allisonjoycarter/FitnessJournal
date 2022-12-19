@@ -12,9 +12,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.*
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.bicepCurlSets
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.PreviewConstants.exerciseBicepCurl
@@ -27,6 +29,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
 @Composable
 fun ColumnScope.readOnlyExerciseCardContent(
     uiData: ExerciseUiData,
+    modifier: Modifier = Modifier.testTag(TestTags.ReadOnlyExercise)
 ) {
     // TODO: is this necessary?
 //    if (uiData.expectedSet != null) {
@@ -63,7 +66,7 @@ fun ColumnScope.readOnlyExerciseCardContent(
         }
 
     Column(
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = modifier.padding(bottom = 8.dp)
     ) {
         items.forEach { set ->
             Row(

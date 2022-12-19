@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.ExerciseSetModifier
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import java.time.OffsetDateTime
 
@@ -18,6 +20,7 @@ fun ColumnScope.editableExerciseCardContent(
     uiData: ExerciseUiData,
     uiActions: ExerciseUiActions?,
     onCompleteExercise: (OffsetDateTime?) -> Unit,
+    modifier: Modifier = Modifier.testTag(TestTags.EditableExercise),
     onFocus: () -> Unit = {},
     onBlur: () -> Unit = {},
 ) {
@@ -41,7 +44,7 @@ fun ColumnScope.editableExerciseCardContent(
         }
     }
 
-    Column(modifier = Modifier.animateContentSize()) {
+    Column(modifier = modifier.animateContentSize()) {
         uiData.entry.sets.sortedBy { it.setNumber }.forEach { set ->
             SetDetailsInputs(
                 set,

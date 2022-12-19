@@ -11,7 +11,7 @@ android {
         minSdk 26
         targetSdk 33
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.catscoffeeandkitchen.fitnessjournal.HiltTestRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 

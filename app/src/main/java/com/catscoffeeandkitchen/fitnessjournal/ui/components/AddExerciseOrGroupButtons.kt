@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.fitnessjournal.R
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 
 @Composable
 fun AddExerciseOrGroupButtons(
@@ -27,7 +29,7 @@ fun AddExerciseOrGroupButtons(
             icon = {
                 Icon(painterResource(id = R.drawable.fitness_center), "group")
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f).testTag(TestTags.AddExerciseButton)
         )
 
         FitnessJournalButton(
@@ -38,7 +40,7 @@ fun AddExerciseOrGroupButtons(
             onClick = {
                 addGroup()
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f).testTag(TestTags.AddGroupButton)
         )
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
@@ -21,6 +22,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
 import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.settings.SettingsScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.SelectPlanScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.WorkoutDetailsScreen
@@ -60,11 +62,14 @@ fun Navigation() {
                 },
                 floatingActionButtonPosition = FabPosition.End,
                 floatingActionButton = {
-                    FloatingActionButton(onClick = {
-                        navController.navigate(
-                            FitnessJournalScreen.NewWorkoutScreen.route
-                        )
-                    }) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(
+                                FitnessJournalScreen.NewWorkoutScreen.route
+                            )
+                        },
+                        modifier = Modifier.testTag(TestTags.FAB)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "create workout")
                     }
                 }
@@ -88,11 +93,14 @@ fun Navigation() {
                 },
                 floatingActionButtonPosition = FabPosition.End,
                 floatingActionButton = {
-                    FloatingActionButton(onClick = {
-                        navController.navigate(
-                            "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/0"
-                        )
-                    }) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(
+                                "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/0"
+                            )
+                        },
+                        modifier = Modifier.testTag(TestTags.FAB)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "create plan")
                     }
                 }
@@ -246,11 +254,14 @@ fun Navigation() {
                 }),
                 floatingActionButtonPosition = FabPosition.End,
                 floatingActionButton = {
-                    FloatingActionButton(onClick = {
-                        navController.navigate(
-                            FitnessJournalScreen.SearchExercisesMultiSelectScreen.route
-                        )
-                    }) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(
+                                FitnessJournalScreen.SearchExercisesMultiSelectScreen.route
+                            )
+                        },
+                        modifier = Modifier.testTag(TestTags.FAB)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "create group")
                     }
                 }
@@ -281,7 +292,10 @@ fun FitnessJournalTopAppBar(
     TopAppBar(
         title = {},
         actions = {
-            IconButton(onClick = { navigateToSettings() }) {
+            IconButton(
+                onClick = { navigateToSettings() },
+                modifier = Modifier.testTag(FitnessJournalScreen.Settings.testTag)
+            ) {
                 Icon(
                     Icons.Default.Settings,
                     contentDescription = "go to settings"
@@ -295,12 +309,15 @@ fun FitnessJournalTopAppBar(
 fun FitnessJournalBottomNavigationBar(
     navController: NavController
 ) {
-    NavigationBar() {
+    NavigationBar(
+        Modifier.testTag(TestTags.BottomNavigationBar)
+    ) {
         NavigationBarItem(
             selected = navController.currentDestination?.route?.contains("workout") == true,
             onClick = { navController.navigate(FitnessJournalScreen.WorkoutsScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutsScreen) },
-            label = { Text("Workouts") }
+            label = { Text("Workouts") },
+            modifier = Modifier.testTag(FitnessJournalScreen.WorkoutsScreen.testTag)
         )
 
         NavigationBarItem(
@@ -308,6 +325,7 @@ fun FitnessJournalBottomNavigationBar(
             onClick = { navController.navigate(FitnessJournalScreen.WorkoutPlansScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutPlansScreen) },
             label = { Text("Plans") },
+            modifier = Modifier.testTag(FitnessJournalScreen.WorkoutPlansScreen.testTag)
         )
 
         NavigationBarItem(
@@ -315,13 +333,15 @@ fun FitnessJournalBottomNavigationBar(
             onClick = { navController.navigate(FitnessJournalScreen.ExerciseGroupScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.ExerciseGroupScreen) },
             label = { Text("Groups") },
+            modifier = Modifier.testTag(FitnessJournalScreen.ExerciseGroupScreen.testTag)
         )
 
         NavigationBarItem(
             selected = navController.currentDestination?.route?.contains("stats") == true,
             onClick = { navController.navigate(FitnessJournalScreen.StatsScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.StatsScreen) },
-            label = { Text("Stats") }
+            label = { Text("Stats") },
+            modifier = Modifier.testTag(FitnessJournalScreen.StatsScreen.testTag)
         )
     }
 }
