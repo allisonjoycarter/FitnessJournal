@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Theme.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.theme</a> &gt; <span class="el_source">Theme.kt</span></div><h1>Theme.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.theme
+
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.material.color.MaterialColors
+
+<span class="fc" id="L12">private val LightThemeColors = lightColorScheme(</span>
+<span class="fc" id="L13">    primary = md_theme_light_primary,</span>
+<span class="fc" id="L14">    onPrimary = md_theme_light_onPrimary,</span>
+<span class="fc" id="L15">    primaryContainer = md_theme_light_primaryContainer,</span>
+<span class="fc" id="L16">    onPrimaryContainer = md_theme_light_onPrimaryContainer,</span>
+<span class="fc" id="L17">    secondary = md_theme_light_secondary,</span>
+<span class="fc" id="L18">    onSecondary = md_theme_light_onSecondary,</span>
+<span class="fc" id="L19">    secondaryContainer = md_theme_light_secondaryContainer,</span>
+<span class="fc" id="L20">    onSecondaryContainer = md_theme_light_onSecondaryContainer,</span>
+<span class="fc" id="L21">    tertiary = md_theme_light_tertiary,</span>
+<span class="fc" id="L22">    onTertiary = md_theme_light_onTertiary,</span>
+<span class="fc" id="L23">    tertiaryContainer = md_theme_light_tertiaryContainer,</span>
+<span class="fc" id="L24">    onTertiaryContainer = md_theme_light_onTertiaryContainer,</span>
+<span class="fc" id="L25">    error = md_theme_light_error,</span>
+<span class="fc" id="L26">    errorContainer = md_theme_light_errorContainer,</span>
+<span class="fc" id="L27">    onError = md_theme_light_onError,</span>
+<span class="fc" id="L28">    onErrorContainer = md_theme_light_onErrorContainer,</span>
+<span class="fc" id="L29">    background = md_theme_light_background,</span>
+<span class="fc" id="L30">    onBackground = md_theme_light_onBackground,</span>
+<span class="fc" id="L31">    surface = md_theme_light_surface,</span>
+<span class="fc" id="L32">    onSurface = md_theme_light_onSurface,</span>
+<span class="fc" id="L33">    surfaceVariant = md_theme_light_surfaceVariant,</span>
+<span class="fc" id="L34">    onSurfaceVariant = md_theme_light_onSurfaceVariant,</span>
+<span class="fc" id="L35">    outline = md_theme_light_outline,</span>
+<span class="fc" id="L36">    inverseOnSurface = md_theme_light_inverseOnSurface,</span>
+<span class="fc" id="L37">    inverseSurface = md_theme_light_inverseSurface,</span>
+<span class="fc" id="L38">    inversePrimary = md_theme_light_inversePrimary,</span>
+)
+<span class="fc" id="L40">private val DarkThemeColors = darkColorScheme(</span>
+<span class="fc" id="L41">    primary = md_theme_dark_primary,</span>
+<span class="fc" id="L42">    onPrimary = md_theme_dark_onPrimary,</span>
+<span class="fc" id="L43">    primaryContainer = md_theme_dark_primaryContainer,</span>
+<span class="fc" id="L44">    onPrimaryContainer = md_theme_dark_onPrimaryContainer,</span>
+<span class="fc" id="L45">    secondary = md_theme_dark_secondary,</span>
+<span class="fc" id="L46">    onSecondary = md_theme_dark_onSecondary,</span>
+<span class="fc" id="L47">    secondaryContainer = md_theme_dark_secondaryContainer,</span>
+<span class="fc" id="L48">    onSecondaryContainer = md_theme_dark_onSecondaryContainer,</span>
+<span class="fc" id="L49">    tertiary = md_theme_dark_tertiary,</span>
+<span class="fc" id="L50">    onTertiary = md_theme_dark_onTertiary,</span>
+<span class="fc" id="L51">    tertiaryContainer = md_theme_dark_tertiaryContainer,</span>
+<span class="fc" id="L52">    onTertiaryContainer = md_theme_dark_onTertiaryContainer,</span>
+<span class="fc" id="L53">    error = md_theme_dark_error,</span>
+<span class="fc" id="L54">    errorContainer = md_theme_dark_errorContainer,</span>
+<span class="fc" id="L55">    onError = md_theme_dark_onError,</span>
+<span class="fc" id="L56">    onErrorContainer = md_theme_dark_onErrorContainer,</span>
+<span class="fc" id="L57">    background = md_theme_dark_background,</span>
+<span class="fc" id="L58">    onBackground = md_theme_dark_onBackground,</span>
+<span class="fc" id="L59">    surface = md_theme_dark_surface,</span>
+<span class="fc" id="L60">    onSurface = md_theme_dark_onSurface,</span>
+<span class="fc" id="L61">    surfaceVariant = md_theme_dark_surfaceVariant,</span>
+<span class="fc" id="L62">    onSurfaceVariant = md_theme_dark_onSurfaceVariant,</span>
+<span class="fc" id="L63">    outline = md_theme_dark_outline,</span>
+<span class="fc" id="L64">    inverseOnSurface = md_theme_dark_inverseOnSurface,</span>
+<span class="fc" id="L65">    inverseSurface = md_theme_dark_inverseSurface,</span>
+<span class="fc" id="L66">    inversePrimary = md_theme_dark_inversePrimary,</span>
+)
+
+fun setupErrorColors(colorScheme: ColorScheme, isLight: Boolean): ColorScheme {
+<span class="fc" id="L70">    val harmonizedError =</span>
+<span class="fc" id="L71">        MaterialColors.harmonize(error.toArgb(), colorScheme.primary.toArgb())</span>
+<span class="fc" id="L72">    val roles = MaterialColors.getColorRoles(harmonizedError, isLight)</span>
+    //returns a colorScheme with newly harmonized error colors
+<span class="fc" id="L74">    return colorScheme.copy(</span>
+<span class="fc" id="L75">        error = Color(roles.accent),</span>
+<span class="fc" id="L76">        onError = Color(roles.onAccent),</span>
+<span class="fc" id="L77">        errorContainer = Color(roles.accentContainer),</span>
+<span class="fc" id="L78">        onErrorContainer = Color(roles.onAccentContainer)</span>
+    )
+}
+
+@Composable
+fun FitnessJournalTheme(
+<span class="pc bnc" id="L84" title="All 2 branches missed.">    useDarkTheme: Boolean = isSystemInDarkTheme(),</span>
+    content: @Composable() () -&gt; Unit
+<span class="pc bpc" id="L86" title="14 of 22 branches missed.">) {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">    val dynamicColor = Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.S</span>
+<span class="fc" id="L88">    val colors = when {</span>
+<span class="pc bpc" id="L89" title="2 of 4 branches missed.">        dynamicColor &amp;&amp; useDarkTheme -&gt; dynamicDarkColorScheme(LocalContext.current)</span>
+<span class="pc bpc" id="L90" title="2 of 4 branches missed.">        dynamicColor &amp;&amp; !useDarkTheme -&gt; dynamicLightColorScheme(LocalContext.current)</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        useDarkTheme -&gt; DarkThemeColors</span>
+<span class="nc" id="L92">        else -&gt; LightThemeColors</span>
+    }
+<span class="fc" id="L94">    val errorHarmonize = true</span>
+<span class="pc bpc" id="L95" title="2 of 4 branches missed.">    val colorsWithHarmonizedError = if (errorHarmonize) setupErrorColors(colors, !useDarkTheme) else colors</span>
+
+<span class="fc" id="L97">    MaterialTheme(</span>
+<span class="fc" id="L98">        colorScheme = colorsWithHarmonizedError,</span>
+<span class="fc" id="L99">        typography = Typography,</span>
+<span class="fc" id="L100">        shapes = FitnessJournalShapes,</span>
+<span class="fc" id="L101">        content = content</span>
+    )
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">}</span>
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

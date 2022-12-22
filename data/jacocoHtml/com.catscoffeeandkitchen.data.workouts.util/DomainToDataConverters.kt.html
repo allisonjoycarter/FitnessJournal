@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainToDataConverters.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.util</a> &gt; <span class="el_source">DomainToDataConverters.kt</span></div><h1>DomainToDataConverters.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.util
+
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithStats
+import com.catscoffeeandkitchen.domain.models.*
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity as DbWorkoutPlan
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
+
+
+<span class="nc" id="L13">fun ExerciseSet.toDbExerciseSet(</span>
+    exerciseId: Long,
+    workoutId: Long,
+    positionId: Long,
+<span class="nc" id="L17">    chosenFromGroup: Long? = null</span>
+): SetEntity {
+<span class="nc" id="L19">    return SetEntity(</span>
+<span class="nc" id="L20">        this.id,</span>
+<span class="nc" id="L21">        exerciseId = exerciseId,</span>
+<span class="nc" id="L22">        workoutId = workoutId,</span>
+<span class="nc" id="L23">        positionId = positionId,</span>
+<span class="nc" id="L24">        groupId = chosenFromGroup,</span>
+<span class="nc" id="L25">        reps = this.reps,</span>
+<span class="nc" id="L26">        weightInKilograms = this.weightInKilograms,</span>
+<span class="nc" id="L27">        weightInPounds = this.weightInPounds,</span>
+<span class="nc" id="L28">        repsInReserve = this.repsInReserve,</span>
+<span class="nc" id="L29">        perceivedExertion = this.perceivedExertion,</span>
+<span class="nc" id="L30">        setNumber = this.setNumber,</span>
+<span class="nc" id="L31">        type = this.type</span>
+    )
+}
+
+<span class="nc" id="L35">fun WorkoutPlan.toDbWorkoutPlan(planId: Long = 0L): DbWorkoutPlan {</span>
+<span class="nc" id="L36">    return DbWorkoutPlan(</span>
+<span class="nc" id="L37">        wpId = planId,</span>
+<span class="nc" id="L38">        addedAt = this.addedAt,</span>
+<span class="nc" id="L39">        name = this.name,</span>
+<span class="nc" id="L40">        note = this.note</span>
+    )
+}
+
+
+<span class="nc" id="L45">fun Exercise.toDbExercise(id: Long = 0L, userCreated: Boolean = false): DbExercise {</span>
+<span class="nc" id="L46">    return DbExercise(</span>
+<span class="nc" id="L47">        eId = id,</span>
+<span class="nc" id="L48">        name = this.name,</span>
+<span class="nc" id="L49">        musclesWorked = this.musclesWorked,</span>
+<span class="nc" id="L50">        userCreated = userCreated,</span>
+<span class="nc" id="L51">        category = this.category,</span>
+<span class="nc" id="L52">        thumbnailUrl = this.thumbnailUrl,</span>
+<span class="nc" id="L53">        equipmentType = this.equipmentType,</span>
+    )
+}
+
+<span class="nc" id="L57">fun Workout.toDbWorkout(id: Long = 0L, planId: Long? = null): DbWorkout {</span>
+<span class="fc" id="L58">    return DbWorkout(</span>
+<span class="fc" id="L59">        wId = id,</span>
+<span class="fc" id="L60">        planId = planId,</span>
+<span class="fc" id="L61">        minutesToComplete = 0,</span>
+<span class="fc" id="L62">        addedAt = this.addedAt,</span>
+<span class="fc" id="L63">        completedAt = this.completedAt,</span>
+<span class="fc" id="L64">        name = this.name,</span>
+<span class="fc" id="L65">        note = this.note,</span>
+    )
+}
+
+fun ExpectedSet.toGoal(exerciseId: Long?, groupId: Long?, planId: Long, positionId: Long): ExerciseGoal {
+<span class="nc" id="L70">    return ExerciseGoal(</span>
+<span class="nc" id="L71">        exerciseId = exerciseId,</span>
+<span class="nc" id="L72">        exerciseGroupId = groupId,</span>
+<span class="nc" id="L73">        workoutPlanId = planId,</span>
+<span class="nc" id="L74">        positionId = positionId,</span>
+<span class="nc" id="L75">        sets = this.sets,</span>
+<span class="nc" id="L76">        reps = this.reps,</span>
+<span class="nc" id="L77">        repRangeMax = this.maxReps,</span>
+<span class="nc" id="L78">        repRangeMin = this.minReps,</span>
+<span class="nc" id="L79">        weightInPounds = 0f,</span>
+<span class="nc" id="L80">        weightInKilograms = 0f,</span>
+<span class="nc" id="L81">        repsInReserve = this.rir,</span>
+<span class="nc" id="L82">        perceivedExertion = this.perceivedExertion,</span>
+<span class="nc" id="L83">        note = this.note,</span>
+<span class="nc" id="L84">        modifier = null,</span>
+<span class="nc" id="L85">        type = this.type,</span>
+    )
+}
+
+fun ExerciseGroup.toEntity(): ExerciseGroupEntity {
+<span class="nc" id="L90">    return ExerciseGroupEntity(</span>
+<span class="nc" id="L91">        gId = id,</span>
+<span class="nc" id="L92">        name = this.name</span>
+    )
+}
+
+fun ExerciseWithStats.toStats(): ExerciseStats {
+<span class="nc" id="L97">    return ExerciseStats(</span>
+<span class="nc" id="L98">        lastCompletedAt = this.lastCompletedAt,</span>
+<span class="nc" id="L99">        amountCompleted = this.amountPerformed,</span>
+<span class="nc" id="L100">        amountCompletedThisWeek = this.amountCompletedThisWeek,</span>
+<span class="nc" id="L101">        highestWeightInKilograms = this.highestWeightInKilograms,</span>
+<span class="nc" id="L102">        highestWeightInPounds = this.highestWeightInPounds</span>
+    )
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

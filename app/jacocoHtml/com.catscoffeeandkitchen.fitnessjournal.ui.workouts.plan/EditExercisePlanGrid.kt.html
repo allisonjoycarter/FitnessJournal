@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditExercisePlanGrid.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan</a> &gt; <span class="el_source">EditExercisePlanGrid.kt</span></div><h1>EditExercisePlanGrid.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.models.ExpectedSet
+import com.google.accompanist.flowlayout.FlowRow
+
+@Composable
+fun EditExercisePlanGrid(
+    expectedSet: ExpectedSet,
+<span class="nc" id="L33">    updateValue: (field: ExercisePlanField, value: Int) -&gt; Unit = { _, _, -&gt; },</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">) {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">    FlowRow(</span>
+<span class="nc" id="L36">        modifier = Modifier.padding(12.dp).fillMaxWidth(),</span>
+<span class="nc" id="L37">        mainAxisSpacing = 12.dp,</span>
+<span class="nc" id="L38">        crossAxisSpacing = 8.dp</span>
+<span class="nc" id="L39">    ) {</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">        Column(</span>
+<span class="nc" id="L41">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L42">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L44" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L45">                startingText = expectedSet.sets.toString(),</span>
+<span class="nc" id="L46">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                        updateValue(ExercisePlanField.Sets, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L50">                },</span>
+<span class="nc" id="L51">                onFocus = {},</span>
+<span class="nc" id="L52">                onBlur = {},</span>
+            )
+<span class="nc" id="L54">            Text(&quot;sets&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L55">        }</span>
+
+<span class="nc" id="L57">        Column(</span>
+<span class="nc" id="L58">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L59">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L61" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L62">                startingText = expectedSet.reps.toString(),</span>
+<span class="nc" id="L63">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                        updateValue(ExercisePlanField.Reps, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L67">                },</span>
+<span class="nc" id="L68">                onFocus = {},</span>
+<span class="nc" id="L69">                onBlur = {},</span>
+            )
+<span class="nc" id="L71">            Text(&quot;reps&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L72">        }</span>
+
+<span class="nc" id="L74">        Column(</span>
+<span class="nc" id="L75">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L76">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L78" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L79">                startingText = expectedSet.minReps.toString(),</span>
+<span class="nc" id="L80">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                        updateValue(ExercisePlanField.MinReps, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L84">                },</span>
+<span class="nc" id="L85">                onFocus = {},</span>
+<span class="nc" id="L86">                onBlur = {},</span>
+            )
+<span class="nc" id="L88">            Text(&quot;min reps&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L89">        }</span>
+
+<span class="nc" id="L91">        Column(</span>
+<span class="nc" id="L92">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L93">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L95" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L96">                startingText = expectedSet.maxReps.toString(),</span>
+<span class="nc" id="L97">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                        updateValue(ExercisePlanField.MaxReps, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L101">                },</span>
+<span class="nc" id="L102">                onFocus = {},</span>
+<span class="nc" id="L103">                onBlur = {},</span>
+            )
+<span class="nc" id="L105">            Text(&quot;max reps&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L106">        }</span>
+
+<span class="nc" id="L108">        Column(</span>
+<span class="nc" id="L109">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L110">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L112" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L113">                startingText = expectedSet.rir.toString(),</span>
+<span class="nc" id="L114">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                        updateValue(ExercisePlanField.RepsInReserve, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L118">                },</span>
+<span class="nc" id="L119">                onFocus = { },</span>
+<span class="nc" id="L120">                onBlur = { },</span>
+            )
+<span class="nc" id="L122">            Text(&quot;reps in reserve&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L123">        }</span>
+<span class="nc" id="L124">        Column(</span>
+<span class="nc" id="L125">            horizontalAlignment = Alignment.Start,</span>
+<span class="nc" id="L126">            verticalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">            ExerciseSetInput(</span>
+<span class="nc" id="L129">                startingText = expectedSet.perceivedExertion.toString(),</span>
+<span class="nc" id="L130">                onValueChange = { value -&gt;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                    if (value.toIntOrNull() != null) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                        updateValue(ExercisePlanField.PerceivedExertion, value.toIntOrNull() ?: 0)</span>
+                    }
+<span class="nc" id="L134">                },</span>
+<span class="nc" id="L135">                onFocus = {},</span>
+<span class="nc" id="L136">                onBlur = {},</span>
+            )
+<span class="nc" id="L138">            Text(&quot;perceived exertion&quot;, style = MaterialTheme.typography.labelLarge)</span>
+<span class="nc" id="L139">        }</span>
+<span class="nc" id="L140">    }</span>
+<span class="nc" id="L141">}</span>
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ExerciseSetInput(
+    startingText: String,
+    onValueChange: (value: String) -&gt; Unit,
+    onFocus: () -&gt; Unit,
+    onBlur: () -&gt; Unit,
+<span class="nc" id="L150">    focusRequester: FocusRequester? = null,</span>
+<span class="nc bnc" id="L151" title="All 36 branches missed.">) {</span>
+<span class="nc" id="L152">    var textFieldValue by remember { mutableStateOf(TextFieldValue(startingText)) }</span>
+<span class="nc" id="L153">    var focusTextKey by remember { mutableStateOf(&quot;&quot;)  }</span>
+
+<span class="nc" id="L155">    BasicTextField(</span>
+<span class="nc" id="L156">        value = textFieldValue,</span>
+<span class="nc" id="L157">        singleLine = true,</span>
+<span class="nc" id="L158">        onValueChange = { newText -&gt;</span>
+<span class="nc" id="L159">            textFieldValue = newText</span>
+<span class="nc" id="L160">        },</span>
+<span class="nc" id="L161">        cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),</span>
+<span class="nc" id="L162">        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),</span>
+<span class="nc" id="L163">        modifier = Modifier</span>
+<span class="nc" id="L164">            .requiredWidth(60.dp)</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            .focusRequester(focusRequester ?: FocusRequester())</span>
+<span class="nc" id="L166">            .onFocusChanged { state -&gt;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                if (state.hasFocus) {</span>
+<span class="nc" id="L168">                    onFocus()</span>
+<span class="nc" id="L169">                    textFieldValue = textFieldValue.copy(</span>
+<span class="nc" id="L170">                        selection = TextRange(0, textFieldValue.text.length)</span>
+                    )
+<span class="nc" id="L172">                    focusTextKey = startingText</span>
+                } else {
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                    if (focusTextKey == startingText) {</span>
+<span class="nc" id="L175">                        onBlur()</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">                        if (textFieldValue.text.isNotEmpty()) {</span>
+<span class="nc" id="L177">                            onValueChange(textFieldValue.text)</span>
+                        }
+                    }
+<span class="nc" id="L180">                    focusTextKey = &quot;&quot;</span>
+                }
+<span class="nc" id="L182">            },</span>
+<span class="nc" id="L183">        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),</span>
+<span class="nc" id="L184">        keyboardActions = KeyboardActions(onDone = {</span>
+<span class="nc" id="L185">            onValueChange(textFieldValue.text)</span>
+<span class="nc" id="L186">        }),</span>
+<span class="nc" id="L187">        decorationBox = { innerTextField -&gt;</span>
+<span class="nc bnc" id="L188" title="All 4 branches missed.">            Box(</span>
+<span class="nc" id="L189">                modifier = Modifier</span>
+<span class="nc" id="L190">                    .clip(RoundedCornerShape(6.dp))</span>
+<span class="nc" id="L191">                    .background(MaterialTheme.colorScheme.surface)</span>
+<span class="nc" id="L192">                    .padding(8.dp),</span>
+            ) {
+<span class="nc bnc" id="L194" title="All 4 branches missed.">                innerTextField()</span>
+<span class="nc" id="L195">            }</span>
+<span class="nc" id="L196">        }</span>
+    )
+<span class="nc bnc" id="L198" title="All 2 branches missed.">}</span>
+
+@Preview(
+    name = &quot;Grid&quot;
+)
+@Composable
+<span class="nc bnc" id="L204" title="All 4 branches missed.">fun SetItemGridPreview() {</span>
+<span class="nc" id="L205">    Card {</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">        EditExercisePlanGrid(</span>
+<span class="nc" id="L207">            expectedSet = ExpectedSet(</span>
+<span class="nc" id="L208">                Exercise(</span>
+<span class="nc" id="L209">                    &quot;Bicep Curls&quot;,</span>
+<span class="nc" id="L210">                    listOf(&quot;Biceps&quot;),</span>
+                ),
+<span class="nc" id="L212">                reps = 8,</span>
+<span class="nc" id="L213">                minReps = 6,</span>
+<span class="nc" id="L214">                maxReps = 10,</span>
+<span class="nc" id="L215">                perceivedExertion = 8,</span>
+<span class="nc" id="L216">                rir = 3</span>
+            ),
+<span class="nc" id="L218">        )</span>
+<span class="nc" id="L219">    }</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepsInput.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.inputs</a> &gt; <span class="el_source">RepsInput.kt</span></div><h1>RepsInput.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.inputs
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
+import com.google.accompanist.flowlayout.FlowColumn
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+fun RepsInput(
+    reps: Int,
+    onUpdate: (Int) -&gt; Unit
+<span class="nc bnc" id="L21" title="All 12 branches missed.">) {</span>
+<span class="nc" id="L22">    Column(</span>
+<span class="nc" id="L23">        modifier = Modifier</span>
+<span class="nc" id="L24">            .height(70.dp)</span>
+<span class="nc" id="L25">            .fillMaxWidth()</span>
+<span class="nc" id="L26">            .clip(MaterialTheme.shapes.small)</span>
+<span class="nc" id="L27">            .background(MaterialTheme.colorScheme.surface)</span>
+<span class="nc" id="L28">            .padding(6.dp)</span>
+    ) {
+<span class="nc bnc" id="L30" title="All 4 branches missed.">        Row(</span>
+<span class="nc" id="L31">            modifier = Modifier.fillMaxWidth(),</span>
+<span class="nc" id="L32">            horizontalArrangement = Arrangement.SpaceEvenly</span>
+        ) {
+<span class="nc bnc" id="L34" title="All 4 branches missed.">            FilterChip(</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                selected = reps == 3,</span>
+<span class="nc" id="L36">                onClick = { onUpdate(3) },</span>
+<span class="nc bnc" id="L37" title="All 4 branches missed.">                label = { Text(&quot;3&quot;) }</span>
+            )
+
+<span class="nc" id="L40">            FilterChip(</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">                selected = reps == 5,</span>
+<span class="nc" id="L42">                onClick = { onUpdate(5) },</span>
+<span class="nc bnc" id="L43" title="All 4 branches missed.">                label = { Text(&quot;5&quot;) }</span>
+            )
+
+<span class="nc" id="L46">            FilterChip(</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                selected = reps == 8,</span>
+<span class="nc" id="L48">                onClick = { onUpdate(8) },</span>
+<span class="nc bnc" id="L49" title="All 4 branches missed.">                label = { Text(&quot;8&quot;) }</span>
+            )
+
+<span class="nc" id="L52">            FilterChip(</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">                selected = reps == 10,</span>
+<span class="nc" id="L54">                onClick = { onUpdate(10) },</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">                label = { Text(&quot;10&quot;) }</span>
+            )
+
+<span class="nc" id="L58">            FilterChip(</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                selected = reps == 12,</span>
+<span class="nc" id="L60">                onClick = { onUpdate(12) },</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">                label = { Text(&quot;12&quot;) }</span>
+            )
+
+<span class="nc" id="L64">            FilterChip(</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                selected = reps == 15,</span>
+<span class="nc" id="L66">                onClick = { onUpdate(15) },</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">                label = { Text(&quot;15&quot;) }</span>
+            )
+
+<span class="nc" id="L70">            FilterChip(</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                selected = reps == 20,</span>
+<span class="nc" id="L72">                onClick = { onUpdate(20) },</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">                label = { Text(&quot;20&quot;) }</span>
+<span class="nc" id="L74">            )</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">    }</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

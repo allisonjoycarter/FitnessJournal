@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExerciseRepositoryImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.repository</a> &gt; <span class="el_source">ExerciseRepositoryImpl.kt</span></div><h1>ExerciseRepositoryImpl.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.repository
+
+import androidx.paging.*
+import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
+import com.catscoffeeandkitchen.data.workouts.models.GroupExerciseXRef
+import com.catscoffeeandkitchen.domain.interfaces.ExerciseRepository
+import com.catscoffeeandkitchen.domain.models.*
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
+import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
+import com.catscoffeeandkitchen.data.workouts.util.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.time.DayOfWeek
+import java.time.OffsetDateTime
+import javax.inject.Inject
+
+
+<span class="nc" id="L18">class ExerciseRepositoryImpl @Inject constructor(</span>
+<span class="nc" id="L19">    private val database: FitnessJournalDb,</span>
+<span class="nc" id="L20">    private val exerciseSearchService: ExerciseSearchService</span>
+): ExerciseRepository {
+
+<span class="nc" id="L23">    override suspend fun getExercises(names: List&lt;String&gt;?): List&lt;Exercise&gt; {</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        if (names != null) {</span>
+<span class="nc" id="L25">            return database.exerciseDao().getExercisesByName(names).map { exercise -&gt;</span>
+<span class="nc" id="L26">                exercise.toExercise()</span>
+            }
+        }
+<span class="nc" id="L29">        return database.exerciseDao().getAllExercises().map { exerciseWithCount -&gt;</span>
+<span class="nc" id="L30">            exerciseWithCount.exercise.toExercise(amountOfSets = exerciseWithCount.amountPerformed)</span>
+        }
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getPagedExercises(search: String?, muscle: String?, category: String?): Flow&lt;PagingData&lt;Exercise&gt;&gt; {
+<span class="nc" id="L36">        return Pager(</span>
+<span class="nc" id="L37">            config = PagingConfig(</span>
+<span class="nc" id="L38">                pageSize = 20,</span>
+<span class="nc" id="L39">                enablePlaceholders = false,</span>
+<span class="nc" id="L40">                prefetchDistance = 5</span>
+            ),
+<span class="nc" id="L42">            remoteMediator = ExerciseRemoteMediator(</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">                search.orEmpty(),</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                muscle.orEmpty(),</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">                category.orEmpty(),</span>
+<span class="nc" id="L46">                exerciseSearchService,</span>
+<span class="nc" id="L47">                database</span>
+            ),
+            pagingSourceFactory = {
+<span class="nc bnc" id="L50" title="All 18 branches missed.">                if (search.isNullOrEmpty() &amp;&amp; muscle.isNullOrEmpty() &amp;&amp; category.isNullOrEmpty()) {</span>
+<span class="nc" id="L51">                    database.exerciseDao().getAllPagedExercises()</span>
+                } else {
+<span class="nc" id="L53">                    database.exerciseDao().getPagedExercisesByName(</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                        search.orEmpty(),</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                        muscle.orEmpty(),</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">                        category.orEmpty()</span>
+                    )
+                }
+            }
+<span class="nc" id="L60">        ).flow.map { pagingData -&gt;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            pagingData.map { it.exercise.toExercise() }</span>
+        }
+    }
+
+    override suspend fun getExerciseByName(name: String): Exercise? {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        val dbExercise = database.exerciseDao().getExerciseByName(name) ?: return null</span>
+<span class="nc" id="L67">        return dbExercise.toExercise()</span>
+    }
+
+    override suspend fun createExercise(exercise: Exercise): Exercise {
+<span class="nc" id="L71">        database.exerciseDao().insert(exercise = exercise.toDbExercise(id = 0L, userCreated = true))</span>
+<span class="nc" id="L72">        return exercise</span>
+    }
+
+<span class="nc" id="L75">    override suspend fun updateExercise(exercise: Exercise, workout: Workout?) {</span>
+<span class="nc" id="L76">        val dbExercise = database.exerciseDao().getExerciseByName(exercise.name)</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        dbExercise?.let { dbEx -&gt;</span>
+<span class="nc" id="L78">            database.exerciseDao().update(exercise.toDbExercise(id = dbEx.eId))</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">    }</span>
+
+<span class="nc" id="L82">    override suspend fun createGroup(groupName: String, exerciseNames: List&lt;String&gt;): ExerciseGroup {</span>
+<span class="nc" id="L83">        val exercises = database.exerciseDao().getExercisesByName(exerciseNames)</span>
+<span class="nc" id="L84">        val groupId = database.exerciseGroupDao().insert(</span>
+<span class="nc" id="L85">            ExerciseGroupEntity(</span>
+<span class="nc" id="L86">                gId = 0L,</span>
+<span class="nc" id="L87">                name = groupName,</span>
+            )
+        )
+
+<span class="nc" id="L91">        database.exerciseGroupDao().insertAllRefs(exercises.map { ex -&gt;</span>
+<span class="nc" id="L92">            GroupExerciseXRef(</span>
+<span class="nc" id="L93">                egxrId = 0L,</span>
+<span class="nc" id="L94">                groupId = groupId,</span>
+<span class="nc" id="L95">                exerciseId = ex.eId</span>
+            )
+        })
+
+<span class="nc" id="L99">        return ExerciseGroup(</span>
+<span class="nc" id="L100">            id = groupId,</span>
+<span class="nc" id="L101">            name = groupName,</span>
+<span class="nc" id="L102">            exercises = exercises.map { it.toExercise() }</span>
+        )
+    }
+
+    override suspend fun updateGroup(group: ExerciseGroup) {
+<span class="nc" id="L107">        database.exerciseGroupDao().update(group.toEntity())</span>
+<span class="nc" id="L108">    }</span>
+
+<span class="nc" id="L110">    override suspend fun updateGroupExercises(</span>
+        group: ExerciseGroup,
+        exerciseNames: List&lt;String&gt;
+    ): ExerciseGroup {
+<span class="nc" id="L114">        database.exerciseGroupDao().removeGroupXRefs(group.id)</span>
+
+<span class="nc" id="L116">        val exercises = database.exerciseDao().getExercisesByName(exerciseNames)</span>
+<span class="nc" id="L117">        database.exerciseGroupDao().insertAllRefs(exercises.map { ex -&gt;</span>
+<span class="nc" id="L118">            GroupExerciseXRef(</span>
+<span class="nc" id="L119">                egxrId = 0L,</span>
+<span class="nc" id="L120">                groupId = group.id,</span>
+<span class="nc" id="L121">                exerciseId = ex.eId</span>
+            )
+        })
+
+<span class="nc" id="L125">        return group.copy(exercises = exercises.map { exercise -&gt;</span>
+<span class="nc" id="L126">            val stats = database.exerciseDao().getExerciseWithStatsByName(</span>
+<span class="nc" id="L127">                exercise.name,</span>
+<span class="nc" id="L128">                startOfWeek = OffsetDateTime.now().inUTC().with(DayOfWeek.MONDAY).withHour(0)</span>
+<span class="nc" id="L129">                    .toUTCEpochMilli(),</span>
+<span class="nc" id="L130">                currentTime = OffsetDateTime.now().toUTCEpochMilli()</span>
+            )
+<span class="nc" id="L132">            exercise.toExercise(</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                stats = stats?.toStats()</span>
+            )
+        })
+    }
+
+    override suspend fun removeGroup(group: ExerciseGroup) {
+<span class="nc" id="L139">        database.exerciseGroupDao().delete(group.toEntity())</span>
+<span class="nc" id="L140">    }</span>
+
+<span class="nc" id="L142">    override suspend fun getGroups(): List&lt;ExerciseGroup&gt; {</span>
+<span class="nc" id="L143">        return database.exerciseGroupDao().getGroups().map { entry -&gt;</span>
+<span class="nc" id="L144">            entry.group.toExerciseGroup(</span>
+<span class="nc" id="L145">                exercises = entry.exercises.map { exercise -&gt;</span>
+<span class="nc" id="L146">                    val stats = database.exerciseDao().getExerciseWithStatsByName(</span>
+<span class="nc" id="L147">                        exercise.name,</span>
+<span class="nc" id="L148">                        startOfWeek = OffsetDateTime.now().inUTC().with(DayOfWeek.MONDAY).withHour(0).toUTCEpochMilli(),</span>
+<span class="nc" id="L149">                        currentTime = OffsetDateTime.now().toUTCEpochMilli()</span>
+                    )
+<span class="nc" id="L151">                    exercise.toExercise(</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                        stats = stats?.toStats()</span>
+                    )
+                }
+            )
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

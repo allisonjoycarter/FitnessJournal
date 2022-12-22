@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchExercisesHeader.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises</a> &gt; <span class="el_source">SearchExercisesHeader.kt</span></div><h1>SearchExercisesHeader.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.google.accompanist.flowlayout.FlowRow
+import com.google.android.material.chip.ChipGroup
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchExerciseHeader(
+    currentSearch: String?,
+    currentMuscleFilter: String?,
+    currentCategoryFilter: String?,
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">    onSearch: (search: String?) -&gt; Unit = {},</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">    filterMuscle: (muscle: String?) -&gt; Unit = {},</span>
+<span class="pc" id="L30">    filterCategory: (category: String?) -&gt; Unit = {}</span>
+<span class="pc bpc" id="L31" title="19 of 42 branches missed.">) {</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">    var search by remember { mutableStateOf(TextFieldValue(currentSearch.orEmpty())) }</span>
+<span class="pc" id="L33">    var muscleFilter by remember { mutableStateOf(currentMuscleFilter) }</span>
+<span class="pc" id="L34">    var categoryFilter by remember { mutableStateOf(currentCategoryFilter) }</span>
+<span class="fc" id="L35">    val categoryOptions = listOf(</span>
+<span class="fc" id="L36">        &quot;Chest&quot;,</span>
+<span class="fc" id="L37">        &quot;Abs&quot;,</span>
+<span class="fc" id="L38">        &quot;Legs&quot;,</span>
+<span class="fc" id="L39">        &quot;Shoulders&quot;,</span>
+<span class="fc" id="L40">        &quot;Arms&quot;,</span>
+<span class="fc" id="L41">        &quot;Back&quot;</span>
+    )
+
+<span class="fc" id="L44">    val muscleOptions: List&lt;String&gt; =</span>
+<span class="pc bpc" id="L45" title="4 of 6 branches missed.">        (if (!currentMuscleFilter.isNullOrEmpty())</span>
+<span class="nc" id="L46">            listOf(currentMuscleFilter)</span>
+<span class="fc" id="L47">        else emptyList()) + listOf(</span>
+<span class="fc" id="L48">            &quot;Pecs&quot;,</span>
+<span class="fc" id="L49">            &quot;Quads&quot;,</span>
+<span class="fc" id="L50">            &quot;Triceps&quot;,</span>
+<span class="fc" id="L51">            &quot;Abs&quot;,</span>
+<span class="fc" id="L52">            &quot;Glutes&quot;,</span>
+<span class="fc" id="L53">            &quot;Lats&quot;,</span>
+        )
+
+<span class="fc" id="L56">    Column(</span>
+<span class="fc" id="L57">        modifier = Modifier</span>
+<span class="fc" id="L58">            .background(MaterialTheme.colorScheme.background)</span>
+<span class="fc" id="L59">            .padding(8.dp)</span>
+<span class="fc" id="L60">            .fillMaxWidth()</span>
+    ) {
+<span class="pc bpc" id="L62" title="3 of 4 branches missed.">        Row(modifier = Modifier.fillMaxWidth()) {</span>
+<span class="pc bpc" id="L63" title="3 of 4 branches missed.">            TextField(</span>
+<span class="fc" id="L64">                modifier = Modifier</span>
+<span class="fc" id="L65">                    .fillMaxWidth()</span>
+<span class="fc" id="L66">                    .weight(1f),</span>
+<span class="fc" id="L67">                value = search,</span>
+<span class="fc" id="L68">                onValueChange = { value -&gt;</span>
+<span class="nc" id="L69">                    search = value</span>
+<span class="nc" id="L70">                },</span>
+<span class="fc" id="L71">                singleLine = true,</span>
+<span class="pc" id="L72">                keyboardActions = KeyboardActions(onDone = { onSearch(search.text.trim()) })</span>
+            )
+<span class="fc" id="L74">            IconButton(</span>
+<span class="fc" id="L75">                onClick = {</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">                    onSearch(search.text.trim().ifEmpty { null })</span>
+<span class="nc" id="L77">                }</span>
+<span class="fc" id="L78">            ) {</span>
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">                Icon(Icons.Default.Search, &quot;search&quot;)</span>
+<span class="pc" id="L80">            }</span>
+<span class="pc" id="L81">        }</span>
+
+<span class="fc" id="L83">        Text(</span>
+<span class="fc" id="L84">            &quot;Muscles&quot;,</span>
+<span class="fc" id="L85">            modifier = Modifier.padding(start = 4.dp, top = 10.dp),</span>
+<span class="fc" id="L86">            style = MaterialTheme.typography.labelSmall</span>
+        )
+<span class="fc" id="L88">        LazyRow(</span>
+<span class="fc" id="L89">            modifier = Modifier</span>
+<span class="fc" id="L90">                .padding(4.dp),</span>
+<span class="fc" id="L91">            horizontalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="fc" id="L93">            items(muscleOptions) { option -&gt;</span>
+                FilterChip(
+                    selected = muscleFilter == option,
+                    onClick = {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                        muscleFilter = if (muscleFilter == option) {</span>
+<span class="nc" id="L98">                            null</span>
+                        } else {
+<span class="nc" id="L100">                            option</span>
+                        }
+<span class="nc" id="L102">                        filterMuscle(muscleFilter)</span>
+<span class="nc" id="L103">                    },</span>
+<span class="pc bpc" id="L104" title="1 of 4 branches missed.">                    label = { Text(option) }</span>
+                )
+            }
+<span class="fc" id="L107">        }</span>
+
+<span class="fc" id="L109">        Divider()</span>
+
+<span class="fc" id="L111">        Text(</span>
+<span class="fc" id="L112">            &quot;Category&quot;,</span>
+<span class="fc" id="L113">            modifier = Modifier.padding(start = 4.dp, top = 10.dp),</span>
+<span class="fc" id="L114">            style = MaterialTheme.typography.labelSmall</span>
+        )
+<span class="fc" id="L116">        LazyRow(</span>
+<span class="fc" id="L117">            modifier = Modifier</span>
+<span class="fc" id="L118">                .padding(4.dp),</span>
+<span class="fc" id="L119">            horizontalArrangement = Arrangement.spacedBy(4.dp)</span>
+        ) {
+<span class="fc" id="L121">            items(categoryOptions) { option -&gt;</span>
+                FilterChip(
+                    selected = categoryFilter == option,
+                    onClick = {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                        categoryFilter = if (categoryFilter == option) {</span>
+<span class="nc" id="L126">                            null</span>
+                        } else {
+<span class="nc" id="L128">                            option</span>
+                        }
+<span class="nc" id="L130">                        filterCategory(categoryFilter)</span>
+<span class="nc" id="L131">                    },</span>
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">                    label = { Text(option) }</span>
+                )
+            }
+<span class="pc" id="L135">        }</span>
+<span class="pc" id="L136">    }</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">}</span>
+
+
+@Preview
+@Composable
+<span class="nc bnc" id="L142" title="All 4 branches missed.">fun SearchExerciseHeaderPreview() {</span>
+<span class="nc" id="L143">    SearchExerciseHeader(</span>
+<span class="nc" id="L144">        &quot;Bicep Curl&quot;,</span>
+<span class="nc" id="L145">        &quot;Chest&quot;,</span>
+<span class="nc" id="L146">        &quot;Pecs&quot;</span>
+    )
+<span class="nc bnc" id="L148" title="All 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

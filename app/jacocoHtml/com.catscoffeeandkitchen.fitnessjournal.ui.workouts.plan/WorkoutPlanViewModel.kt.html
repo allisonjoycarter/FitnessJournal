@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutPlanViewModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan</a> &gt; <span class="el_source">WorkoutPlanViewModel.kt</span></div><h1>WorkoutPlanViewModel.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan
+
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.models.ExerciseGroup
+import com.catscoffeeandkitchen.domain.models.ExpectedSet
+import com.catscoffeeandkitchen.domain.models.WorkoutPlan
+import com.catscoffeeandkitchen.domain.usecases.exercisegroup.CreateExerciseGroupUseCase
+import com.catscoffeeandkitchen.domain.usecases.workoutplan.*
+import com.catscoffeeandkitchen.domain.util.DataState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import javax.inject.Inject
+
+@HiltViewModel()
+<span class="nc" id="L26">class WorkoutPlanViewModel @Inject constructor(</span>
+<span class="nc" id="L27">    private val getPlanUseCase: GetWorkoutPlanUseCase,</span>
+<span class="nc" id="L28">    private val updateWorkoutPlanUseCase: UpdateWorkoutPlanUseCase,</span>
+<span class="nc" id="L29">    private val addSetToWorkoutPlan: AddSetToWorkoutPlanUseCase,</span>
+<span class="nc" id="L30">    private val createExerciseGroupUseCase: CreateExerciseGroupUseCase,</span>
+<span class="nc" id="L31">    private val removeSetFromWorkoutPlan: RemoveSetFromWorkoutPlanUseCase,</span>
+<span class="nc" id="L32">    private val updateExpectedSet: UpdateExpectedSetUseCase,</span>
+<span class="nc" id="L33">    private val updateExercisePositionUseCase: UpdateExpectedSetPositionUseCase,</span>
+<span class="nc" id="L34">    private val createWorkoutPlanUseCase: CreateWorkoutPlanUseCase,</span>
+    savedStateHandle: SavedStateHandle
+<span class="nc" id="L36">): ViewModel() {</span>
+<span class="nc" id="L37">    private var _workoutPlan: MutableState&lt;DataState&lt;WorkoutPlan&gt;&gt; = mutableStateOf(DataState.NotSent())</span>
+<span class="nc" id="L38">    val workoutPlan: State&lt;DataState&lt;WorkoutPlan&gt;&gt; = _workoutPlan</span>
+
+<span class="nc" id="L40">    private var _showExerciseGroupNameDialog = MutableStateFlow(false)</span>
+<span class="nc" id="L41">    val showExerciseGroupNameDialog = _showExerciseGroupNameDialog</span>
+<span class="nc" id="L42">    private var _exercisesToGroup = MutableStateFlow(emptyList&lt;String&gt;())</span>
+<span class="nc" id="L43">    var exercisesToGroup = _exercisesToGroup</span>
+
+<span class="nc" id="L45">    init {</span>
+<span class="nc" id="L46">        val planId = savedStateHandle.get&lt;Long?&gt;(&quot;workoutId&quot;)</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (planId != null) {</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            if (planId == 0L) {</span>
+<span class="nc" id="L49">                viewModelScope.launch {</span>
+<span class="nc" id="L50">                    createWorkoutPlanUseCase.run(WorkoutPlan(id = 0L)</span>
+<span class="nc" id="L51">                    ).collect { wo -&gt;</span>
+<span class="nc" id="L52">                        _workoutPlan.value = wo</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                        if (wo is DataState.Success) {</span>
+<span class="nc" id="L55">                            savedStateHandle[&quot;workoutId&quot;] = wo.data.id</span>
+                        }
+<span class="nc" id="L57">                    }</span>
+<span class="nc" id="L58">                }</span>
+            } else {
+<span class="nc" id="L60">                viewModelScope.launch {</span>
+<span class="nc" id="L61">                    getPlanUseCase.run(planId).collect { wo -&gt;</span>
+<span class="nc bnc" id="L62" title="All 6 branches missed.">                        Timber.d(&quot;*** ${(wo as? DataState.Success)?.data?.entries}&quot;)</span>
+<span class="nc" id="L63">                        _workoutPlan.value = wo</span>
+<span class="nc" id="L64">                    }</span>
+<span class="nc" id="L65">                }</span>
+            }
+        }
+<span class="nc" id="L68">    }</span>
+
+<span class="nc" id="L70">    fun updateExercisePlan(setNumber: Int, field: ExercisePlanField, value: Int) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L71" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { workout -&gt;</span>
+<span class="nc bnc" id="L72" title="All 6 branches missed.">            val setFromWorkout = workout.entries.find { it.positionInWorkout == setNumber }</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (setFromWorkout != null) {</span>
+<span class="nc" id="L74">                updateExpectedSet.run(</span>
+<span class="nc" id="L75">                    workout,</span>
+<span class="nc" id="L76">                    getUpdatedExpectedSetField(setFromWorkout, field, value)</span>
+<span class="nc" id="L77">                ).collect { result -&gt;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                    if (result is DataState.Success) {</span>
+<span class="nc" id="L79">                        getPlanUseCase.run(workout.id).collect { wo -&gt;</span>
+<span class="nc" id="L80">                            Timber.d(&quot;updated plan = $wo&quot;)</span>
+<span class="nc" id="L81">                            _workoutPlan.value = wo</span>
+<span class="nc" id="L82">                        }</span>
+                    }
+<span class="nc" id="L84">                }</span>
+            }
+<span class="nc" id="L86">        }</span>
+<span class="nc" id="L87">    }</span>
+
+<span class="nc" id="L89">    fun updateExercisePosition(originalSetNumber: Int, newSetNumber: Int) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L90" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { workout -&gt;</span>
+<span class="nc bnc" id="L91" title="All 6 branches missed.">            val setFromWorkout = workout.entries.find { it.positionInWorkout == originalSetNumber }</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            setFromWorkout?.let { set -&gt;</span>
+<span class="nc" id="L93">                updateExercisePositionUseCase.run(</span>
+<span class="nc" id="L94">                    workout,</span>
+<span class="nc" id="L95">                    set,</span>
+<span class="nc" id="L96">                    newSetNumber,</span>
+<span class="nc" id="L97">                ).collect { result -&gt;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (result is DataState.Success) {</span>
+<span class="nc" id="L99">                        getPlanUseCase.run(workout.id).collect { wo -&gt;</span>
+<span class="nc" id="L100">                            Timber.d(&quot;updated plan = $wo&quot;)</span>
+<span class="nc" id="L101">                            _workoutPlan.value = wo</span>
+<span class="nc" id="L102">                        }</span>
+                    }
+<span class="nc" id="L104">                }</span>
+<span class="nc" id="L105">            }</span>
+<span class="nc" id="L106">        }</span>
+<span class="nc" id="L107">    }</span>
+
+<span class="nc" id="L109">    fun addExercise(name: String) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        val workout = (workoutPlan.value as? DataState.Success)?.data</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (workout != null) {</span>
+<span class="nc" id="L112">            addSetToWorkoutPlan.run(</span>
+<span class="nc" id="L113">                workout,</span>
+<span class="nc" id="L114">                ExpectedSet(</span>
+<span class="nc" id="L115">                    exercise = Exercise(name, musclesWorked = emptyList()),</span>
+<span class="nc" id="L116">                    sets = 3,</span>
+<span class="nc" id="L117">                    reps = 10,</span>
+<span class="nc" id="L118">                    minReps = 8,</span>
+<span class="nc" id="L119">                    maxReps = 12,</span>
+<span class="nc" id="L120">                    perceivedExertion = 8,</span>
+<span class="nc" id="L121">                    rir = 2</span>
+                )
+<span class="nc" id="L123">            ).collect { result -&gt;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                if (result is DataState.Success) {</span>
+<span class="nc" id="L125">                    getPlanUseCase.run(workout.id).collect { wo -&gt;</span>
+<span class="nc" id="L126">                        Timber.d(&quot;added to workout = $wo&quot;)</span>
+<span class="nc" id="L127">                        _workoutPlan.value = wo</span>
+<span class="nc" id="L128">                    }</span>
+                }
+<span class="nc" id="L130">            }</span>
+        }
+<span class="nc" id="L132">    }</span>
+
+<span class="nc" id="L134">    fun addExerciseGroup(names: List&lt;String&gt;, groupName: String = &quot;&quot;) = viewModelScope.launch {</span>
+<span class="nc" id="L135">        Timber.d(&quot;*** creating exercise group $names&quot;)</span>
+<span class="nc bnc" id="L136" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { workout -&gt;</span>
+<span class="nc" id="L137">            createExerciseGroupUseCase.run(names, groupName)</span>
+<span class="nc" id="L138">                .collect { state -&gt;</span>
+<span class="nc" id="L139">                    Timber.d(&quot;*** create group state = $state&quot;)</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                    if (state is DataState.Success) {</span>
+<span class="nc" id="L141">                        addSetToWorkoutPlan.run(</span>
+<span class="nc" id="L142">                            workout,</span>
+<span class="nc" id="L143">                            ExpectedSet(</span>
+<span class="nc" id="L144">                                exerciseGroup = state.data</span>
+                            )
+<span class="nc" id="L146">                        ).collectLatest { addedSetState -&gt;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                            if (addedSetState is DataState.Success) {</span>
+<span class="nc" id="L148">                                getPlanUseCase.run(workout.id).collect { wo -&gt;</span>
+<span class="nc" id="L149">                                    _workoutPlan.value = wo</span>
+<span class="nc" id="L150">                                }</span>
+                            }
+<span class="nc" id="L152">                        }</span>
+                    }
+<span class="nc" id="L154">            }</span>
+<span class="nc" id="L155">        }</span>
+<span class="nc" id="L156">    }</span>
+
+<span class="nc" id="L158">    fun removeSet(expectedSet: ExpectedSet) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L159" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { workout -&gt;</span>
+<span class="nc" id="L160">            removeSetFromWorkoutPlan.run(</span>
+<span class="nc" id="L161">                workout,</span>
+<span class="nc" id="L162">                expectedSet</span>
+<span class="nc" id="L163">            ).collect { result -&gt;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (result is DataState.Success) {</span>
+<span class="nc" id="L165">                    getPlanUseCase.run(workout.id).collect { wo -&gt;</span>
+<span class="nc" id="L166">                        _workoutPlan.value = wo</span>
+<span class="nc" id="L167">                    }</span>
+                }
+<span class="nc" id="L169">            }</span>
+<span class="nc" id="L170">        }</span>
+<span class="nc" id="L171">    }</span>
+
+<span class="nc" id="L173">    fun updateWorkoutName(name: String) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L174" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { currentWorkout -&gt;</span>
+<span class="nc" id="L175">            _workoutPlan.value = DataState.Loading()</span>
+<span class="nc" id="L176">            val updatedWorkout = currentWorkout.copy(name = name)</span>
+<span class="nc" id="L177">            updateWorkoutPlanUseCase.run(updatedWorkout).collect { updated -&gt;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                if (updated is DataState.Success) {</span>
+<span class="nc" id="L179">                    _workoutPlan.value = DataState.Success(updatedWorkout)</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                } else if (updated is DataState.Error) {</span>
+<span class="nc" id="L181">                    _workoutPlan.value = DataState.Error(updated.e)</span>
+                }
+<span class="nc" id="L183">            }</span>
+<span class="nc" id="L184">        }</span>
+<span class="nc" id="L185">    }</span>
+
+<span class="nc" id="L187">    fun updateWorkoutNotes(note: String) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L188" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { currentWorkout -&gt;</span>
+<span class="nc" id="L189">            _workoutPlan.value = DataState.Loading()</span>
+<span class="nc" id="L190">            val updatedWorkout = currentWorkout.copy(note = note)</span>
+<span class="nc" id="L191">            updateWorkoutPlanUseCase.run(updatedWorkout).collect { updated -&gt;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                if (updated is DataState.Success) {</span>
+<span class="nc" id="L193">                    _workoutPlan.value = DataState.Success(updatedWorkout)</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                } else if (updated is DataState.Error) {</span>
+<span class="nc" id="L195">                    _workoutPlan.value = DataState.Error(updated.e)</span>
+                }
+<span class="nc" id="L197">            }</span>
+<span class="nc" id="L198">        }</span>
+<span class="nc" id="L199">    }</span>
+
+<span class="nc" id="L201">    fun selectGroup(id: Long) = viewModelScope.launch {</span>
+<span class="nc bnc" id="L202" title="All 6 branches missed.">        (workoutPlan.value as? DataState.Success)?.data?.let { currentWorkout -&gt;</span>
+<span class="nc" id="L203">            addSetToWorkoutPlan.run(</span>
+<span class="nc" id="L204">                currentWorkout,</span>
+<span class="nc" id="L205">                ExpectedSet(</span>
+<span class="nc" id="L206">                    exerciseGroup = ExerciseGroup(id = id, name = &quot;&quot;, emptyList())</span>
+                )
+<span class="nc" id="L208">            ).collectLatest { addedSetState -&gt;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                if (addedSetState is DataState.Success) {</span>
+<span class="nc" id="L210">                    getPlanUseCase.run(currentWorkout.id).collect { wo -&gt;</span>
+<span class="nc" id="L211">                        _workoutPlan.value = wo</span>
+<span class="nc" id="L212">                    }</span>
+                }
+<span class="nc" id="L214">            }</span>
+<span class="nc" id="L215">        }</span>
+<span class="nc" id="L216">    }</span>
+
+    fun showGroupNameDialog(names: List&lt;String&gt;) {
+<span class="nc" id="L219">        _showExerciseGroupNameDialog.value = true</span>
+<span class="nc" id="L220">        _exercisesToGroup.value = names</span>
+<span class="nc" id="L221">    }</span>
+
+    fun hideGroupNameDialog() {
+<span class="nc" id="L224">        _showExerciseGroupNameDialog.value = false</span>
+<span class="nc" id="L225">    }</span>
+
+    private fun getUpdatedExpectedSetField(set: ExpectedSet, field: ExercisePlanField, value: Int): ExpectedSet {
+<span class="nc bnc" id="L228" title="All 9 branches missed.">        return when (field) {</span>
+<span class="nc" id="L229">            ExercisePlanField.Reps -&gt; set.copy(reps = value)</span>
+<span class="nc" id="L230">            ExercisePlanField.MaxReps -&gt; set.copy(maxReps = value)</span>
+<span class="nc" id="L231">            ExercisePlanField.MinReps -&gt; set.copy(minReps = value)</span>
+<span class="nc" id="L232">            ExercisePlanField.Sets -&gt; set.copy(sets = value)</span>
+<span class="nc" id="L233">            ExercisePlanField.WeightInPounds -&gt; set</span>
+<span class="nc" id="L234">            ExercisePlanField.WeightInKilograms -&gt; set</span>
+<span class="nc" id="L235">            ExercisePlanField.RepsInReserve -&gt; set.copy(rir = value)</span>
+<span class="nc" id="L236">            ExercisePlanField.PerceivedExertion -&gt; set.copy(perceivedExertion = value)</span>
+<span class="nc" id="L237">            ExercisePlanField.SetNumber -&gt; set</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

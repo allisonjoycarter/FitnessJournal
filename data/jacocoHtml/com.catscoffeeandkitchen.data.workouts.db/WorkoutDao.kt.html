@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutDao.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.db</a> &gt; <span class="el_source">WorkoutDao.kt</span></div><h1>WorkoutDao.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.db
+
+import androidx.paging.PagingSource
+import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteQuery
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutWithPlanAndGoals
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutWithSetsAndExercises
+import java.time.OffsetDateTime
+
+
+@Dao
+interface WorkoutDao {
+    @RawQuery
+    fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery): Int
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(workout: WorkoutEntity): Long
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun update(workout: WorkoutEntity): Int
+
+    @Transaction
+    suspend fun upsert(workout: WorkoutEntity) {
+<span class="nc" id="L25">        val id = insert(workout)</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (id == -1L) {</span>
+<span class="nc" id="L27">            update(workout)</span>
+        }
+<span class="nc" id="L29">    }</span>
+
+    @Delete
+    suspend fun delete(workout: WorkoutEntity)
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        ORDER BY addedAt DESC, completedAt DESC
+    &quot;&quot;&quot;
+    )
+    fun getAll(): List&lt;WorkoutEntity&gt;
+
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        ORDER BY addedAt DESC, completedAt DESC
+    &quot;&quot;&quot;
+    )
+    fun getAllPaged(): PagingSource&lt;Int, WorkoutWithSetsAndExercises&gt;
+
+
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        WHERE completedAt IS NOT NULL
+        ORDER BY addedAt DESC, completedAt DESC
+    &quot;&quot;&quot;
+    )
+    suspend fun getAllCompletedWorkouts(): List&lt;WorkoutEntity&gt;
+
+    @Query(
+        &quot;&quot;&quot;
+        SELECT completedAt
+        FROM WorkoutEntity
+        WHERE completedAt IS NOT NULL AND completedAt &gt;= :earliestDateInEpochMilli
+        ORDER BY completedAt DESC
+    &quot;&quot;&quot;
+    )
+    suspend fun getAllCompletedWorkoutDates(earliestDateInEpochMilli: Long): List&lt;OffsetDateTime&gt;
+
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        WHERE completedAt IS NOT NULL
+        ORDER BY completedAt DESC
+        LIMIT 1
+    &quot;&quot;&quot;
+    )
+    suspend fun getLastWorkout(): WorkoutEntity
+
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        WHERE addedAt = :addedAt
+        LIMIT 1
+    &quot;&quot;&quot;
+    )
+    suspend fun getWorkoutByAddedAt(addedAt: OffsetDateTime): WorkoutEntity
+
+    @Query(&quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        WHERE wId = :id
+        LIMIT 1
+    &quot;&quot;&quot;)
+    suspend fun getWorkout(id: Long): WorkoutEntity
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+    &quot;&quot;&quot;
+    )
+    suspend fun getWorkoutsWithPlans(): List&lt;WorkoutWithPlanAndGoals&gt;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

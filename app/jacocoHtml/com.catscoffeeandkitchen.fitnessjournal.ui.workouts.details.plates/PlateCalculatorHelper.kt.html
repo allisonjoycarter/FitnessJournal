@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlateCalculatorHelper.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates</a> &gt; <span class="el_source">PlateCalculatorHelper.kt</span></div><h1>PlateCalculatorHelper.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.plates
+
+import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
+
+<span class="fc" id="L5">class PlateCalculatorHelper {</span>
+<span class="fc" id="L6">    data class PlateSettings(</span>
+<span class="fc" id="L7">        val amounts: Map&lt;Double, Int&gt;,</span>
+<span class="fc" id="L8">        val unit: WeightUnit,</span>
+    )
+
+<span class="fc" id="L11">    data class PlateResults(</span>
+<span class="fc" id="L12">        val amounts: Map&lt;Double, Int&gt;,</span>
+<span class="fc" id="L13">        val leftoverWeight: Double</span>
+    )
+
+<span class="fc" id="L16">    private val poundPlates = listOf(45.0, 35.0, 25.0, 10.0, 5.0, 2.5)</span>
+<span class="fc" id="L17">    private val kgPlates = listOf(25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25)</span>
+
+    fun calculatePlates(barbellType: BarbellType, weight: Double, settings: PlateSettings): PlateResults {
+<span class="fc" id="L20">        val barWeight = when {</span>
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">            barbellType == BarbellType.None -&gt; 0</span>
+<span class="pc bpc" id="L22" title="2 of 4 branches missed.">            barbellType == BarbellType.Standard &amp;&amp; settings.unit == WeightUnit.Pounds -&gt; 45</span>
+<span class="nc bnc" id="L23" title="All 4 branches missed.">            barbellType == BarbellType.Standard &amp;&amp; settings.unit == WeightUnit.Kilograms -&gt; 20</span>
+<span class="nc" id="L24">            else -&gt; 0</span>
+        }
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        val plates = if (settings.unit == WeightUnit.Pounds) poundPlates else kgPlates</span>
+
+<span class="fc" id="L28">        val oneSidedWeight = (weight - barWeight) / 2</span>
+
+<span class="fc" id="L30">        return calculateAmountOfPlates(oneSidedWeight, settings, plates, 0, mapOf())</span>
+    }
+
+    private fun calculateAmountOfPlates(
+        weight: Double,
+        settings: PlateSettings,
+        plateOptions: List&lt;Double&gt;,
+        plateIndex: Int,
+        currentPlates: Map&lt;Double, Int&gt;
+    ): PlateResults {
+<span class="fc" id="L40">        val plateCalculating = plateOptions[plateIndex]</span>
+
+<span class="fc" id="L42">        var amountOfPlates = weight.toInt() / plateCalculating.toInt()</span>
+<span class="fc" id="L43">        val maxPlates = settings.amounts.getOrDefault(plateCalculating, 100)</span>
+
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (amountOfPlates &gt; maxPlates) {</span>
+<span class="nc" id="L46">            amountOfPlates = maxPlates</span>
+        }
+
+<span class="fc" id="L49">        val updatedMap = currentPlates + mapOf(plateCalculating to amountOfPlates)</span>
+//        Timber.d(&quot;*** weight = ${weight}. calculating $plateCalculating lb plate, &quot; +
+//                &quot;using $amountOfPlates plates, next plate = $nextPlate. map = $updatedMap&quot;)
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        return when (plateIndex + 1 &gt;= plateOptions.size) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            true -&gt; PlateResults(updatedMap, leftoverWeight = weight)</span>
+<span class="fc" id="L54">            else -&gt; calculateAmountOfPlates(</span>
+<span class="fc" id="L55">                weight - (plateCalculating * amountOfPlates),</span>
+<span class="fc" id="L56">                settings,</span>
+<span class="fc" id="L57">                plateOptions,</span>
+<span class="fc" id="L58">                plateIndex + 1,</span>
+<span class="fc" id="L59">                updatedMap</span>
+            )
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

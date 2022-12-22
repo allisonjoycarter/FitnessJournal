@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectPlanScreen.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details</a> &gt; <span class="el_source">SelectPlanScreen.kt</span></div><h1>SelectPlanScreen.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
+import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list.WorkoutPlanSummaryCard
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.plan.list.WorkoutPlansViewModel
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SelectPlanScreen(
+    navController: NavController,
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">    modifier: Modifier = Modifier,</span>
+<span class="fc" id="L32">    workoutPlansViewModel: WorkoutPlansViewModel = hiltViewModel()</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">) {</span>
+<span class="fc" id="L34">    val coroutineScope = rememberCoroutineScope()</span>
+
+<span class="fc" id="L36">    when (val planState = workoutPlansViewModel.workouts.value) {</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        is DataState.Loading -&gt; { CircularProgressIndicator() }</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        is DataState.Error -&gt; { Text(&quot;Error = ${planState.e.localizedMessage}&quot;)}</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        is DataState.Success -&gt; {</span>
+<span class="fc" id="L40">            LaunchedEffect(coroutineScope) {</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">                if (planState.data.isEmpty()) {</span>
+<span class="fc" id="L42">                    navController.navigate(&quot;${FitnessJournalScreen.WorkoutDetails.route}/0&quot;) {</span>
+<span class="fc" id="L43">                        popUpTo(FitnessJournalScreen.WorkoutsScreen.route)</span>
+<span class="fc" id="L44">                    }</span>
+                }
+<span class="pc" id="L46">            }</span>
+
+<span class="fc" id="L48">            LazyColumn(</span>
+<span class="fc" id="L49">                modifier = modifier.padding(12.dp).testTag(TestTags.ScrollableComponent),</span>
+            ) {
+<span class="fc" id="L51">                stickyHeader {</span>
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">                    Text(</span>
+<span class="fc" id="L53">                        &quot;Select a Plan&quot;,</span>
+<span class="fc" id="L54">                        style = MaterialTheme.typography.headlineMedium</span>
+<span class="fc" id="L55">                    )</span>
+<span class="fc" id="L56">                }</span>
+
+<span class="fc" id="L58">                items(planState.data) { item -&gt;</span>
+                    WorkoutPlanSummaryCard(
+                        workout = item,
+                        onTap = {
+<span class="nc" id="L62">                            navController.navigate(</span>
+<span class="nc" id="L63">                                &quot;${FitnessJournalScreen.WorkoutDetails.route}/0?plan=${item.id}&quot;</span>
+                            ) {
+<span class="nc" id="L65">                                popUpTo(FitnessJournalScreen.WorkoutsScreen.route)</span>
+<span class="nc" id="L66">                            }</span>
+<span class="nc" id="L67">                        }</span>
+                    )
+                }
+
+<span class="fc" id="L71">                item {</span>
+<span class="pc bpc" id="L72" title="3 of 4 branches missed.">                    Row(</span>
+<span class="fc" id="L73">                        modifier = Modifier.fillMaxWidth(),</span>
+<span class="fc" id="L74">                        horizontalArrangement = Arrangement.End</span>
+                    ) {
+<span class="pc bpc" id="L76" title="3 of 4 branches missed.">                        TextButton(onClick = {</span>
+<span class="nc" id="L77">                            navController.navigate(</span>
+<span class="nc" id="L78">                                &quot;${FitnessJournalScreen.WorkoutDetails.route}/0&quot;</span>
+                            ) {
+<span class="nc" id="L80">                                popUpTo(FitnessJournalScreen.WorkoutsScreen.route)</span>
+<span class="nc" id="L81">                            }</span>
+<span class="pc" id="L82">                        }) {</span>
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">                            Text(&quot;Skip&quot;)</span>
+<span class="pc" id="L84">                        }</span>
+<span class="pc" id="L85">                    }</span>
+<span class="fc" id="L86">                }</span>
+<span class="fc" id="L87">            }</span>
+        }
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        else -&gt; {}</span>
+    }
+<span class="fc" id="L91">}</span>
+
+@Preview
+@Composable
+<span class="nc bnc" id="L95" title="All 4 branches missed.">fun SelectPlanScreenPreview() {</span>
+<span class="nc" id="L96">    SelectPlanScreen(</span>
+<span class="nc" id="L97">        navController = rememberNavController()</span>
+    )
+<span class="nc bnc" id="L99" title="All 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

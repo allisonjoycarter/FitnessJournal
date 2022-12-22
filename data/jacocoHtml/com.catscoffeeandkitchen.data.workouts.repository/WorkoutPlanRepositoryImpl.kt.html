@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutPlanRepositoryImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.repository</a> &gt; <span class="el_source">WorkoutPlanRepositoryImpl.kt</span></div><h1>WorkoutPlanRepositoryImpl.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.repository
+
+import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
+import com.catscoffeeandkitchen.data.workouts.util.*
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity as DbWorkoutPlan
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.domain.interfaces.WorkoutPlanRepository
+import com.catscoffeeandkitchen.domain.models.*
+import timber.log.Timber
+import java.time.OffsetDateTime
+import javax.inject.Inject
+import kotlin.math.roundToInt
+
+<span class="nc" id="L16">class WorkoutPlanRepositoryImpl @Inject constructor(</span>
+<span class="nc" id="L17">    private val database: FitnessJournalDb</span>
+): WorkoutPlanRepository {
+<span class="nc" id="L19">    override suspend fun getWorkoutPlans(): List&lt;WorkoutPlan&gt; {</span>
+<span class="nc" id="L20">        return database.workoutPlanDao().getAllWithGoals().map { dbWorkout -&gt;</span>
+<span class="nc" id="L21">            Timber.d(&quot;got workout ${dbWorkout.plan.wpId}, note = ${dbWorkout.plan.note}&quot;)</span>
+<span class="nc" id="L22">            WorkoutPlan(</span>
+<span class="nc" id="L23">                id = dbWorkout.plan.wpId,</span>
+<span class="nc" id="L24">                addedAt = dbWorkout.plan.addedAt,</span>
+<span class="nc" id="L25">                name = dbWorkout.plan.name,</span>
+<span class="nc" id="L26">                note = dbWorkout.plan.note,</span>
+<span class="nc" id="L27">                entries = getExpectedSetFromGoals(dbWorkout.goals)</span>
+            )
+        }
+    }
+
+<span class="nc" id="L32">    override suspend fun getWorkoutPlan(id: Long): WorkoutPlan {</span>
+<span class="nc" id="L33">        val dbWorkout = database.workoutPlanDao().getWorkoutPlanWithGoalsById(id)</span>
+<span class="nc" id="L34">        return WorkoutPlan(</span>
+<span class="nc" id="L35">            id = dbWorkout.plan.wpId,</span>
+<span class="nc" id="L36">            addedAt = dbWorkout.plan.addedAt,</span>
+<span class="nc" id="L37">            name = dbWorkout.plan.name,</span>
+<span class="nc" id="L38">            note = dbWorkout.plan.note,</span>
+<span class="nc" id="L39">            entries = getExpectedSetFromGoals(dbWorkout.goals)</span>
+        )
+    }
+
+    override suspend fun createWorkoutPlan(plan: WorkoutPlan) {
+<span class="nc" id="L44">        database.workoutPlanDao().insert(plan.toDbWorkoutPlan())</span>
+<span class="nc" id="L45">    }</span>
+
+<span class="nc" id="L47">    override suspend fun createPlanFromWorkout(workout: Workout): OffsetDateTime {</span>
+<span class="nc" id="L48">        val workoutEntity = database.workoutDao().getWorkoutByAddedAt(workout.addedAt)</span>
+<span class="nc" id="L49">        val planToAdd = DbWorkoutPlan(</span>
+<span class="nc" id="L50">            wpId = 0L,</span>
+<span class="nc" id="L51">            addedAt = OffsetDateTime.now(),</span>
+<span class="nc" id="L52">            name = &quot;Plan from ${workout.name}&quot;,</span>
+        )
+<span class="nc" id="L54">        val planId = database.workoutPlanDao().insert(planToAdd)</span>
+<span class="nc" id="L55">        val workoutPositions = database.exercisePositionDao().getPositionsWithExerciseAndSets(workoutEntity.wId)</span>
+
+<span class="nc" id="L57">        val dbExercises = arrayListOf&lt;DbExercise&gt;()</span>
+<span class="nc" id="L58">        val goals = workoutPositions.map { item -&gt;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">            item.exercise?.let { dbExercises.add(it) }</span>
+<span class="nc bnc" id="L60" title="All 4 branches missed.">            val position = workoutPositions.first { it.position.epId == item.position.epId }</span>
+<span class="nc" id="L61">            val positionId = database.exercisePositionDao().insert(</span>
+<span class="nc" id="L62">                position.position.copy(epId = 0L, planId = planId)</span>
+            )
+
+<span class="nc" id="L65">            ExerciseGoal(</span>
+<span class="nc" id="L66">                egId = 0L,</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                exerciseId = item.exercise?.eId ?: 0L,</span>
+<span class="nc" id="L68">                workoutPlanId = planId,</span>
+<span class="nc" id="L69">                sets = item.exerciseSets.size,</span>
+<span class="nc" id="L70">                positionId = positionId,</span>
+<span class="nc" id="L71">                reps = item.exerciseSets.map { it.reps }.average().roundToInt(),</span>
+<span class="nc bnc" id="L72" title="All 6 branches missed.">                repRangeMax = item.exerciseSets.minOf { it.reps },</span>
+<span class="nc bnc" id="L73" title="All 6 branches missed.">                repRangeMin = item.exerciseSets.maxOf { it.reps },</span>
+<span class="nc" id="L74">                weightInPounds = item.exerciseSets.map { it.weightInPounds }.average().toFloat(),</span>
+<span class="nc" id="L75">                weightInKilograms = item.exerciseSets.map { it.weightInKilograms }.average().toFloat(),</span>
+<span class="nc" id="L76">                repsInReserve = item.exerciseSets.map { it.repsInReserve }.average().roundToInt(),</span>
+<span class="nc" id="L77">                perceivedExertion = item.exerciseSets.map { it.perceivedExertion }.average().roundToInt(),</span>
+<span class="nc" id="L78">                note = &quot;&quot;,</span>
+            )
+        }
+<span class="nc" id="L81">        database.exerciseGoalDao().insertAll(goals)</span>
+
+<span class="nc" id="L83">        return planToAdd.addedAt</span>
+    }
+
+<span class="nc" id="L86">    override suspend fun updateWorkoutPlan(plan: WorkoutPlan) {</span>
+<span class="nc" id="L87">        val dbPlan = database.workoutPlanDao().getWorkoutPlanByAddedAt(plan.addedAt)</span>
+<span class="nc" id="L88">        database.workoutPlanDao().update(plan.toDbWorkoutPlan(dbPlan.wpId))</span>
+<span class="nc" id="L89">    }</span>
+
+<span class="nc" id="L91">    override suspend fun addExpectedSetToWorkout(workout: WorkoutPlan, expectedSet: ExpectedSet) {</span>
+<span class="nc" id="L92">        val dbWorkout = database.workoutPlanDao().getWorkoutPlanByAddedAt(workout.addedAt)</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        val exercise = expectedSet.exercise?.let { database.exerciseDao().getExerciseByName(it.name) }</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        Timber.d(&quot;adding ${exercise?.name} at set ${workout.entries.size} to workout ${dbWorkout.wpId}&quot;)</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">        val setNumber = if (workout.entries.isNotEmpty())</span>
+<span class="nc bnc" id="L96" title="All 6 branches missed.">            workout.entries.maxOf { it.positionInWorkout } + 1</span>
+<span class="nc" id="L97">            else 1</span>
+
+<span class="nc" id="L99">        val positionId = database.exercisePositionDao().insert(</span>
+<span class="nc" id="L100">            ExercisePositionEntity(</span>
+<span class="nc" id="L101">                epId = 0L,</span>
+<span class="nc" id="L102">                workoutId = null,</span>
+<span class="nc" id="L103">                planId = dbWorkout.wpId,</span>
+<span class="nc" id="L104">                position = setNumber,</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                exerciseId = exercise?.eId,</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                groupId = expectedSet.exerciseGroup?.id</span>
+            )
+        )
+
+<span class="nc" id="L110">        val id = database.exerciseGoalDao().insert(</span>
+<span class="nc" id="L111">            ExerciseGoal(</span>
+<span class="nc" id="L112">                egId = 0L,</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                exerciseId = exercise?.eId,</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                exerciseGroupId = expectedSet.exerciseGroup?.id,</span>
+<span class="nc" id="L115">                workoutPlanId = dbWorkout.wpId,</span>
+<span class="nc" id="L116">                sets = expectedSet.sets,</span>
+<span class="nc" id="L117">                reps = expectedSet.reps,</span>
+<span class="nc" id="L118">                repRangeMax = expectedSet.maxReps,</span>
+<span class="nc" id="L119">                repRangeMin = expectedSet.minReps,</span>
+<span class="nc" id="L120">                repsInReserve = expectedSet.rir,</span>
+<span class="nc" id="L121">                perceivedExertion = expectedSet.perceivedExertion,</span>
+<span class="nc" id="L122">                positionId = positionId,</span>
+            )
+        )
+<span class="nc" id="L125">        Timber.d(&quot;successfully added workout goal $id&quot;)</span>
+<span class="nc" id="L126">    }</span>
+
+<span class="nc" id="L128">    override suspend fun removeExpectedSetFromWorkout(workout: WorkoutPlan, expectedSet: ExpectedSet) {</span>
+<span class="nc" id="L129">        val planWithGoals = database.workoutPlanDao().getWithGoalsByAddedAt(workout.addedAt)</span>
+<span class="nc" id="L130">        val positions = database.exercisePositionDao().getPositionsInPlan(planWithGoals.plan.wpId)</span>
+
+<span class="nc" id="L132">        val dbExerciseGoal = database.exerciseGoalDao().getByPlanAndPositionId(</span>
+<span class="nc" id="L133">            planId = planWithGoals.plan.wpId,</span>
+<span class="nc bnc" id="L134" title="All 4 branches missed.">            positionId = positions.first { it.position == expectedSet.positionInWorkout }.epId</span>
+        )
+<span class="nc" id="L136">        database.exerciseGoalDao().delete(dbExerciseGoal)</span>
+
+<span class="nc" id="L138">        val updatedPositions = positions</span>
+<span class="nc bnc" id="L139" title="All 4 branches missed.">            .filter { it.position &gt; expectedSet.positionInWorkout }.map { entry -&gt;</span>
+<span class="nc" id="L140">                entry.copy(position = entry.position - 1)</span>
+            }
+
+<span class="nc" id="L143">        database.exercisePositionDao().updateAll(updatedPositions)</span>
+<span class="nc" id="L144">    }</span>
+
+<span class="nc" id="L146">    override suspend fun updateExpectedSet(</span>
+        workout: WorkoutPlan,
+        expectedSet: ExpectedSet
+    ) {
+<span class="nc" id="L150">        val planEntity = database.workoutPlanDao().getWorkoutPlanByAddedAt(workout.addedAt)</span>
+<span class="nc" id="L151">        val position = database.exercisePositionDao().getPositionInPlanByPosition(</span>
+<span class="nc" id="L152">            planEntity.wpId,</span>
+<span class="nc" id="L153">            position = expectedSet.positionInWorkout</span>
+        )
+
+<span class="nc" id="L156">        val dbExerciseGoal = database.exerciseGoalDao().getByPlanAndPositionId(</span>
+<span class="nc" id="L157">            planEntity.wpId,</span>
+<span class="nc" id="L158">            positionId = position.epId</span>
+        )
+
+<span class="nc" id="L161">        database.exerciseGoalDao().update(</span>
+<span class="nc" id="L162">            expectedSet.toGoal(</span>
+<span class="nc" id="L163">                exerciseId = dbExerciseGoal.exerciseId,</span>
+<span class="nc" id="L164">                groupId = dbExerciseGoal.exerciseGroupId,</span>
+<span class="nc" id="L165">                planId = planEntity.wpId,</span>
+<span class="nc" id="L166">                positionId = dbExerciseGoal.positionId</span>
+            )
+        )
+<span class="nc" id="L169">    }</span>
+
+<span class="nc" id="L171">    override suspend fun updateExpectedSetPosition(</span>
+        workout: WorkoutPlan,
+        expectedSet: ExpectedSet,
+        newPosition: Int
+    ) {
+<span class="nc" id="L176">        val planEntity = database.workoutPlanDao().getWorkoutPlanByAddedAt(workout.addedAt)</span>
+<span class="nc" id="L177">        val positions = database.exercisePositionDao().getPositionsInPlan(planEntity.wpId)</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        val movingUp = expectedSet.positionInWorkout &gt; newPosition</span>
+<span class="nc bnc" id="L180" title="All 8 branches missed.">        positions.find { it.position == newPosition }?.let { entry -&gt;</span>
+<span class="nc" id="L181">            Timber.d(&quot;*** updating ${entry.position} to &quot; +</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    &quot;${if (movingUp) (entry.position + 1) else (entry.position - 1)}&quot;)</span>
+<span class="nc" id="L183">            database.exercisePositionDao().update(entry.copy(</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                position = if (movingUp) (entry.position + 1) else (entry.position - 1)</span>
+            ))
+<span class="nc" id="L186">        }</span>
+
+<span class="nc bnc" id="L188" title="All 8 branches missed.">        positions.find { it.position == expectedSet.positionInWorkout }?.let { positionToMove -&gt;</span>
+<span class="nc" id="L189">            database.exercisePositionDao().update(positionToMove.copy(position = newPosition))</span>
+<span class="nc" id="L190">        }</span>
+<span class="nc" id="L191">    }</span>
+
+<span class="nc" id="L193">    private suspend fun getExpectedSetFromGoals(goals: List&lt;ExerciseGoal&gt;): List&lt;ExpectedSet&gt; {</span>
+<span class="nc" id="L194">        return goals.mapNotNull { goal -&gt;</span>
+<span class="nc" id="L195">            val position = database.exercisePositionDao().getPosition(goal.positionId)</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            when {</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                goal.exerciseId != null -&gt; {</span>
+<span class="nc" id="L198">                    val dbExercise = database.exerciseDao().getExerciseById(goal.exerciseId)</span>
+<span class="nc" id="L199">                    goal.toExpectedSet(</span>
+<span class="nc" id="L200">                        position = position.position,</span>
+<span class="nc" id="L201">                        exercise = dbExercise.toExercise(position.position)</span>
+                    )
+                }
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                goal.exerciseGroupId != null -&gt; {</span>
+<span class="nc" id="L205">                    val dbExerciseGroup =</span>
+<span class="nc" id="L206">                        database.exerciseGroupDao().getGroupByIdWithExercises(goal.exerciseGroupId)</span>
+
+<span class="nc" id="L208">                    goal.toExpectedSet(</span>
+<span class="nc" id="L209">                        position = position.position,</span>
+<span class="nc" id="L210">                        group = dbExerciseGroup.group.toExerciseGroup(</span>
+<span class="nc" id="L211">                            exercises = dbExerciseGroup.exercises.map { it.toExercise(position.position) },</span>
+                        )
+                    )
+                }
+<span class="nc" id="L215">                else -&gt; null</span>
+            }
+<span class="nc" id="L217">        }.sortedBy { it.positionInWorkout }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

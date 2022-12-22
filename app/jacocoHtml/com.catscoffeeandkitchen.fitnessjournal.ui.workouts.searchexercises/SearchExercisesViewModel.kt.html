@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchExercisesViewModel.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises</a> &gt; <span class="el_source">SearchExercisesViewModel.kt</span></div><h1>SearchExercisesViewModel.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises
+
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.catscoffeeandkitchen.domain.models.Exercise
+import com.catscoffeeandkitchen.domain.usecases.exercise.CreateExercisesUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.GetPagedExercisesUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.UpdateExerciseUseCase
+import com.catscoffeeandkitchen.domain.util.DataState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@HiltViewModel
+<span class="fc" id="L24">class SearchExercisesViewModel @Inject constructor(</span>
+<span class="fc" id="L25">    private val getPagedExercisesUseCase: GetPagedExercisesUseCase,</span>
+<span class="fc" id="L26">    private val createExerciseUseCase: CreateExercisesUseCase,</span>
+<span class="fc" id="L27">    private val updateExerciseUseCase: UpdateExerciseUseCase,</span>
+<span class="fc" id="L28">    private val savedStateHandle: SavedStateHandle,</span>
+<span class="fc" id="L29">) : ViewModel() {</span>
+
+<span class="fc" id="L31">    private val _search = MutableSharedFlow&lt;ExerciseSearch&gt;()</span>
+    private val _searchRequest: Flow&lt;ExerciseSearch&gt;
+    val searchRequest: Flow&lt;ExerciseSearch&gt;
+<span class="fc" id="L34">        get() = _searchRequest</span>
+
+    private var _pagedExerciseFlow: Flow&lt;PagingData&lt;Exercise&gt;&gt;
+    val pagedExerciseFlow: Flow&lt;PagingData&lt;Exercise&gt;&gt;
+<span class="fc" id="L38">        get() = _pagedExerciseFlow</span>
+
+<span class="fc" id="L40">    private var _creatingExercise: MutableState&lt;DataState&lt;Exercise&gt;&gt; = mutableStateOf(DataState.NotSent())</span>
+<span class="pc" id="L41">    val creatingExercise: State&lt;DataState&lt;Exercise&gt;&gt; = _creatingExercise</span>
+
+<span class="fc" id="L43">    init {</span>
+<span class="fc" id="L44">        _searchRequest = _search.distinctUntilChanged()</span>
+<span class="fc" id="L45">            .shareIn(</span>
+<span class="fc" id="L46">                scope = viewModelScope,</span>
+<span class="fc" id="L47">                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),</span>
+<span class="fc" id="L48">                replay = 1</span>
+            )
+
+<span class="fc" id="L51">        _pagedExerciseFlow = searchRequest.flatMapLatest { request -&gt;</span>
+            getPagedExercisesUseCase.run(request.name, request.muscle, request.category)
+        }
+<span class="fc" id="L54">            .cachedIn(viewModelScope)</span>
+<span class="fc" id="L55">    }</span>
+
+<span class="fc" id="L57">    fun searchExercises(search: ExerciseSearch) = viewModelScope.launch {</span>
+<span class="fc" id="L58">        _search.emit(search)</span>
+<span class="fc" id="L59">    }</span>
+
+<span class="nc" id="L61">    fun createExercise(exercise: Exercise, onSuccess: () -&gt; Unit) = viewModelScope.launch {</span>
+<span class="nc" id="L62">        createExerciseUseCase.run(exercise).collect { state -&gt;</span>
+<span class="nc" id="L63">            _creatingExercise.value = state</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (state is DataState.Success) {</span>
+<span class="nc" id="L65">                onSuccess()</span>
+            }
+<span class="nc" id="L67">        }</span>
+<span class="nc" id="L68">    }</span>
+
+<span class="nc" id="L70">    fun updateExercise(exercise: Exercise, refreshItems: () -&gt; Unit) = viewModelScope.launch {</span>
+<span class="nc" id="L71">        updateExerciseUseCase.run(exercise).collect { state -&gt;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (state is DataState.Success) {</span>
+<span class="nc" id="L73">                refreshItems()</span>
+            }
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

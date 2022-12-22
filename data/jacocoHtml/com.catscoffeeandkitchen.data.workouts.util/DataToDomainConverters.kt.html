@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataToDomainConverters.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.util</a> &gt; <span class="el_source">DataToDomainConverters.kt</span></div><h1>DataToDomainConverters.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.util
+
+import com.catscoffeeandkitchen.data.workouts.models.CombinedSetData
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity
+import com.catscoffeeandkitchen.domain.models.*
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity as DbExerciseGroup
+
+fun SetEntity.toExerciseSet(exercise: Exercise): ExerciseSet {
+<span class="fc" id="L13">    return ExerciseSet(</span>
+<span class="fc" id="L14">        this.sId,</span>
+<span class="fc" id="L15">        exercise = exercise,</span>
+<span class="fc" id="L16">        chosenFromGroup = this.groupId,</span>
+<span class="fc" id="L17">        reps = this.reps,</span>
+<span class="fc" id="L18">        weightInKilograms = this.weightInKilograms,</span>
+<span class="fc" id="L19">        weightInPounds = this.weightInPounds,</span>
+<span class="fc" id="L20">        setNumber = this.setNumber,</span>
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">        isComplete = this.completedAt != null,</span>
+<span class="fc" id="L22">        completedAt = this.completedAt,</span>
+<span class="fc" id="L23">        type = this.type,</span>
+<span class="fc" id="L24">        seconds = this.seconds,</span>
+<span class="fc" id="L25">        modifier = this.modifier,</span>
+<span class="fc" id="L26">        repsInReserve = this.repsInReserve,</span>
+<span class="fc" id="L27">        perceivedExertion = this.perceivedExertion</span>
+    )
+}
+
+<span class="nc" id="L31">fun ExerciseGoal.toExpectedSet(position: Int, exercise: Exercise? = null, group: ExerciseGroup? = null): ExpectedSet {</span>
+<span class="fc" id="L32">    return ExpectedSet(</span>
+<span class="fc" id="L33">        exercise = exercise,</span>
+<span class="fc" id="L34">        exerciseGroup = group,</span>
+<span class="fc" id="L35">        reps = this.reps,</span>
+<span class="fc" id="L36">        sets = this.sets,</span>
+<span class="fc" id="L37">        maxReps = this.repRangeMax,</span>
+<span class="fc" id="L38">        minReps = this.repRangeMin,</span>
+<span class="fc" id="L39">        perceivedExertion = this.perceivedExertion,</span>
+<span class="fc" id="L40">        rir = this.repsInReserve,</span>
+<span class="fc" id="L41">        positionInWorkout = position,</span>
+<span class="fc" id="L42">        note = this.note,</span>
+    )
+}
+
+fun ExerciseGoalWithExercises.toExpectedSet(position: Int, exercise: Exercise): ExpectedSet {
+<span class="nc" id="L47">    return ExpectedSet(</span>
+<span class="nc" id="L48">        exercise = exercise,</span>
+<span class="nc" id="L49">        reps = this.goal.reps,</span>
+<span class="nc" id="L50">        sets = this.goal.sets,</span>
+<span class="nc" id="L51">        maxReps = this.goal.repRangeMax,</span>
+<span class="nc" id="L52">        minReps = this.goal.repRangeMin,</span>
+<span class="nc" id="L53">        perceivedExertion = this.goal.perceivedExertion,</span>
+<span class="nc" id="L54">        rir = this.goal.repsInReserve,</span>
+<span class="nc" id="L55">        positionInWorkout = position,</span>
+<span class="nc" id="L56">        note = this.goal.note,</span>
+<span class="nc" id="L57">        type = this.goal.type,</span>
+    )
+}
+
+fun DbExerciseGroup.toExerciseGroup(exercises: List&lt;Exercise&gt;): ExerciseGroup {
+<span class="fc" id="L62">    return ExerciseGroup(</span>
+<span class="fc" id="L63">        id = this.gId,</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        name = this.name.orEmpty(),</span>
+<span class="fc" id="L65">        exercises = exercises,</span>
+    )
+}
+
+<span class="fc" id="L69">fun DbExercise.toExercise(amountOfSets: Int? = null, stats: ExerciseStats? = null): Exercise {</span>
+<span class="fc" id="L70">    return Exercise(</span>
+<span class="fc" id="L71">        name = this.name,</span>
+<span class="fc" id="L72">        musclesWorked = this.musclesWorked,</span>
+<span class="fc" id="L73">        category = this.category,</span>
+<span class="fc" id="L74">        thumbnailUrl = this.thumbnailUrl,</span>
+<span class="fc" id="L75">        equipmentType = this.equipmentType,</span>
+<span class="fc" id="L76">        amountOfSets = amountOfSets,</span>
+<span class="fc" id="L77">        stats = stats,</span>
+    )
+}
+
+fun DbWorkout.toWorkout(): Workout {
+<span class="fc" id="L82">    return Workout(</span>
+<span class="fc" id="L83">        id = this.wId,</span>
+<span class="fc" id="L84">        addedAt = this.addedAt,</span>
+<span class="fc" id="L85">        name = this.name,</span>
+<span class="fc" id="L86">        note = this.note,</span>
+<span class="fc" id="L87">        completedAt = this.completedAt,</span>
+    )
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

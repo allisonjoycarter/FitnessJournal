@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Migration_3_4.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.db.migrations</a> &gt; <span class="el_source">Migration_3_4.kt</span></div><h1>Migration_3_4.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.db.migrations
+
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+<span class="nc" id="L6">val Migration_3_4 = object : Migration(3, 4) {</span>
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // Create a temporary table with the PRIMARY KEY constraint corrected
+        // (what we want it to be in the newest version)
+<span class="nc" id="L10">        database.execSQL(&quot;&quot;&quot;</span>
+            CREATE TABLE IF NOT EXISTS ExerciseGoal_tmp (
+                egId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                exerciseId INTEGER,
+                exerciseGroupId INTEGER,
+                workoutPlanId INTEGER NOT NULL,
+                positionId INTEGER NOT NULL,
+                positionInWorkout INTEGER NOT NULL,
+                sets INTEGER NOT NULL,
+                reps INTEGER NOT NULL,
+                repRangeMax INTEGER NOT NULL,
+                repRangeMin INTEGER NOT NULL,
+                weightInPounds REAL NOT NULL,
+                weightInKilograms REAL NOT NULL,
+                repsInReserve INTEGER NOT NULL,
+                perceivedExertion INTEGER NOT NULL,
+                note TEXT NOT NULL,
+                modifier TEXT,
+                type TEXT NOT NULL,
+                FOREIGN KEY(exerciseId) 
+                    REFERENCES ExerciseEntity(eId) ON UPDATE NO ACTION ON DELETE CASCADE , 
+                FOREIGN KEY(positionId) 
+                    REFERENCES ExercisePositionEntity(epId) ON UPDATE NO ACTION ON DELETE CASCADE , 
+                FOREIGN KEY(exerciseGroupId)
+                    REFERENCES ExerciseGroupEntity(gId) ON UPDATE NO ACTION ON DELETE CASCADE ,
+                FOREIGN KEY(workoutPlanId)
+                    REFERENCES WorkoutPlanEntity(wpId) ON UPDATE NO ACTION ON DELETE CASCADE 
+            )
+<span class="nc" id="L38">        &quot;&quot;&quot;.trimIndent())</span>
+
+        // Create ExercisePositionEntity's for each goal in the original table
+<span class="nc" id="L41">        database.execSQL(&quot;&quot;&quot;</span>
+            INSERT INTO ExercisePositionEntity 
+            (planId, position, exerciseId, groupId)
+            SELECT 
+                workoutPlanId AS planId,
+                positionInWorkout AS position,
+                exerciseId,
+                exerciseGroupId AS groupId 
+            FROM ExerciseGoal
+<span class="nc" id="L50">        &quot;&quot;&quot;.trimIndent())</span>
+
+        // copy over all the data into the temporary table
+<span class="nc" id="L53">        database.execSQL(&quot;&quot;&quot;</span>
+            INSERT INTO ExerciseGoal_tmp
+            (
+                exerciseId,
+                exerciseGroupId,
+                workoutPlanId,
+                positionId,
+                positionInWorkout,
+                sets, reps, repRangeMax, repRangeMin,
+                weightInPounds, weightInKilograms,
+                repsInReserve, perceivedExertion,
+                note, modifier, type
+            )
+            SELECT
+                exerciseId,
+                exerciseGroupId,
+                workoutPlanId,
+                (
+                    SELECT epId
+                    FROM ExercisePositionEntity 
+                    WHERE ExercisePositionEntity.position = ExerciseGoal.positionInWorkout AND
+                            ExercisePositionEntity.planId = ExerciseGoal.workoutPlanId
+                ) AS positionId,
+                positionInWorkout,
+                sets, reps, repRangeMax, repRangeMin,
+                weightInPounds, weightInKilograms,
+                repsInReserve, perceivedExertion,
+                note, modifier, type
+            FROM ExerciseGoal
+<span class="nc" id="L82">        &quot;&quot;&quot;.trimIndent())</span>
+
+        // delete the original table and rename the new table to the old table name
+<span class="nc" id="L85">        database.execSQL(&quot;DROP TABLE ExerciseGoal&quot;)</span>
+<span class="nc" id="L86">        database.execSQL(&quot;ALTER TABLE ExerciseGoal_tmp RENAME TO ExerciseGoal&quot;)</span>
+<span class="nc" id="L87">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

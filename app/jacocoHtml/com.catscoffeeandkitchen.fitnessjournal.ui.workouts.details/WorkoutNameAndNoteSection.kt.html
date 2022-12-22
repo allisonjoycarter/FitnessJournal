@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutNameAndNoteSection.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details</a> &gt; <span class="el_source">WorkoutNameAndNoteSection.kt</span></div><h1>WorkoutNameAndNoteSection.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
+
+@Composable
+fun WorkoutNameAndNoteSection(
+    workoutName: String,
+    workoutNote: String?,
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">    updateName: (String) -&gt; Unit = {},</span>
+<span class="pc" id="L28">    updateNote: (String?) -&gt; Unit = {},</span>
+<span class="pc bpc" id="L29" title="14 of 30 branches missed.">) {</span>
+<span class="pc" id="L30">    var isEditing by remember { mutableStateOf(false) }</span>
+<span class="pc" id="L31">    var name by remember { mutableStateOf(workoutName) }</span>
+<span class="pc" id="L32">    var note by remember { mutableStateOf(workoutNote) }</span>
+
+<span class="fc" id="L34">    Column(</span>
+<span class="fc" id="L35">        modifier = Modifier.padding(4.dp),</span>
+<span class="fc" id="L36">        verticalArrangement = Arrangement.spacedBy(6.dp)</span>
+    ) {
+<span class="pc bpc" id="L38" title="4 of 6 branches missed.">        if (isEditing) {</span>
+<span class="nc" id="L39">            Row(</span>
+<span class="nc" id="L40">                verticalAlignment = Alignment.CenterVertically</span>
+            ) {
+<span class="nc bnc" id="L42" title="All 4 branches missed.">                FitnessJournalOutlinedTextField(</span>
+<span class="nc" id="L43">                    value = workoutName,</span>
+<span class="nc" id="L44">                    onUpdate = { newName -&gt;</span>
+<span class="nc" id="L45">                        updateName(newName)</span>
+<span class="nc" id="L46">                        name = newName</span>
+<span class="nc" id="L47">                    },</span>
+<span class="nc" id="L48">                    singleLine = true,</span>
+<span class="nc" id="L49">                    label = &quot;workout name&quot;,</span>
+                )
+
+<span class="nc" id="L52">                IconButton(</span>
+<span class="nc" id="L53">                    onClick = {</span>
+<span class="nc" id="L54">                        isEditing = false</span>
+<span class="nc" id="L55">                    },</span>
+<span class="fc" id="L56">                ) {</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">                    Icon(Icons.Default.Check, &quot;stop editing name and note&quot;)</span>
+<span class="nc" id="L58">                }</span>
+<span class="nc" id="L59">            }</span>
+<span class="nc" id="L60">            FitnessJournalOutlinedTextField(</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                value = workoutNote.orEmpty(),</span>
+<span class="nc" id="L62">                onUpdate = { newNote -&gt;</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">                    updateNote(newNote.ifEmpty { null })</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">                    note = newNote.ifEmpty { null }</span>
+<span class="nc" id="L65">                },</span>
+<span class="nc" id="L66">                singleLine = false,</span>
+<span class="nc" id="L67">                label = &quot;note&quot;</span>
+            )
+<span class="fc" id="L69">        } else {</span>
+<span class="fc" id="L70">            Row(</span>
+<span class="fc" id="L71">                verticalAlignment = Alignment.CenterVertically</span>
+            ) {
+<span class="pc bpc" id="L73" title="3 of 4 branches missed.">                Text(</span>
+<span class="fc" id="L74">                    name,</span>
+<span class="fc" id="L75">                    modifier = Modifier.padding(8.dp),</span>
+<span class="fc" id="L76">                    style = MaterialTheme.typography.headlineLarge</span>
+                )
+
+<span class="fc" id="L79">                IconButton(</span>
+<span class="pc" id="L80">                    onClick = { isEditing = true },</span>
+<span class="fc" id="L81">                ) {</span>
+<span class="pc bpc" id="L82" title="2 of 4 branches missed.">                    Icon(Icons.Default.Edit, &quot;edit name and note&quot;)</span>
+<span class="pc" id="L83">                }</span>
+<span class="pc" id="L84">            }</span>
+
+<span class="pc bpc" id="L86" title="4 of 6 branches missed.">            if (note.isNullOrEmpty()) {</span>
+<span class="fc" id="L87">                Text(</span>
+<span class="fc" id="L88">                    &quot;No Note&quot;,</span>
+<span class="fc" id="L89">                    modifier = Modifier.padding(horizontal = 12.dp),</span>
+<span class="fc" id="L90">                    style = MaterialTheme.typography.bodyMedium)</span>
+<span class="nc" id="L91">            } else {</span>
+<span class="nc" id="L92">                Text(</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                    note ?: &quot;&quot;,</span>
+<span class="nc" id="L94">                    modifier = Modifier.padding(horizontal = 12.dp),</span>
+<span class="nc" id="L95">                    style = MaterialTheme.typography.bodyMedium)</span>
+            }
+        }
+
+<span class="pc" id="L99">//        FitnessJournalButton(text = &quot;${if (isEditing) &quot;stop editing&quot; else &quot;edit&quot;} name/note&quot;, onClick = { isEditing = !isEditing })</span>
+<span class="pc" id="L100">    }</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

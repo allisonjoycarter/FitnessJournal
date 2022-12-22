@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MPExerciseLineGraph.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs</a> &gt; <span class="el_source">MPExerciseLineGraph.kt</span></div><h1>MPExerciseLineGraph.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs
+
+import android.util.DisplayMetrics
+import android.view.ViewGroup
+import android.widget.RelativeLayout
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
+import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.stats.StatsData
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.AxisBase
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import timber.log.Timber
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
+
+
+@Composable
+fun MPExerciseLineGraph(
+    entries: List&lt;StatsData&gt;
+<span class="nc" id="L39">) {</span>
+<span class="nc" id="L40">    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()</span>
+<span class="nc" id="L41">    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()</span>
+<span class="nc" id="L42">    val tertiaryColor = MaterialTheme.colorScheme.tertiary.toArgb()</span>
+<span class="nc" id="L43">    val configuration = LocalConfiguration.current</span>
+<span class="nc" id="L44">    val density = LocalDensity.current</span>
+<span class="nc" id="L45">    val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">    AndroidView(</span>
+<span class="nc" id="L48">        modifier = Modifier</span>
+<span class="nc" id="L49">            .fillMaxWidth()</span>
+<span class="nc" id="L50">            .height(200.dp),</span>
+        factory = { context -&gt;
+            // programmatically create a LineChart
+<span class="nc" id="L53">            val chart = LineChart(context)</span>
+
+<span class="nc bnc" id="L55" title="All 6 branches missed.">            val earliest = entries.minOfOrNull { it.date }</span>
+<span class="nc bnc" id="L56" title="All 8 branches missed.">            val hours = earliest?.until(entries.maxOf { it.date }, ChronoUnit.HOURS)</span>
+<span class="nc" id="L57">            val unitToUse = when {</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">                hours == null -&gt; ChronoUnit.HOURS</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                hours &gt; (730.5 * 3) -&gt; ChronoUnit.MONTHS</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                hours &gt; (24 * 3) -&gt; ChronoUnit.DAYS</span>
+<span class="nc" id="L61">                else -&gt;  ChronoUnit.HOURS</span>
+            }
+
+<span class="nc" id="L64">            val dateFormatter = DateTimeFormatterBuilder()</span>
+<span class="nc" id="L65">                .appendPattern(&quot;MMM d&quot;)</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                .appendPattern(if (unitToUse == ChronoUnit.MONTHS) &quot; yy&quot; else &quot;&quot;)</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                .appendPattern(if (unitToUse == ChronoUnit.HOURS) &quot; ha&quot; else &quot;&quot;)</span>
+<span class="nc" id="L68">                .toFormatter()</span>
+
+<span class="nc" id="L70">            val xAxis = chart.xAxis</span>
+
+<span class="nc" id="L72">            xAxis.position = XAxis.XAxisPosition.BOTTOM</span>
+<span class="nc" id="L73">            xAxis.textSize = 8f</span>
+<span class="nc" id="L74">            xAxis.textColor = Color.White.toArgb()</span>
+<span class="nc" id="L75">            xAxis.setDrawAxisLine(false)</span>
+<span class="nc" id="L76">            xAxis.setDrawGridLines(true)</span>
+<span class="nc" id="L77">            xAxis.granularity = .5f</span>
+<span class="nc" id="L78">            xAxis.setDrawLabels(true)</span>
+<span class="nc" id="L79">            xAxis.setCenterAxisLabels(false)</span>
+
+<span class="nc" id="L81">            xAxis.valueFormatter = object : ValueFormatter() {</span>
+                override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+<span class="nc" id="L83">                    val date = unitToUse.addTo(earliest, value.toLong())</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                    return if (date == null) &quot;&quot; else</span>
+<span class="nc" id="L85">                        date</span>
+<span class="nc" id="L86">                            .atZoneSameInstant(ZoneId.of(&quot;UTC&quot;))</span>
+<span class="nc" id="L87">                            .withZoneSameInstant(ZoneId.systemDefault())</span>
+<span class="nc" id="L88">                            .format(dateFormatter)</span>
+                }
+            }
+<span class="nc" id="L91">            xAxis.labelRotationAngle = 45f</span>
+
+<span class="nc" id="L93">            val leftAxis = chart.axisLeft</span>
+<span class="nc" id="L94">            leftAxis.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART)</span>
+<span class="nc" id="L95">            leftAxis.textColor = Color.White.toArgb()</span>
+<span class="nc" id="L96">            leftAxis.setDrawGridLines(true)</span>
+<span class="nc" id="L97">            leftAxis.isGranularityEnabled = true</span>
+<span class="nc" id="L98">            leftAxis.axisMinimum = 0f</span>
+<span class="nc bnc" id="L99" title="All 6 branches missed.">            leftAxis.axisMaximum = (entries.maxOfOrNull { it.repMax } ?: 0f) + 20f</span>
+<span class="nc" id="L100">            leftAxis.yOffset = -9f</span>
+<span class="nc" id="L101">            leftAxis.textColor = primaryColor</span>
+
+<span class="nc" id="L103">            chart.axisRight.isEnabled = false</span>
+
+<span class="nc" id="L105">            val repMaxEntries = arrayListOf&lt;Entry&gt;()</span>
+<span class="nc" id="L106">            val highestWeightEntries = arrayListOf&lt;Entry&gt;()</span>
+<span class="nc" id="L107">            val repEntries = arrayListOf&lt;Entry&gt;()</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (hours != null) {</span>
+<span class="nc bnc" id="L109" title="All 3 branches missed.">                val groupingFormatter = when (unitToUse) {</span>
+<span class="nc" id="L110">                    ChronoUnit.HOURS -&gt; DateTimeFormatterBuilder().appendPattern(&quot;d-ha&quot;).toFormatter()</span>
+<span class="nc" id="L111">                    ChronoUnit.MONTHS -&gt; DateTimeFormatterBuilder().appendPattern(&quot;yyyy-MM&quot;).toFormatter()</span>
+<span class="nc" id="L112">                    else -&gt; DateTimeFormatterBuilder().appendPattern(&quot;yyyy-MM-d&quot;).toFormatter()</span>
+                }
+<span class="nc" id="L114">                val groupedEntries = entries.groupBy { it.date.format(groupingFormatter) }</span>
+<span class="nc" id="L115">                Timber.d(&quot;*** entries = ${entries.size}, grouped into ${groupedEntries.size}, groups = ${groupedEntries.map { it.key }.joinToString(&quot;, &quot;)}&quot;)</span>
+<span class="nc" id="L116">                groupedEntries.forEach { entry -&gt;</span>
+<span class="nc" id="L117">                    val set = entry.value.maxByOrNull { it.repMax }!!</span>
+
+<span class="nc bnc" id="L119" title="All 3 branches missed.">                    val earliestInUnit = when (unitToUse) {</span>
+<span class="nc" id="L120">                        ChronoUnit.HOURS -&gt; earliest.withMinute(1)</span>
+<span class="nc" id="L121">                        ChronoUnit.MONTHS -&gt; earliest.withDayOfMonth(1)</span>
+<span class="nc" id="L122">                        else -&gt; earliest.withMonth(1).withDayOfMonth(1)</span>
+                    }
+
+<span class="nc bnc" id="L125" title="All 3 branches missed.">                    val setDateInUnit = when (unitToUse) {</span>
+<span class="nc" id="L126">                        ChronoUnit.HOURS -&gt; set.date.withMinute(1)</span>
+<span class="nc" id="L127">                        ChronoUnit.MONTHS -&gt; set.date.withDayOfMonth(1)</span>
+<span class="nc" id="L128">                        else -&gt; set.date.withMonth(1).withDayOfMonth(1)</span>
+                    }
+
+<span class="nc" id="L131">                    repMaxEntries.add(</span>
+<span class="nc" id="L132">                        Entry(</span>
+<span class="nc" id="L133">                            earliestInUnit.until(setDateInUnit, unitToUse).toFloat(),</span>
+<span class="nc bnc" id="L134" title="All 6 branches missed.">                            entry.value.maxOfOrNull { it.repMax } ?: 0f</span>
+                        )
+                    )
+
+<span class="nc" id="L138">                    repEntries.add(</span>
+<span class="nc" id="L139">                        Entry(</span>
+<span class="nc" id="L140">                            earliestInUnit.until(setDateInUnit, unitToUse).toFloat(),</span>
+<span class="nc bnc" id="L141" title="All 6 branches missed.">                            entry.value.maxOfOrNull { it.reps } ?: 0f</span>
+                        )
+                    )
+<span class="nc" id="L144">                }</span>
+
+<span class="nc" id="L146">                xAxis.labelCount = groupedEntries.size</span>
+            }
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">            val take = if (repMaxEntries.size &gt; 2) 3 else repMaxEntries.size</span>
+<span class="nc" id="L150">            val trendEntries = arrayListOf(</span>
+<span class="nc" id="L151">                Entry(repMaxEntries.first().x, repMaxEntries.subList(0, take).map { it.y }.average().toFloat()),</span>
+<span class="nc" id="L152">                Entry(repMaxEntries.last().x, repMaxEntries.takeLast(take).map { it.y }.average().toFloat())</span>
+            )
+
+<span class="nc" id="L155">            val repMaxDataSet = LineDataSet(repMaxEntries.sortedWith(compareBy({ it.x }, { it.y }))</span>
+<span class="nc" id="L156">                .distinctBy { it.x }, &quot;Estimated 1RM&quot;)</span>
+<span class="nc" id="L157">                .apply {</span>
+<span class="nc" id="L158">                color = primaryColor</span>
+<span class="nc" id="L159">                axisDependency = YAxis.AxisDependency.LEFT;</span>
+<span class="nc" id="L160">                lineWidth = 1.5f</span>
+<span class="nc" id="L161">                fillColor = primaryColor</span>
+<span class="nc" id="L162">                fillAlpha = 60</span>
+<span class="nc" id="L163">                valueTextColor = primaryColor</span>
+<span class="nc" id="L164">                valueTextSize = 12f</span>
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+<span class="nc" id="L170">                valueFormatter = object : ValueFormatter() {</span>
+                    override fun getFormattedValue(value: Float): String {
+<span class="nc" id="L172">                        return &quot;&quot;</span>
+                    }
+                }
+<span class="nc" id="L175">                setCircleColor(primaryColor)</span>
+<span class="nc" id="L176">                circleHoleColor = primaryColor</span>
+<span class="nc" id="L177">            }</span>
+<span class="nc" id="L178">            Timber.d(&quot;*** rep max entries = ${repMaxEntries.joinToString(&quot;\n&quot;)}&quot;)</span>
+
+<span class="nc" id="L180">            val highestWeightDataSet = LineDataSet(highestWeightEntries.sortedWith(compareBy({ it.x }, { it.y }))</span>
+<span class="nc" id="L181">                .distinctBy { it.x }, &quot;Highest Weight Lifted&quot;).apply {</span>
+<span class="nc" id="L182">                color = tertiaryColor</span>
+<span class="nc" id="L183">                axisDependency = YAxis.AxisDependency.LEFT;</span>
+<span class="nc" id="L184">                lineWidth = 1.5f</span>
+<span class="nc" id="L185">                fillColor = tertiaryColor</span>
+<span class="nc" id="L186">                fillAlpha = 60</span>
+<span class="nc" id="L187">                valueTextColor = tertiaryColor</span>
+<span class="nc" id="L188">                valueTextSize = 12f</span>
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+<span class="nc" id="L194">                valueFormatter = object : ValueFormatter() {</span>
+                    override fun getFormattedValue(value: Float): String {
+<span class="nc" id="L196">                        return &quot;&quot;</span>
+                    }
+                }
+<span class="nc" id="L199">                setCircleColor(tertiaryColor)</span>
+<span class="nc" id="L200">                circleHoleColor = tertiaryColor</span>
+<span class="nc" id="L201">                highLightColor = Color.White.toArgb()</span>
+<span class="nc" id="L202">            }</span>
+
+<span class="nc" id="L204">            val repsDataSet = LineDataSet(repEntries.sortedWith(compareBy({ it.x }, { it.y }))</span>
+<span class="nc" id="L205">                .distinctBy { it.x }, &quot;Reps&quot;).apply {</span>
+<span class="nc" id="L206">                color = primaryColor</span>
+<span class="nc" id="L207">                axisDependency = YAxis.AxisDependency.LEFT;</span>
+<span class="nc" id="L208">                lineWidth = 1.5f</span>
+<span class="nc" id="L209">                fillColor = primaryColor</span>
+<span class="nc" id="L210">                fillAlpha = 60</span>
+<span class="nc" id="L211">                valueTextColor = primaryColor</span>
+<span class="nc" id="L212">                valueTextSize = 12f</span>
+//                valueFormatter = object : ValueFormatter() {
+//                    override fun getFormattedValue(value: Float): String {
+//                        return ((value * 10).roundToInt() / 10.0f).toCleanString()
+//                    }
+//                }
+<span class="nc" id="L218">                valueFormatter = object : ValueFormatter() {</span>
+                    override fun getFormattedValue(value: Float): String {
+<span class="nc" id="L220">                        return &quot;&quot;</span>
+                    }
+                }
+<span class="nc" id="L223">                setCircleColor(primaryColor)</span>
+<span class="nc" id="L224">                circleHoleColor = primaryColor</span>
+<span class="nc" id="L225">            }</span>
+
+<span class="nc" id="L227">            val trendDataSet = LineDataSet(trendEntries.distinctBy { it.x }, &quot;Trend&quot;).apply {</span>
+<span class="nc" id="L228">                color = secondaryColor</span>
+<span class="nc" id="L229">                axisDependency = YAxis.AxisDependency.LEFT;</span>
+<span class="nc" id="L230">                lineWidth = 1f</span>
+<span class="nc" id="L231">                fillColor = secondaryColor</span>
+<span class="nc" id="L232">                fillAlpha = 10</span>
+<span class="nc" id="L233">                valueFormatter = object : ValueFormatter() {</span>
+                    override fun getFormattedValue(value: Float): String {
+<span class="nc" id="L235">                        return &quot;&quot;</span>
+                    }
+                }
+<span class="nc" id="L238">                setDrawCircles(false)</span>
+<span class="nc" id="L239">                enableDashedLine(15f, 8f, 0f)</span>
+<span class="nc" id="L240">                highLightColor = Color.White.toArgb()</span>
+<span class="nc" id="L241">            }</span>
+
+<span class="nc" id="L243">            val lineData = when {</span>
+<span class="nc bnc" id="L244" title="All 6 branches missed.">                entries.maxOf { it.repMax } &lt; 30 -&gt; LineData(repsDataSet)</span>
+<span class="nc" id="L245">                else -&gt; LineData(repMaxDataSet, highestWeightDataSet, trendDataSet)</span>
+            }
+<span class="nc" id="L247">            chart.data = lineData</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">            Timber.d(&quot;*** best sets = ${entries.joinToString(&quot;\n&quot;) { &quot;${it.bestSet.reps}x ${it.bestSet.weightInPounds}lbs, completedAt ${it.bestSet.completedAt?.format(</span>
+<span class="nc" id="L250">                DateTimeFormatter.ISO_OFFSET_DATE_TIME)}&quot; }}&quot;)</span>
+<span class="nc" id="L251">            val markerView = SetMarkerView(</span>
+<span class="nc" id="L252">                context,</span>
+<span class="nc" id="L253">                (screenWidth * .9).roundToInt(),</span>
+<span class="nc" id="L254">                unitToUse,</span>
+<span class="nc" id="L255">                earliest,</span>
+<span class="nc" id="L256">                entries.map { it.bestSet }</span>
+            )
+<span class="nc" id="L258">            chart.marker = markerView</span>
+
+<span class="nc" id="L260">            chart.legend.apply {</span>
+<span class="nc" id="L261">                textColor = Color.White.toArgb()</span>
+<span class="nc" id="L262">            }</span>
+<span class="nc" id="L263">            chart.invalidate()</span>
+<span class="nc" id="L264">            chart.layoutParams = ViewGroup.LayoutParams(</span>
+<span class="nc" id="L265">                ViewGroup.LayoutParams.MATCH_PARENT,</span>
+<span class="nc" id="L266">                ViewGroup.LayoutParams.MATCH_PARENT</span>
+            )
+<span class="nc" id="L268">            RelativeLayout(context).apply {</span>
+<span class="nc" id="L269">                layoutParams = RelativeLayout.LayoutParams(</span>
+<span class="nc" id="L270">                    RelativeLayout.LayoutParams.MATCH_PARENT,</span>
+<span class="nc" id="L271">                    RelativeLayout.LayoutParams.MATCH_PARENT</span>
+                )
+<span class="nc" id="L273">                addView(chart, ViewGroup.LayoutParams.MATCH_PARENT)</span>
+<span class="nc" id="L274">            }</span>
+        },
+    )
+<span class="nc" id="L277">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

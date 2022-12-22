@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainActivity.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal</a> &gt; <span class="el_source">MainActivity.kt</span></div><h1>MainActivity.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
+import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
+import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.Navigation
+import com.catscoffeeandkitchen.fitnessjournal.ui.theme.FitnessJournalTheme
+import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
+import javax.inject.Inject
+
+
+@AndroidEntryPoint
+<span class="nc" id="L17">class MainActivity : ComponentActivity() {</span>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+<span class="nc" id="L20">        super.onCreate(savedInstanceState)</span>
+
+<span class="nc bnc" id="L22" title="All 2 branches missed.">        if (BuildConfig.DEBUG) {</span>
+<span class="nc" id="L23">            Timber.plant(Timber.DebugTree())</span>
+        }
+
+<span class="pc" id="L26">        setContent {</span>
+<span class="pc bpc" id="L27" title="3 of 4 branches missed.">            FitnessJournalTheme {</span>
+<span class="pc bpc" id="L28" title="2 of 4 branches missed.">                Navigation()</span>
+<span class="pc" id="L29">            }</span>
+<span class="fc" id="L30">        }</span>
+<span class="nc" id="L31">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

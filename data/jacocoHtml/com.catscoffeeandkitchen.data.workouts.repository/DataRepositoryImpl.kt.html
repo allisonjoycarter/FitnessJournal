@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataRepositoryImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.repository</a> &gt; <span class="el_source">DataRepositoryImpl.kt</span></div><h1>DataRepositoryImpl.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.repository
+
+import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
+import android.net.Uri
+import com.catscoffeeandkitchen.data.workouts.db.FitnessJournalDb
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEntity
+import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
+import com.catscoffeeandkitchen.data.workouts.util.populateWeight
+import com.catscoffeeandkitchen.domain.interfaces.DataRepository
+import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
+import com.catscoffeeandkitchen.domain.util.DataState
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
+import com.github.doyaaaaaken.kotlincsv.util.MalformedCSVException
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ActivityScoped
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
+import com.catscoffeeandkitchen.data.workouts.models.SetEntity as DbExerciseSet
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
+import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
+
+<span class="nc" id="L32">@ActivityScoped</span>
+<span class="nc" id="L33">class DataRepositoryImpl @Inject constructor(</span>
+<span class="nc" id="L34">    @ApplicationContext val context: Context,</span>
+<span class="nc" id="L35">    private val backupHelper: DatabaseBackupHelper,</span>
+<span class="nc" id="L36">    private val database: FitnessJournalDb</span>
+): DataRepository {
+<span class="nc" id="L38">    private data class CSVRowWorkoutData(</span>
+<span class="nc" id="L39">        val workout: DbWorkout,</span>
+<span class="nc" id="L40">        val exercise: DbExercise,</span>
+<span class="nc" id="L41">        val set: DbExerciseSet,</span>
+<span class="nc" id="L42">        val position: Int? = null</span>
+<span class="nc" id="L43">    )</span>
+
+
+    override fun backupData(uri: Uri?) {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (uri == null) {</span>
+<span class="nc" id="L48">            backupHelper.backup(null)</span>
+        } else {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            val fileDescriptor = context.contentResolver.openFileDescriptor(uri, &quot;w&quot;) ?: return</span>
+
+<span class="nc" id="L52">            backupHelper.backup(FileOutputStream(fileDescriptor.fileDescriptor))</span>
+
+<span class="nc" id="L54">            fileDescriptor.close()</span>
+        }
+<span class="nc" id="L56">    }</span>
+
+    override fun restoreData(file: File?) {
+<span class="nc" id="L59">        backupHelper.restore(file)</span>
+<span class="nc" id="L60">    }</span>
+
+    override fun importDataFromCsv(uri: Uri): Flow&lt;DataState&lt;Double&gt;&gt; {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        val inputStream = context.contentResolver.openInputStream(uri) ?: return flowOf(DataState.Error(Exception(&quot;Could not read file&quot;)))</span>
+<span class="nc" id="L64">        var fileIsStrongFormatted = false</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        val headerLine = inputStream.bufferedReader().readLine()</span>
+<span class="nc" id="L66">        fileIsStrongFormatted = headerLine.contains(&quot;Workout Duration&quot;)</span>
+<span class="nc" id="L67">        inputStream.close()</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        return if (fileIsStrongFormatted) {</span>
+<span class="nc" id="L70">            readStrongFormattedCsv(uri)</span>
+        } else {
+<span class="nc" id="L72">            readLiftingLogFormattedCsv(uri)</span>
+        }
+    }
+
+<span class="nc" id="L76">    override fun writeDataToCsv(saveLocation: Uri): Flow&lt;DataState&lt;Int&gt;&gt; = channelFlow {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (saveLocation.path == null) return@channelFlow</span>
+
+<span class="nc" id="L79">        withContext(Dispatchers.IO) {</span>
+<span class="nc" id="L80">            val fileDescriptor = context.contentResolver.openFileDescriptor(saveLocation, &quot;w&quot;)</span>
+<span class="nc" id="L81">            var stored = 0</span>
+<span class="nc" id="L82">            this@channelFlow.send(DataState.Success(stored))</span>
+
+<span class="nc" id="L84">            try {</span>
+<span class="nc" id="L85">                val workouts = database.workoutDao().getAll()</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                csvWriter().openAsync(FileOutputStream(fileDescriptor?.fileDescriptor)) {</span>
+<span class="nc" id="L87">                    writeRow(</span>
+<span class="nc" id="L88">                        listOf(</span>
+<span class="nc" id="L89">                            &quot;Date&quot;,</span>
+<span class="nc" id="L90">                            &quot;Workout Name&quot;,</span>
+<span class="nc" id="L91">                            &quot;Workout Notes&quot;,</span>
+<span class="nc" id="L92">                            &quot;Exercise Order&quot;,</span>
+<span class="nc" id="L93">                            &quot;Exercise Name&quot;,</span>
+<span class="nc" id="L94">                            &quot;Muscles Worked by Exercise&quot;,</span>
+<span class="nc" id="L95">                            &quot;Exercise Category&quot;,</span>
+<span class="nc" id="L96">                            &quot;Set Order&quot;,</span>
+<span class="nc" id="L97">                            &quot;Weight&quot;,</span>
+<span class="nc" id="L98">                            &quot;Weight Unit&quot;,</span>
+<span class="nc" id="L99">                            &quot;Reps&quot;,</span>
+<span class="nc" id="L100">                            &quot;PE&quot;,</span>
+<span class="nc" id="L101">                            &quot;RIR&quot;</span>
+                        )
+                    )
+
+<span class="nc" id="L105">                    workouts.forEach { workout -&gt;</span>
+<span class="nc" id="L106">                        val items =</span>
+<span class="nc" id="L107">                            database.exerciseSetDao().getSetsAndExercisesInWorkout(workout.wId)</span>
+<span class="nc" id="L108">                        val positions =</span>
+<span class="nc" id="L109">                            database.exercisePositionDao().getPositionsInWorkout(workout.wId)</span>
+<span class="nc" id="L110">                        items.forEach { item -&gt;</span>
+<span class="nc" id="L111">                            val date =</span>
+<span class="nc bnc" id="L112" title="All 4 branches missed.">                                item.set.completedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">                                    ?: workout.completedAt?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)</span>
+<span class="nc" id="L114">                                    ?: &quot;&quot;</span>
+
+<span class="nc" id="L116">                            val position =</span>
+<span class="nc bnc" id="L117" title="All 6 branches missed.">                                positions.firstOrNull { it.exerciseId == item.exercise.eId }</span>
+
+<span class="nc" id="L119">                            Timber.d(&quot;*** writing set ${item.exercise.name}${item.set.setNumber} in workout ${workout.name}&quot;)</span>
+<span class="nc" id="L120">                            writeRow(</span>
+<span class="nc" id="L121">                                listOf(</span>
+<span class="nc" id="L122">                                    date,</span>
+<span class="nc" id="L123">                                    workout.name,</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                                    workout.note ?: &quot;&quot;,</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                                    position?.position ?: &quot;&quot;,</span>
+<span class="nc" id="L126">                                    item.exercise.name,</span>
+<span class="nc" id="L127">                                    item.exercise.musclesWorked.joinToString(&quot;|&quot;),</span>
+<span class="nc" id="L128">                                    item.exercise.category,</span>
+<span class="nc" id="L129">                                    item.set.setNumber,</span>
+<span class="nc" id="L130">                                    item.set.weightInPounds,</span>
+<span class="nc" id="L131">                                    &quot;lbs&quot;,</span>
+<span class="nc" id="L132">                                    item.set.reps,</span>
+<span class="nc" id="L133">                                    item.set.perceivedExertion,</span>
+<span class="nc" id="L134">                                    item.set.repsInReserve</span>
+                                )
+                            )
+
+<span class="nc" id="L138">                            stored++</span>
+<span class="nc" id="L139">                            this@channelFlow.send(DataState.Success(stored))</span>
+<span class="nc" id="L140">                        }</span>
+<span class="nc" id="L141">                    }</span>
+<span class="nc" id="L142">                }</span>
+<span class="nc" id="L143">            } catch (e: Exception) {</span>
+<span class="nc" id="L144">                this@channelFlow.send(DataState.Error(e))</span>
+<span class="nc" id="L145">                this@withContext.cancel()</span>
+            }
+<span class="nc" id="L147">            this@channelFlow.send(DataState.Success(-1))</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            fileDescriptor?.close()</span>
+<span class="nc" id="L149">        }</span>
+<span class="nc" id="L150">    }</span>
+
+<span class="nc" id="L152">    private fun readLiftingLogFormattedCsv(uri: Uri) = flow {</span>
+<span class="nc" id="L153">        var counted = 0.0</span>
+<span class="nc" id="L154">        emit(DataState.Success(counted))</span>
+
+<span class="nc" id="L156">        var setNumber = 1</span>
+<span class="nc" id="L157">        var workout: DbWorkout? = null</span>
+<span class="nc" id="L158">        var exercise: DbExercise? = null</span>
+<span class="nc" id="L159">        val sets = arrayListOf&lt;DbExerciseSet&gt;()</span>
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        val inputStream = context.contentResolver.openInputStream(uri) ?: return@flow</span>
+
+<span class="nc" id="L163">        coroutineScope {</span>
+<span class="nc" id="L164">            try {</span>
+                /**
+                    &quot;Date&quot;,
+                    &quot;Workout Name&quot;,
+                    &quot;Exercise Order&quot;,
+                    &quot;Exercise Name&quot;,
+                    &quot;Muscles Worked by Exercise&quot;,
+                    &quot;Exercise Category&quot;,
+                    &quot;Set Order&quot;,
+                    &quot;Weight&quot;,
+                    &quot;Weight Unit&quot;,
+                    &quot;Reps&quot;,
+                    &quot;PE&quot;,
+                    &quot;RIR&quot;
+                 */
+<span class="nc" id="L179">                csvReader().openAsync(inputStream) {</span>
+<span class="nc" id="L180">                    readAllWithHeaderAsSequence().asFlow().collect { row: Map&lt;String, String&gt; -&gt;</span>
+<span class="nc bnc" id="L181" title="All 6 branches missed.">                        val exerciseName = row.entries.find { rowData -&gt; rowData.key == &quot;Exercise Name&quot; }?.value</span>
+<span class="nc bnc" id="L182" title="All 6 branches missed.">                        val workoutName = row.entries.find { rowData -&gt; rowData.key == &quot;Workout Name&quot; }?.value</span>
+
+<span class="nc" id="L184">                        var csvData = CSVRowWorkoutData(</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                            workout ?: DbWorkout(wId = 0L),</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                            exercise ?: DbExercise(eId = 0L, name = &quot;&quot;),</span>
+<span class="nc" id="L187">                            DbExerciseSet(sId = 0L, exerciseId = 0L, workoutId = 0L, positionId = 0L, setNumber = setNumber)</span>
+                        )
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                        if (csvData.exercise.name != exerciseName) {</span>
+<span class="nc" id="L191">                            val workoutId = when {</span>
+<span class="nc bnc" id="L192" title="All 6 branches missed.">                                csvData.workout.wId == 0L || workoutName != workout?.name -&gt; {</span>
+<span class="nc" id="L193">                                    database.workoutDao().insert(csvData.workout.copy(wId = 0L))</span>
+                                }
+<span class="nc" id="L195">                                else -&gt; csvData.workout.wId</span>
+                            }
+<span class="nc" id="L197">                            csvData = csvData.copy(workout = csvData.workout.copy(wId = workoutId))</span>
+
+<span class="nc" id="L199">                            val dbExercise = database.exerciseDao().searchExercisesByName(csvData.exercise.name)</span>
+<span class="nc" id="L200">                            val exerciseToUpdate = DbExercise(</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                                eId = dbExercise?.eId ?: 0L,</span>
+<span class="nc" id="L202">                                name = csvData.exercise.name,</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">                                musclesWorked = dbExercise?.musclesWorked.orEmpty(),</span>
+<span class="nc" id="L204">                                userCreated = false,</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">                                category = dbExercise?.category.orEmpty(),</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">                                thumbnailUrl = dbExercise?.thumbnailUrl</span>
+                            )
+
+<span class="nc bnc" id="L209" title="All 4 branches missed.">                            if (exerciseToUpdate.name.isNotEmpty()) {</span>
+<span class="nc" id="L210">                                var exerciseId = exerciseToUpdate.eId</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                                if (exerciseToUpdate.eId == 0L) {</span>
+<span class="nc" id="L212">                                    exerciseId = database.exerciseDao().insert(exerciseToUpdate)</span>
+                                } else {
+<span class="nc" id="L214">                                    database.exerciseDao().update(exerciseToUpdate)</span>
+                                }
+
+<span class="nc" id="L217">                                val positionToInsert = ExercisePositionEntity(</span>
+<span class="nc" id="L218">                                    epId = 0L,</span>
+<span class="nc" id="L219">                                    exerciseId = exerciseId,</span>
+<span class="nc" id="L220">                                    workoutId = workoutId,</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                                    position = csvData.position ?: 1,</span>
+                                )
+<span class="nc" id="L223">                                val positionId = database.exercisePositionDao().insert(positionToInsert)</span>
+
+<span class="nc" id="L225">                                val setsToInsert = sets.map { item -&gt;</span>
+<span class="nc" id="L226">                                    item.copy(</span>
+<span class="nc" id="L227">                                        sId = 0L,</span>
+<span class="nc" id="L228">                                        workoutId = workoutId,</span>
+<span class="nc" id="L229">                                        exerciseId = exerciseId,</span>
+<span class="nc" id="L230">                                        positionId = positionId,</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">                                        completedAt = workout?.completedAt</span>
+                                    )
+                                }
+<span class="nc" id="L234">                                database.exerciseSetDao().insertAll(setsToInsert)</span>
+                            }
+
+<span class="nc" id="L237">                            sets.removeAll(sets.toSet())</span>
+                        }
+
+<span class="nc bnc" id="L240" title="All 4 branches missed.">                        if (workoutName != workout?.name) {</span>
+<span class="nc" id="L241">                            counted += 1.0</span>
+<span class="nc" id="L242">                            this@flow.emit(DataState.Success(counted))</span>
+
+<span class="nc" id="L244">                            setNumber = 1</span>
+                        } else {
+<span class="nc" id="L246">                            setNumber++</span>
+                        }
+
+<span class="nc" id="L249">                        try {</span>
+<span class="nc" id="L250">                            val newData = getLLRowData(row, csvData)</span>
+
+<span class="nc" id="L252">                            workout = newData.workout</span>
+<span class="nc" id="L253">                            exercise = newData.exercise</span>
+<span class="nc" id="L254">                            sets.add(newData.set)</span>
+<span class="nc" id="L255">                        } catch (e: Exception) {</span>
+<span class="nc" id="L256">                            Timber.e(e)</span>
+<span class="nc" id="L257">                            this@flow.emit(DataState.Error(e))</span>
+<span class="nc" id="L258">                            this@coroutineScope.cancel()</span>
+                        }
+<span class="nc" id="L260">                    }</span>
+<span class="nc" id="L261">                }</span>
+<span class="nc" id="L262">            } catch (e: MalformedCSVException) {</span>
+<span class="nc" id="L263">                Timber.e(e)</span>
+<span class="nc" id="L264">                emit(DataState.Error(e))</span>
+<span class="nc" id="L265">                this@coroutineScope.cancel()</span>
+<span class="nc" id="L266">            } catch (e: SQLiteConstraintException) {</span>
+<span class="nc" id="L267">                Timber.e(e)</span>
+<span class="nc" id="L268">                emit(DataState.Error(e))</span>
+<span class="nc" id="L269">                this@coroutineScope.cancel()</span>
+<span class="nc" id="L270">            } finally {</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">                withContext(Dispatchers.IO) {</span>
+<span class="nc" id="L272">                    inputStream.close()</span>
+<span class="nc" id="L273">                }</span>
+<span class="nc" id="L274">            }</span>
+<span class="nc" id="L275">        }</span>
+<span class="nc" id="L276">        emit(DataState.Success(-1.0))</span>
+<span class="nc" id="L277">    }</span>
+
+    private fun getLLRowData(
+        row: Map&lt;String, String&gt;,
+        csvRowWorkoutData: CSVRowWorkoutData
+    ): CSVRowWorkoutData {
+<span class="nc" id="L283">        var csvRowData = csvRowWorkoutData</span>
+<span class="nc bnc" id="L284" title="All 10 branches missed.">        val weight = row.entries.find { it.key == &quot;Weight&quot; }?.value?.toFloatOrNull() ?: 0f</span>
+<span class="nc" id="L285">        row.entries.forEach { item -&gt;</span>
+<span class="nc bnc" id="L286" title="All 13 branches missed.">            when (item.key) {</span>
+                &quot;Date&quot; -&gt; {
+<span class="nc" id="L288">                    val date = OffsetDateTime.parse(item.value)</span>
+<span class="nc" id="L289">                    val updated = csvRowData.workout.copy(completedAt = date, addedAt = date)</span>
+<span class="nc" id="L290">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+                &quot;Workout Name&quot; -&gt; {
+<span class="nc" id="L293">                    val updated = csvRowData.workout.copy(name = item.value)</span>
+<span class="nc" id="L294">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+                &quot;Exercise Name&quot; -&gt; {
+<span class="nc" id="L297">                    val equipment = when {</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;barbell&quot;) -&gt; ExerciseEquipmentType.Barbell</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;dumbbell&quot;) -&gt; ExerciseEquipmentType.Dumbbell</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;machine&quot;) -&gt; ExerciseEquipmentType.Machine</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;cable&quot;) -&gt; ExerciseEquipmentType.Cable</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;bodyweight&quot;) -&gt; ExerciseEquipmentType.Bodyweight</span>
+<span class="nc" id="L303">                        else -&gt; ExerciseEquipmentType.Bodyweight</span>
+                    }
+<span class="nc" id="L305">                    val updated = csvRowData.exercise.copy(</span>
+<span class="nc" id="L306">                        name = item.value,</span>
+<span class="nc" id="L307">                        equipmentType = equipment</span>
+                    )
+<span class="nc" id="L309">                    csvRowData = csvRowData.copy(exercise = updated)</span>
+                }
+                &quot;Exercise Order&quot; -&gt; {
+<span class="nc" id="L312">                    csvRowData = csvRowData.copy(position = item.value.toIntOrNull())</span>
+                }
+                &quot;Muscles Worked by Exercise&quot; -&gt; {
+<span class="nc" id="L315">                    csvRowData = csvRowData.copy(exercise = csvRowData.exercise.copy(musclesWorked = item.value.split(&quot;|&quot;)))</span>
+                }
+                &quot;Exercise Category&quot; -&gt; {
+<span class="nc" id="L318">                    csvRowData = csvRowData.copy(exercise = csvRowData.exercise.copy(category = item.value))</span>
+                }
+                &quot;Set Order&quot; -&gt; {
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(setNumber = item.value.toIntOrNull() ?: 1)</span>
+<span class="nc" id="L322">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;Weight&quot; -&gt; { }
+                &quot;Weight Unit&quot; -&gt; {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">                    val updated = if (item.value == &quot;lbs&quot;) {</span>
+<span class="nc" id="L327">                        csvRowData.set.copy(weightInPounds = weight).populateWeight()</span>
+                    } else {
+<span class="nc" id="L329">                        csvRowData.set.copy(weightInKilograms = weight).populateWeight()</span>
+                    }
+<span class="nc" id="L331">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;Reps&quot; -&gt; {
+<span class="nc bnc" id="L334" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(reps = item.value.toIntOrNull() ?: 0)</span>
+<span class="nc" id="L335">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;PE&quot; -&gt; {
+<span class="nc bnc" id="L338" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(perceivedExertion = item.value.toIntOrNull() ?: 0)</span>
+<span class="nc" id="L339">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;RIR&quot; -&gt; {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                    csvRowData = csvRowData.copy(set = csvRowData.set.copy(repsInReserve = item.value.toIntOrNull() ?: 0))</span>
+                }
+                &quot;Workout Notes&quot; -&gt; {
+<span class="nc bnc" id="L345" title="All 4 branches missed.">                    val updated = csvRowData.workout.copy(note = item.value.ifEmpty { null })</span>
+<span class="nc" id="L346">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+            }
+<span class="nc" id="L349">        }</span>
+<span class="nc" id="L350">        return csvRowData</span>
+    }
+
+<span class="nc" id="L353">    private fun readStrongFormattedCsv(uri: Uri) = flow {</span>
+<span class="nc" id="L354">        var counted = 0.0</span>
+<span class="nc" id="L355">        emit(DataState.Success(counted))</span>
+
+<span class="nc" id="L357">        var setNumber = 1</span>
+<span class="nc" id="L358">        var workout: DbWorkout? = null</span>
+<span class="nc" id="L359">        var exercise: DbExercise? = null</span>
+<span class="nc" id="L360">        val sets = arrayListOf&lt;DbExerciseSet&gt;()</span>
+
+<span class="nc bnc" id="L362" title="All 2 branches missed.">        val inputStream = context.contentResolver.openInputStream(uri) ?: return@flow</span>
+
+<span class="nc" id="L364">        coroutineScope {</span>
+<span class="nc" id="L365">            try {</span>
+<span class="nc" id="L366">                csvReader { delimiter = ';' }.openAsync(inputStream) {</span>
+<span class="nc" id="L367">                    readAllWithHeaderAsSequence().asFlow().collect { row: Map&lt;String, String&gt; -&gt;</span>
+<span class="nc bnc" id="L368" title="All 6 branches missed.">                        val exerciseName = row.entries.find { rowData -&gt; rowData.key == &quot;Exercise Name&quot; }?.value</span>
+<span class="nc bnc" id="L369" title="All 6 branches missed.">                        val workoutName = row.entries.find { rowData -&gt; rowData.key == &quot;Workout Name&quot; }?.value</span>
+
+<span class="nc" id="L371">                        var csvData = CSVRowWorkoutData(</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">                            workout ?: DbWorkout(wId = 0L),</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">                            exercise ?: DbExercise(eId = 0L, name = &quot;&quot;),</span>
+<span class="nc" id="L374">                            DbExerciseSet(sId = 0L, exerciseId = 0L, workoutId = 0L, positionId = 0L, setNumber = setNumber)</span>
+                        )
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">                        if (csvData.exercise.name != exerciseName) {</span>
+<span class="nc" id="L378">                            val workoutId = when {</span>
+<span class="nc bnc" id="L379" title="All 6 branches missed.">                                csvData.workout.wId == 0L || workoutName != workout?.name -&gt; {</span>
+<span class="nc" id="L380">                                    database.workoutDao().insert(csvData.workout.copy(wId = 0L))</span>
+                                }
+<span class="nc" id="L382">                                else -&gt; csvData.workout.wId</span>
+                            }
+<span class="nc" id="L384">                            csvData = csvData.copy(workout = csvData.workout.copy(wId = workoutId))</span>
+
+<span class="nc" id="L386">                            val dbExercise = database.exerciseDao().getExerciseByName(csvData.exercise.name)</span>
+<span class="nc" id="L387">                            val exerciseToUpdate = DbExercise(</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">                                eId = dbExercise?.eId ?: 0L,</span>
+<span class="nc" id="L389">                                name = csvData.exercise.name,</span>
+<span class="nc bnc" id="L390" title="All 4 branches missed.">                                musclesWorked = dbExercise?.musclesWorked.orEmpty(),</span>
+<span class="nc" id="L391">                                userCreated = false,</span>
+<span class="nc bnc" id="L392" title="All 4 branches missed.">                                category = dbExercise?.category.orEmpty(),</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                                thumbnailUrl = dbExercise?.thumbnailUrl</span>
+                            )
+
+<span class="nc bnc" id="L396" title="All 4 branches missed.">                            if (exerciseToUpdate.name.isNotEmpty()) {</span>
+<span class="nc" id="L397">                                var exerciseId = exerciseToUpdate.eId</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">                                if (exerciseToUpdate.eId == 0L) {</span>
+<span class="nc" id="L399">                                    exerciseId = database.exerciseDao().insert(exerciseToUpdate)</span>
+                                } else {
+<span class="nc" id="L401">                                    database.exerciseDao().update(exerciseToUpdate)</span>
+                                }
+
+<span class="nc" id="L404">                                val positions = database.exercisePositionDao().getPositionsInWorkout(workoutId)</span>
+<span class="nc" id="L405">                                val positionToInsert = ExercisePositionEntity(</span>
+<span class="nc" id="L406">                                    epId = 0L,</span>
+<span class="nc" id="L407">                                    exerciseId = exerciseId,</span>
+<span class="nc" id="L408">                                    workoutId = workoutId,</span>
+<span class="nc" id="L409">                                    position = positions.size + 1,</span>
+                                )
+<span class="nc" id="L411">                                val positionId = database.exercisePositionDao().insert(positionToInsert)</span>
+
+<span class="nc" id="L413">                                val setsToInsert = sets.map { item -&gt;</span>
+<span class="nc" id="L414">                                    item.copy(</span>
+<span class="nc" id="L415">                                        sId = 0L,</span>
+<span class="nc" id="L416">                                        workoutId = workoutId,</span>
+<span class="nc" id="L417">                                        exerciseId = exerciseId,</span>
+<span class="nc" id="L418">                                        positionId = positionId,</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">                                        completedAt = workout?.completedAt</span>
+                                    )
+                                }
+<span class="nc" id="L422">                                database.exerciseSetDao().insertAll(setsToInsert)</span>
+                            }
+
+<span class="nc" id="L425">                            sets.removeAll(sets.toSet())</span>
+                        }
+
+<span class="nc bnc" id="L428" title="All 4 branches missed.">                        if (workoutName != workout?.name) {</span>
+<span class="nc" id="L429">                            counted += 1.0</span>
+<span class="nc" id="L430">                            this@flow.emit(DataState.Success(counted))</span>
+
+<span class="nc" id="L432">                            setNumber = 1</span>
+                        } else {
+<span class="nc" id="L434">                            setNumber++</span>
+                        }
+
+<span class="nc" id="L437">                        try {</span>
+<span class="nc" id="L438">                            val newData = getRowData(row, csvData)</span>
+
+<span class="nc" id="L440">                            workout = newData.workout</span>
+<span class="nc" id="L441">                            exercise = newData.exercise</span>
+<span class="nc" id="L442">                            sets.add(newData.set)</span>
+<span class="nc" id="L443">                        } catch (e: Exception) {</span>
+<span class="nc" id="L444">                            Timber.e(e)</span>
+<span class="nc" id="L445">                            this@flow.emit(DataState.Error(e))</span>
+<span class="nc" id="L446">                            this@coroutineScope.cancel()</span>
+                        }
+<span class="nc" id="L448">                    }</span>
+<span class="nc" id="L449">                }</span>
+<span class="nc" id="L450">            } catch (e: MalformedCSVException) {</span>
+<span class="nc" id="L451">                Timber.e(e)</span>
+<span class="nc" id="L452">                emit(DataState.Error(e))</span>
+<span class="nc" id="L453">                this@coroutineScope.cancel()</span>
+<span class="nc" id="L454">            } catch (e: SQLiteConstraintException) {</span>
+<span class="nc" id="L455">                Timber.e(e)</span>
+<span class="nc" id="L456">                emit(DataState.Error(e))</span>
+<span class="nc" id="L457">                this@coroutineScope.cancel()</span>
+<span class="nc" id="L458">            } finally {</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">                withContext(Dispatchers.IO) {</span>
+<span class="nc" id="L460">                    inputStream.close()</span>
+<span class="nc" id="L461">                }</span>
+<span class="nc" id="L462">            }</span>
+<span class="nc" id="L463">        }</span>
+<span class="nc" id="L464">        emit(DataState.Success(-1.0))</span>
+<span class="nc" id="L465">    }</span>
+
+    private fun getRowData(
+        row: Map&lt;String, String&gt;,
+        csvRowWorkoutData: CSVRowWorkoutData,
+    ): CSVRowWorkoutData {
+<span class="nc" id="L471">        var csvRowData = csvRowWorkoutData</span>
+<span class="nc bnc" id="L472" title="All 10 branches missed.">        val weight = row.entries.find { it.key == &quot;Weight&quot; }?.value?.toFloatOrNull() ?: 0f</span>
+<span class="nc" id="L473">        row.entries.forEach { item -&gt;</span>
+<span class="nc bnc" id="L474" title="All 9 branches missed.">            when (item.key) {</span>
+                &quot;Date&quot; -&gt; {
+<span class="nc" id="L476">                    val date = LocalDateTime.parse( // format 2021-10-20 07:20:11</span>
+<span class="nc" id="L477">                        item.value,</span>
+                        DateTimeFormatter
+<span class="nc" id="L479">                            .ofPattern(&quot;uuuu-MM-dd HH:mm:ss&quot;)</span>
+                    )
+<span class="nc" id="L481">                        .atZone(ZoneOffset.systemDefault())</span>
+<span class="nc" id="L482">                        .toOffsetDateTime()</span>
+<span class="nc" id="L483">                    val updated = csvRowData.workout.copy(completedAt = date, addedAt = date)</span>
+<span class="nc" id="L484">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+                &quot;Workout Name&quot; -&gt; {
+<span class="nc" id="L487">                    val updated = csvRowData.workout.copy(name = item.value)</span>
+<span class="nc" id="L488">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+                &quot;Exercise Name&quot; -&gt; {
+<span class="nc" id="L491">                    val equipment = when {</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;barbell&quot;) -&gt; ExerciseEquipmentType.Barbell</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;dumbbell&quot;) -&gt; ExerciseEquipmentType.Dumbbell</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;machine&quot;) -&gt; ExerciseEquipmentType.Machine</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;cable&quot;) -&gt; ExerciseEquipmentType.Cable</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">                        item.value.lowercase().contains(&quot;bodyweight&quot;) -&gt; ExerciseEquipmentType.Bodyweight</span>
+<span class="nc" id="L497">                        else -&gt; ExerciseEquipmentType.Bodyweight</span>
+                    }
+<span class="nc" id="L499">                    val updated = csvRowData.exercise.copy(</span>
+<span class="nc" id="L500">                        name = item.value,</span>
+<span class="nc" id="L501">                        equipmentType = equipment</span>
+                    )
+<span class="nc" id="L503">                    csvRowData = csvRowData.copy(exercise = updated)</span>
+                }
+                &quot;Set Order&quot; -&gt; {
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(setNumber = item.value.toIntOrNull() ?: 1)</span>
+<span class="nc" id="L507">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;Weight&quot; -&gt; {
+                }
+                &quot;Weight Unit&quot; -&gt; {
+<span class="nc bnc" id="L512" title="All 2 branches missed.">                    val updated = if (item.value == &quot;lbs&quot;) {</span>
+<span class="nc" id="L513">                        csvRowData.set.copy(weightInPounds = weight).populateWeight()</span>
+                    } else {
+<span class="nc" id="L515">                        csvRowData.set.copy(weightInKilograms = weight).populateWeight()</span>
+                    }
+<span class="nc" id="L517">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;Reps&quot; -&gt; {
+<span class="nc bnc" id="L520" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(reps = item.value.toIntOrNull() ?: 0)</span>
+<span class="nc" id="L521">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;RPE&quot; -&gt; {
+<span class="nc bnc" id="L524" title="All 2 branches missed.">                    val updated = csvRowData.set.copy(perceivedExertion = item.value.toIntOrNull() ?: 0)</span>
+<span class="nc" id="L525">                    csvRowData = csvRowData.copy(set = updated)</span>
+                }
+                &quot;Distance&quot; -&gt; { }
+                &quot;Distance Unit&quot; -&gt; { }
+                &quot;Seconds&quot; -&gt; { }
+                &quot;Notes&quot; -&gt; { }
+                &quot;Workout Notes&quot; -&gt; {
+<span class="nc bnc" id="L532" title="All 4 branches missed.">                    val updated = csvRowData.workout.copy(note = item.value.ifEmpty { null })</span>
+<span class="nc" id="L533">                    csvRowData = csvRowData.copy(workout = updated)</span>
+                }
+            }
+<span class="nc" id="L536">        }</span>
+<span class="nc" id="L537">        return csvRowData</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

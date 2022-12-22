@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExerciseGroupScreen.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.exercisegroups</a> &gt; <span class="el_source">ExerciseGroupScreen.kt</span></div><h1>ExerciseGroupScreen.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.exercisegroups
+
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.navigation.NavController
+import com.catscoffeeandkitchen.domain.models.ExerciseGroup
+import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
+import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+
+@Composable
+fun ExerciseGroupScreen(
+    navController: NavController,
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">    modifier: Modifier = Modifier,</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">    selectable: Boolean = false,</span>
+<span class="fc" id="L32">    viewModel: ExerciseGroupsViewModel = hiltViewModel(),</span>
+<span class="fc" id="L33">    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">    ) {</span>
+<span class="fc" id="L35">    val localScope = rememberCoroutineScope()</span>
+<span class="pc" id="L36">    val createGroup by rememberUpdatedState(viewModel::createGroup)</span>
+<span class="pc" id="L37">    val updateGroupExercises by rememberUpdatedState(viewModel::updateGroupExercises)</span>
+
+<span class="pc" id="L39">    var editingGroup by remember { mutableStateOf(null as ExerciseGroup?) }</span>
+
+<span class="fc" id="L41">    val groupState = viewModel.exerciseGroups.collectAsState()</span>
+<span class="fc" id="L42">    val listState = rememberLazyListState()</span>
+
+<span class="fc" id="L44">    DisposableEffect(lifecycleOwner) {</span>
+<span class="fc" id="L45">        val observer = LifecycleEventObserver { _, event -&gt;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (event == Lifecycle.Event.ON_RESUME) {</span>
+                // watch for selected exercises coming back from search exercise screen
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">                navController.currentBackStackEntry?.savedStateHandle</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                    ?.getLiveData&lt;String&gt;(&quot;selectedExercises&quot;)?.observe(lifecycleOwner) { result -&gt;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                        if (editingGroup == null) {</span>
+                            // create a group from those exercises
+<span class="nc" id="L52">                            createGroup(result.split(&quot;|&quot;))</span>
+<span class="nc bnc" id="L53" title="All 6 branches missed.">                            (groupState.value as? DataState.Success)?.data?.let { groups -&gt;</span>
+<span class="nc" id="L54">                                localScope.launch {</span>
+<span class="nc" id="L55">                                    listState.scrollToItem(groups.lastIndex)</span>
+<span class="nc" id="L56">                                }</span>
+                            }
+                        } else {
+<span class="nc" id="L59">                            updateGroupExercises(editingGroup!!, result.split(&quot;|&quot;))</span>
+<span class="nc bnc" id="L60" title="All 6 branches missed.">                            (groupState.value as? DataState.Success)?.data?.let { groups -&gt;</span>
+<span class="nc" id="L61">                                localScope.launch {</span>
+<span class="nc bnc" id="L62" title="All 6 branches missed.">                                    listState.scrollToItem(groups.indexOfFirst { it.id == editingGroup?.id })</span>
+<span class="nc" id="L63">                                }</span>
+                            }
+<span class="nc" id="L65">                            editingGroup = null</span>
+                        }
+
+                        // remove the handle so we don't duplicate the action
+<span class="nc bnc" id="L69" title="All 4 branches missed.">                        navController.currentBackStackEntry?.savedStateHandle</span>
+<span class="nc" id="L70">                            ?.remove&lt;String&gt;(&quot;selectedExercises&quot;)</span>
+<span class="nc" id="L71">                    }</span>
+            }
+<span class="fc" id="L73">        }</span>
+<span class="fc" id="L74">        lifecycleOwner.lifecycle.addObserver(observer)</span>
+<span class="fc" id="L75">        onDispose {</span>
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+<span class="fc" id="L80">    when (val state = groupState.value) {</span>
+<span class="pc bpc" id="L81" title="2 of 4 branches missed.">        is DataState.Loading, is DataState.NotSent -&gt; { CircularProgressIndicator(modifier = modifier) }</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        is DataState.Error -&gt; {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            state.e.localizedMessage?.let { Text(it, modifier = modifier) }</span>
+        }
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        is DataState.Success -&gt; {</span>
+<span class="fc" id="L86">            LazyColumn(state = listState, modifier = modifier.testTag(TestTags.ScrollableComponent)) {</span>
+<span class="fc" id="L87">                items(state.data) { group -&gt;</span>
+                    ExerciseGroupSummaryCard(
+                        group,
+                        renameGroup = { newName -&gt;
+<span class="nc" id="L91">                            viewModel.renameGroup(group, newName)</span>
+<span class="nc" id="L92">                        },</span>
+                        editExercises = {
+<span class="nc" id="L94">                            editingGroup = group</span>
+<span class="nc" id="L95">                            navController.navigate(</span>
+<span class="nc" id="L96">                                &quot;${FitnessJournalScreen.SearchExercisesMultiSelectScreen.route}?&quot; +</span>
+<span class="nc" id="L97">                                        &quot;selectedExercises=${group.exercises.joinToString(&quot;|&quot;) { it.name }}&quot;</span>
+                            )
+<span class="nc" id="L99">                        },</span>
+<span class="nc" id="L100">                        removeGroup = { viewModel.removeGroup(group) },</span>
+                        onTap = if (selectable) ({
+<span class="nc bnc" id="L102" title="All 4 branches missed.">                            navController.previousBackStackEntry?.savedStateHandle?.set&lt;Long&gt;(</span>
+<span class="nc" id="L103">                                &quot;selectedGroup&quot;,</span>
+<span class="nc" id="L104">                                group.id</span>
+                            )
+<span class="nc" id="L106">                            navController.popBackStack()</span>
+<span class="nc" id="L107">                        }) else null</span>
+                    )
+                }
+<span class="fc" id="L110">            }</span>
+        }
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">    }</span>
+
+<span class="fc" id="L114">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

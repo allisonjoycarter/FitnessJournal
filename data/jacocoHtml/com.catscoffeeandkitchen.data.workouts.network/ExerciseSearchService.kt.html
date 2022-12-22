@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExerciseSearchService.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.network</a> &gt; <span class="el_source">ExerciseSearchService.kt</span></div><h1>ExerciseSearchService.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.network
+
+import com.catscoffeeandkitchen.data.workouts.network.models.*
+import retrofit2.Retrofit
+import retrofit2.http.GET
+import retrofit2.http.Query
+import java.util.*
+
+interface ExerciseSearchService {
+    suspend fun searchExercises(search: String): SearchResponse
+
+<span class="nc" id="L12">    suspend fun getExercises(</span>
+        limit: Int,
+        offset: Int,
+        name: String?,
+<span class="nc" id="L16">        muscle: WgerMuscle? = null,</span>
+<span class="nc" id="L17">        category: WgerExerciseCategory? = null,</span>
+    ): WgerPage&lt;WgerExerciseItem&gt;
+
+<span class="nc" id="L20">    suspend fun getExerciseImages(</span>
+<span class="nc" id="L21">        id: Int? = null,</span>
+<span class="nc" id="L22">        limit: Int = 20,</span>
+<span class="nc" id="L23">        offset: Int = 0</span>
+    ): WgerPage&lt;WgerExerciseImage&gt;
+
+    interface Endpoints {
+        @GET(&quot;/api/v2/exercise&quot;)
+<span class="nc" id="L28">        suspend fun getExercises(</span>
+<span class="nc" id="L29">            @Query(&quot;limit&quot;) limit: Int = 20,</span>
+<span class="nc" id="L30">            @Query(&quot;offset&quot;) offset: Int = 0,</span>
+<span class="nc" id="L31">            @Query(&quot;name&quot;) name: String? = null,</span>
+<span class="nc" id="L32">            @Query(&quot;muscles&quot;) muscles: Int? = null,</span>
+<span class="nc" id="L33">            @Query(&quot;category&quot;) category: Int? = null,</span>
+<span class="nc" id="L34">            @Query(&quot;language&quot;) language: Int = 2, // 2 english, 1 german</span>
+        ): WgerPage&lt;WgerExerciseItem&gt;
+
+        @GET(&quot;/api/v2/exerciseimage&quot;)
+<span class="nc" id="L38">        suspend fun getExerciseImages(</span>
+<span class="nc" id="L39">            @Query(&quot;limit&quot;) limit: Int = 20,</span>
+<span class="nc" id="L40">            @Query(&quot;offset&quot;) offset: Int = 0,</span>
+<span class="nc" id="L41">            @Query(&quot;exercise_base&quot;) id: Int? = null,</span>
+        ): WgerPage&lt;WgerExerciseImage&gt;
+
+        @GET(&quot;/api/v2/exercise/search&quot;)
+<span class="nc" id="L45">        suspend fun searchExercises(</span>
+<span class="nc" id="L46">            @Query(&quot;term&quot;) name: String? = null,</span>
+<span class="nc" id="L47">            @Query(&quot;language&quot;) language: Int = 2, // 2 english, 1 german</span>
+        ): SearchResponse
+    }
+
+<span class="nc" id="L51">    class Impl(retrofit: Retrofit): ExerciseSearchService {</span>
+<span class="nc" id="L52">        private val endpoint = retrofit.create(Endpoints::class.java)</span>
+
+        override suspend fun searchExercises(
+            search: String,
+        ): SearchResponse {
+<span class="nc" id="L57">            return endpoint.searchExercises(</span>
+<span class="nc" id="L58">                search,</span>
+            )
+        }
+
+        override suspend fun getExercises(
+            limit: Int,
+            offset: Int,
+            name: String?,
+            muscle: WgerMuscle?,
+            category: WgerExerciseCategory?,
+        ): WgerPage&lt;WgerExerciseItem&gt; {
+<span class="nc" id="L69">            return endpoint.getExercises(</span>
+<span class="nc" id="L70">                limit = limit,</span>
+<span class="nc" id="L71">                offset = offset,</span>
+<span class="nc" id="L72">                name = name,</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                muscles = muscle?.number,</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                category = category?.number</span>
+            )
+        }
+
+        override suspend fun getExerciseImages(
+            id: Int?,
+            limit: Int,
+            offset: Int
+        ): WgerPage&lt;WgerExerciseImage&gt; {
+<span class="nc" id="L83">            return endpoint.getExerciseImages(id = id, limit = limit, offset = offset)</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataSourceModule.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data</a> &gt; <span class="el_source">DataSourceModule.kt</span></div><h1>DataSourceModule.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data
+
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.catscoffeeandkitchen.data.workouts.db.*
+import com.catscoffeeandkitchen.data.workouts.db.migrations.Migration_3_4
+import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
+import com.catscoffeeandkitchen.data.workouts.repository.*
+import com.catscoffeeandkitchen.data.workouts.util.DatabaseBackupHelper
+import com.catscoffeeandkitchen.domain.interfaces.*
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import timber.log.Timber
+import java.util.concurrent.Executors
+import javax.inject.Singleton
+
+<span class="nc" id="L28">@InstallIn(SingletonComponent::class)</span>
+@Module
+<span class="nc" id="L30">class DataSourceModule {</span>
+    //region Network
+    @Provides
+    @Singleton
+    fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
+<span class="nc" id="L35">        return HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)</span>
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        httpLoggingInterceptor: HttpLoggingInterceptor,
+    ): OkHttpClient {
+<span class="nc" id="L43">        return OkHttpClient.Builder()</span>
+<span class="nc" id="L44">            .addInterceptor(httpLoggingInterceptor)</span>
+<span class="nc" id="L45">            .build()</span>
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(
+        moshi: Moshi,
+        okHttpClient: OkHttpClient
+    ): Retrofit {
+<span class="nc" id="L54">        return Retrofit.Builder()</span>
+<span class="nc" id="L55">            .client(okHttpClient)</span>
+<span class="nc" id="L56">            .baseUrl(&quot;https://wger.de/&quot;)</span>
+<span class="nc" id="L57">            .addConverterFactory(MoshiConverterFactory.create(moshi))</span>
+<span class="nc" id="L58">            .build()</span>
+    }
+
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi {
+<span class="nc" id="L64">        return Moshi.Builder()</span>
+<span class="nc" id="L65">            .add(KotlinJsonAdapterFactory())</span>
+<span class="nc" id="L66">            .build()</span>
+    }
+
+    @Provides
+    fun provideExerciseSearchService(retrofit: Retrofit): ExerciseSearchService {
+<span class="nc" id="L71">        return ExerciseSearchService.Impl(retrofit)</span>
+    }
+
+    @Provides
+    fun provideDatabaseBackupHelper(
+        @ApplicationContext context: Context,
+        sharedPreferences: SharedPreferences,
+        database: FitnessJournalDb,
+        ): DatabaseBackupHelper {
+<span class="nc" id="L80">        return DatabaseBackupHelper(context, sharedPreferences, database)</span>
+    }
+    //endregion
+
+    //region Database DAO
+    @Provides
+    @Singleton
+    fun provideAppDatabase(
+        @ApplicationContext appContext: Context,
+    ): FitnessJournalDb {
+<span class="nc" id="L90">        return Room.databaseBuilder(</span>
+<span class="nc" id="L91">            appContext,</span>
+            FitnessJournalDb::class.java,
+<span class="nc" id="L93">            &quot;FitnessJournalDb&quot;</span>
+        )
+<span class="nc" id="L95">            .addMigrations(Migration_3_4)</span>
+            // uncomment for query logging
+//            .setQueryCallback(object : RoomDatabase.QueryCallback {
+//                override fun onQuery(sqlQuery: String, bindArgs: List&lt;Any?&gt;) {
+//                    Timber.d(&quot;+++\n SQL Query $sqlQuery \n SQL Args $bindArgs \n +++&quot;)
+//                }
+//
+//            }, Executors.newSingleThreadExecutor())
+<span class="nc" id="L103">            .build()</span>
+    }
+
+    @Provides
+    fun provideExerciseDao(database: FitnessJournalDb): ExerciseDao {
+<span class="nc" id="L108">        return database.exerciseDao()</span>
+    }
+
+    @Provides
+    fun provideExerciseGoalDao(database: FitnessJournalDb): ExerciseGoalDao {
+<span class="nc" id="L113">        return database.exerciseGoalDao()</span>
+    }
+
+    @Provides
+    fun provideExerciseGroupDao(database: FitnessJournalDb): ExerciseGroupDao {
+<span class="nc" id="L118">        return database.exerciseGroupDao()</span>
+    }
+
+    @Provides
+    fun provideExercisePositionDao(database: FitnessJournalDb): ExercisePositionDao {
+<span class="nc" id="L123">        return database.exercisePositionDao()</span>
+    }
+
+    @Provides
+    fun provideExerciseSetDao(database: FitnessJournalDb): ExerciseSetDao {
+<span class="nc" id="L128">        return database.exerciseSetDao()</span>
+    }
+
+    @Provides
+    fun provideWorkoutDao(database: FitnessJournalDb): WorkoutDao {
+<span class="nc" id="L133">        return database.workoutDao()</span>
+    }
+
+    @Provides
+    fun provideWorkoutPlanDao(database: FitnessJournalDb): WorkoutPlanDao {
+<span class="nc" id="L138">        return database.workoutPlanDao()</span>
+    }
+
+    @Provides
+    fun provideRemoteKeysDao(database: FitnessJournalDb): RemoteKeysDao {
+<span class="nc" id="L143">        return database.remoteKeysDao()</span>
+    }
+
+    //endregion
+
+    //region Repositories
+    @Provides
+    fun provideWorkoutRepository(
+        database: FitnessJournalDb,
+        ): WorkoutRepository {
+<span class="nc" id="L153">        return WorkoutRepositoryImpl(database)</span>
+    }
+
+    @Provides
+    fun provideWorkoutPlanRepository(
+        database: FitnessJournalDb,
+        ): WorkoutPlanRepository {
+<span class="nc" id="L160">        return WorkoutPlanRepositoryImpl(database)</span>
+    }
+
+    @Provides
+    fun provideExerciseSetRepository(
+        database: FitnessJournalDb,
+        ): ExerciseSetRepository {
+<span class="nc" id="L167">        return ExerciseSetRepositoryImpl(database)</span>
+    }
+
+    @Provides
+    fun provideExerciseRepository(
+        database: FitnessJournalDb,
+        exerciseSearchService: ExerciseSearchService,
+        ): ExerciseRepository {
+<span class="nc" id="L175">        return ExerciseRepositoryImpl(database, exerciseSearchService)</span>
+    }
+
+    @Provides
+    fun provideDataRepository(
+        @ApplicationContext context: Context,
+        backupHelper: DatabaseBackupHelper,
+        database: FitnessJournalDb
+        ): DataRepository {
+<span class="nc" id="L184">        return DataRepositoryImpl(context, backupHelper, database)</span>
+    }
+    //endregion
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

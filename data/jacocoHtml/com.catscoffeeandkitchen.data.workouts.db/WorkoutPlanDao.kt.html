@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutPlanDao.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">data</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.data.workouts.db</a> &gt; <span class="el_source">WorkoutPlanDao.kt</span></div><h1>WorkoutPlanDao.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.data.workouts.db
+
+import androidx.room.*
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanWithGoals
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanWithGoalsAndPosition
+import java.time.OffsetDateTime
+
+@Dao
+interface WorkoutPlanDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(workout: WorkoutPlanEntity): Long
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun update(workout: WorkoutPlanEntity): Int
+
+    @Transaction
+    suspend fun upsert(workout: WorkoutPlanEntity) {
+<span class="nc" id="L19">        val id = insert(workout)</span>
+<span class="nc bnc" id="L20" title="All 2 branches missed.">        if (id == -1L) {</span>
+<span class="nc" id="L21">            update(workout)</span>
+        }
+<span class="nc" id="L23">    }</span>
+
+    @Delete
+    suspend fun delete(workout: WorkoutPlanEntity)
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        ORDER BY addedAt DESC
+    &quot;&quot;&quot;
+    )
+    fun getAll(): List&lt;WorkoutPlanEntity&gt;
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        ORDER BY addedAt DESC
+    &quot;&quot;&quot;
+    )
+    fun getAllWithGoals(): List&lt;WorkoutPlanWithGoals&gt;
+
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE addedAt = :addedAt
+        LIMIT 1
+    &quot;&quot;&quot;
+    )
+    suspend fun getWorkoutPlanByAddedAt(addedAt: OffsetDateTime): WorkoutPlanEntity
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.addedAt = :addedAt
+    &quot;&quot;&quot;
+    )
+    fun getWithGoalsByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoals
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.addedAt = :addedAt
+    &quot;&quot;&quot;
+    )
+    fun getWithGoalAndPositionByAddedAt(addedAt: OffsetDateTime): WorkoutPlanWithGoalsAndPosition
+
+    @Transaction
+    @Query(
+        &quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE WorkoutPlanEntity.wpId = :planId
+    &quot;&quot;&quot;
+    )
+    fun getWorkoutPlanWithGoalsById(planId: Long): WorkoutPlanWithGoals
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

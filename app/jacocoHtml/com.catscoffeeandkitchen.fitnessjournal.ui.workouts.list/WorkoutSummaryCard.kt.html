@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorkoutSummaryCard.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.catscoffeeandkitchen.fitnessjournal.ui.workouts.list</a> &gt; <span class="el_source">WorkoutSummaryCard.kt</span></div><h1>WorkoutSummaryCard.kt</h1><pre class="source lang-java linenums">package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.list
+
+import android.text.format.DateUtils
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.catscoffeeandkitchen.domain.models.ExerciseSetType
+import com.catscoffeeandkitchen.domain.models.Workout
+import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
+import java.time.OffsetDateTime
+import kotlin.math.roundToInt
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun WorkoutSummaryCard(
+    workout: Workout,
+<span class="nc bnc" id="L23" title="All 2 branches missed.">    onTap: () -&gt; Unit = {},</span>
+<span class="nc" id="L24">    onLongPress: () -&gt; Unit = {},</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">) {</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">    FitnessJournalCard(</span>
+<span class="nc" id="L27">        modifier = Modifier</span>
+<span class="nc" id="L28">            .padding(8.dp)</span>
+<span class="nc" id="L29">            .fillMaxWidth()</span>
+<span class="nc" id="L30">            .combinedClickable(</span>
+<span class="nc" id="L31">                onClick = { onTap() },</span>
+<span class="nc" id="L32">                onLongClick = { onLongPress() },</span>
+            ),
+<span class="nc" id="L34">        columnPaddingVertical = 4.dp</span>
+<span class="nc" id="L35">    ) {</span>
+<span class="nc bnc" id="L36" title="All 4 branches missed.">        Text(workout.name, style = MaterialTheme.typography.headlineMedium)</span>
+
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (workout.completedAt == null) {</span>
+
+<span class="nc" id="L40">            Surface(</span>
+<span class="nc" id="L41">                modifier = Modifier.padding(vertical = 4.dp),</span>
+<span class="nc" id="L42">                shape = SuggestionChipDefaults.shape,</span>
+<span class="nc" id="L43">                tonalElevation = 4.dp</span>
+<span class="nc" id="L44">            ) {</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">                Text(</span>
+<span class="nc" id="L46">                    &quot;In Progress&quot;,</span>
+<span class="nc" id="L47">                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)</span>
+<span class="nc" id="L48">                )</span>
+<span class="nc" id="L49">            }</span>
+        }
+
+<span class="nc" id="L52">        when (val completed = workout.completedAt) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            null -&gt; Text(</span>
+<span class="nc" id="L54">                &quot;added &quot; + DateUtils.getRelativeTimeSpanString(</span>
+<span class="nc" id="L55">                    workout.addedAt.toInstant().toEpochMilli(),</span>
+<span class="nc" id="L56">                    OffsetDateTime.now().toInstant().toEpochMilli(),</span>
+<span class="nc" id="L57">                    DateUtils.DAY_IN_MILLIS</span>
+<span class="nc" id="L58">                ).toString().lowercase(),</span>
+<span class="nc" id="L59">                style = MaterialTheme.typography.labelMedium</span>
+            )
+<span class="nc" id="L61">            else -&gt; Text(</span>
+<span class="nc" id="L62">                &quot;finished &quot; + DateUtils.getRelativeTimeSpanString(</span>
+<span class="nc" id="L63">                    completed.toInstant().toEpochMilli(),</span>
+<span class="nc" id="L64">                    OffsetDateTime.now().toInstant().toEpochMilli(),</span>
+<span class="nc" id="L65">                    DateUtils.DAY_IN_MILLIS</span>
+<span class="nc" id="L66">                ).toString().lowercase(),</span>
+<span class="nc" id="L67">                style = MaterialTheme.typography.labelMedium</span>
+            )
+        }
+
+<span class="nc" id="L71">        when (val plan = workout.plan) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            null -&gt; {}</span>
+            else -&gt; {
+<span class="nc" id="L74">                Text(&quot;plan: ${plan.name}&quot;)</span>
+<span class="nc" id="L75">                Text(&quot;${plan.entries.size} exercises&quot;)</span>
+            }
+        }
+
+<span class="nc bnc" id="L79" title="All 8 branches missed.">        if (workout.note?.isNotEmpty() == true) {</span>
+<span class="nc" id="L80">            Text(</span>
+<span class="nc" id="L81">                workout.note!!,</span>
+<span class="nc" id="L82">                style = MaterialTheme.typography.labelLarge,</span>
+            )
+        }
+
+<span class="nc" id="L86">        workout.sets.groupBy { it.exercise.name }.forEach { entry -&gt;</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">            val warmupSets = entry.value.filter { it.type == ExerciseSetType.WarmUp }</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">            val workingSets = entry.value.filter { it.type == ExerciseSetType.Working }</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (warmupSets.any()) {</span>
+<span class="nc" id="L90">                Text(</span>
+<span class="nc" id="L91">                    &quot;${warmupSets.size}x${warmupSets.map { it.reps }.average().roundToInt()} &quot; +</span>
+<span class="nc" id="L92">                            &quot;${entry.key} Warm Up&quot;,</span>
+<span class="nc" id="L93">                    style = MaterialTheme.typography.bodyMedium</span>
+                )
+            }
+<span class="nc" id="L96">            Text(</span>
+<span class="nc" id="L97">                &quot;${workingSets.size}x${workingSets.map { it.reps }.average().roundToInt()} &quot; +</span>
+<span class="nc" id="L98">                        entry.key,</span>
+<span class="nc" id="L99">                style = MaterialTheme.typography.bodyMedium</span>
+            )
+<span class="nc" id="L101">        }</span>
+<span class="nc" id="L102">    }</span>
+<span class="nc" id="L103">}</span>
+
+@Preview
+@Composable
+<span class="nc bnc" id="L107" title="All 4 branches missed.">fun WorkoutCardPreview() {</span>
+<span class="nc" id="L108">    WorkoutSummaryCard(workout = Workout(</span>
+<span class="nc" id="L109">        id = 1L,</span>
+<span class="nc" id="L110">        name = &quot;Best Workout Ever&quot;,</span>
+<span class="nc" id="L111">        addedAt = OffsetDateTime.now().minusDays(30L),</span>
+<span class="nc" id="L112">        completedAt = OffsetDateTime.now().minusDays(3),</span>
+<span class="nc" id="L113">        note = &quot;A good workout for a nice burn&quot;</span>
+    ))
+<span class="nc bnc" id="L115" title="All 2 branches missed.">}</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
