@@ -19,13 +19,13 @@ class AddExerciseSetUseCase @Inject constructor(
     fun run(
         entry: WorkoutEntry,
         set: ExerciseSet,
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
     ): Flow<DataState<WorkoutEntry>> = flow {
         emit(DataState.Loading())
         val result = repository.addExerciseSetWithPopulatedData(
             entry = entry,
             exerciseSet = set,
-            workoutAddedAt = workoutAddedAt,
+            workoutId = workoutId,
         )
         emit(DataState.Success(result))
     }

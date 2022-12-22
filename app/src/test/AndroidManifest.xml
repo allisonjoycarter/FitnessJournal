@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.catscoffeeandkitchen.fitnessjournal">
+    <application>
+        <activity
+            android:name="com.catscoffeeandkitchen.fitnessjournal.LiftingLogTestApplication"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light"/>
+    </application>
+</manifest>

@@ -15,10 +15,10 @@ import javax.inject.Inject
 class CreateWorkoutUseCase @Inject constructor(
     val workoutRepository: WorkoutRepository
 ) {
-    fun run(workout: Workout, planAddedAt: OffsetDateTime? = null): Flow<DataState<Workout>> = flow {
+    fun run(workout: Workout, planId: Long? = null): Flow<DataState<Workout>> = flow {
         emit(DataState.Loading())
-        workoutRepository.createWorkout(workout, planAddedAt)
-        emit(DataState.Success(workout))
+        val result = workoutRepository.createWorkout(workout, planId)
+        emit(DataState.Success(result))
     }
         .catch { ex ->
             Timber.e(ex)

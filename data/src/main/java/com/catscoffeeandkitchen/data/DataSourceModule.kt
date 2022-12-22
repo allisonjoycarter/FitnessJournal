@@ -67,7 +67,7 @@ class DataSourceModule {
     }
 
     @Provides
-    fun provideExerciseSearchService(retrofit: Retrofit): ExerciseSearchService.Impl {
+    fun provideExerciseSearchService(retrofit: Retrofit): ExerciseSearchService {
         return ExerciseSearchService.Impl(retrofit)
     }
 
@@ -149,9 +149,8 @@ class DataSourceModule {
     @Provides
     fun provideWorkoutRepository(
         database: FitnessJournalDb,
-        exerciseSearchService: ExerciseSearchService.Impl,
         ): WorkoutRepository {
-        return WorkoutRepositoryImpl(database, exerciseSearchService)
+        return WorkoutRepositoryImpl(database)
     }
 
     @Provides
@@ -169,10 +168,11 @@ class DataSourceModule {
     }
 
     @Provides
-    fun provideExerciseGroupRepository(
+    fun provideExerciseRepository(
         database: FitnessJournalDb,
+        exerciseSearchService: ExerciseSearchService,
         ): ExerciseRepository {
-        return ExerciseRepositoryImpl(database)
+        return ExerciseRepositoryImpl(database, exerciseSearchService)
     }
 
     @Provides

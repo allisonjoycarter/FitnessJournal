@@ -12,10 +12,10 @@ android {
         applicationId "com.catscoffeeandkitchen.fitnessjournal"
         minSdk 26
         targetSdk 33
-        versionCode 7
-        versionName "0.1.5"
+        versionCode 8
+        versionName "0.1.6"
 
-        testInstrumentationRunner "com.catscoffeeandkitchen.fitnessjournal.HiltTestRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -34,20 +34,34 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = '11'
-        freeCompilerArgs += ["-Xopt-in=kotlin.RequiresOptIn"]
+        freeCompilerArgs += [
+                "-Xjvm-default=all",
+                "-Xopt-in=kotlin.RequiresOptIn"
+        ]
     }
+
     buildFeatures {
         compose true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion compose_compiler_version
     }
+
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -141,8 +155,12 @@ dependencies {
     implementation 'androidx.test.espresso:espresso-idling-resource:3.5.0'
 
     /////////// Tests //////////////////////
-    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
-    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.1'
+    testImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+    testImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+//    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 }

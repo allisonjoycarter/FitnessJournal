@@ -11,11 +11,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.catscoffeeandkitchen.domain.util.DataState
 import com.catscoffeeandkitchen.fitnessjournal.R
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import java.time.OffsetDateTime
@@ -36,7 +38,8 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.testTag(TestTags.ScrollableComponent),
     ) {
         item {
             Text(

@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -20,6 +21,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.list.EmptyWorkoutList
@@ -65,17 +67,14 @@ fun WorkoutPlansScreen(
                 if (workouts.data.isNotEmpty()) {
                         LazyColumn(modifier = modifier
                             .background(MaterialTheme.colorScheme.background)
+                            .testTag(TestTags.ScrollableComponent),
                         ) {
                             items(workouts.data) { item ->
                                 WorkoutPlanSummaryCard(
                                     item,
                                     onTap = {
                                         navController.navigate(
-                                            "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/${
-                                                item.addedAt
-                                                    .toInstant()
-                                                    .toEpochMilli()
-                                            }"
+                                            "${FitnessJournalScreen.WorkoutPlanEditScreen.route}/${item.id}"
                                         )
                                     }
                                 )

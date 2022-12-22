@@ -80,6 +80,7 @@ fun DbExercise.toExercise(amountOfSets: Int? = null, stats: ExerciseStats? = nul
 
 fun DbWorkout.toWorkout(): Workout {
     return Workout(
+        id = this.wId,
         addedAt = this.addedAt,
         name = this.name,
         note = this.note,

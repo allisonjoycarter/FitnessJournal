@@ -15,10 +15,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalCard
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.graphs.MPExerciseLineGraph
 import kotlinx.coroutines.launch
@@ -148,7 +150,7 @@ fun StatsScreen(
             }
             else -> {
                 LazyColumn(
-                    modifier = modifier.padding(horizontal = 8.dp),
+                    modifier = modifier.padding(horizontal = 8.dp).testTag(TestTags.ScrollableComponent),
                     state = listState,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

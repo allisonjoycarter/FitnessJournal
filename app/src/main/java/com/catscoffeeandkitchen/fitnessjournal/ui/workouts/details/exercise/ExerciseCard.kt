@@ -116,7 +116,7 @@ fun ColumnScope.exerciseMenuItems(
         text = { Text("add pyramid warmup") },
         onClick = {
             uiActions?.addWarmupSets(
-                uiData.workoutAddedAt,
+                uiData.workoutId,
                 uiData.entry,
                 uiData.unit
             )

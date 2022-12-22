@@ -7,6 +7,22 @@ import retrofit2.http.Query
 import java.util.*
 
 interface ExerciseSearchService {
+    suspend fun searchExercises(search: String): SearchResponse
+
+    suspend fun getExercises(
+        limit: Int,
+        offset: Int,
+        name: String?,
+        muscle: WgerMuscle? = null,
+        category: WgerExerciseCategory? = null,
+    ): WgerPage<WgerExerciseItem>
+
+    suspend fun getExerciseImages(
+        id: Int? = null,
+        limit: Int = 20,
+        offset: Int = 0
+    ): WgerPage<WgerExerciseImage>
+
     interface Endpoints {
         @GET("/api/v2/exercise")
         suspend fun getExercises(
@@ -32,10 +48,10 @@ interface ExerciseSearchService {
         ): SearchResponse
     }
 
-    class Impl(retrofit: Retrofit) {
+    class Impl(retrofit: Retrofit): ExerciseSearchService {
         private val endpoint = retrofit.create(Endpoints::class.java)
 
-        suspend fun searchExercises(
+        override suspend fun searchExercises(
             search: String,
         ): SearchResponse {
             return endpoint.searchExercises(
@@ -43,12 +59,12 @@ interface ExerciseSearchService {
             )
         }
 
-        suspend fun getExercises(
+        override suspend fun getExercises(
             limit: Int,
             offset: Int,
             name: String?,
-            muscle: WgerMuscle? = null,
-            category: WgerExerciseCategory? = null,
+            muscle: WgerMuscle?,
+            category: WgerExerciseCategory?,
         ): WgerPage<WgerExerciseItem> {
             return endpoint.getExercises(
                 limit = limit,
@@ -59,10 +75,10 @@ interface ExerciseSearchService {
             )
         }
 
-        suspend fun getExerciseImages(
-            id: Int? = null,
-            limit: Int = 20,
-            offset: Int = 0
+        override suspend fun getExerciseImages(
+            id: Int?,
+            limit: Int,
+            offset: Int
         ): WgerPage<WgerExerciseImage> {
             return endpoint.getExerciseImages(id = id, limit = limit, offset = offset)
         }

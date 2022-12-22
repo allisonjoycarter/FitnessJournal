@@ -49,13 +49,12 @@ interface ExerciseSetDao {
     )
     suspend fun deleteSetsWithPositionId(positionId: Long)
 
-    @Query(
-        """
+    @Query("""
         SELECT *
         FROM SetEntity
-    """
-    )
-    suspend fun getAllSets(): List<SetEntity>
+        WHERE sId = :id
+    """)
+    fun getSet(id: Long): SetEntity
 
     @Query(
         """
@@ -139,4 +138,5 @@ interface ExerciseSetDao {
     """
     )
     fun getLastSetOfExerciseInWorkout(exerciseId: Long, workoutId: Long): SetEntity?
+
 }

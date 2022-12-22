@@ -52,7 +52,7 @@ class WorkoutDetailsViewModel @Inject constructor(
     private val updateExercisesInGroupUseCase: UpdateExercisesInGroupUseCase,
     private val chooseExerciseInGroupUseCase: ChooseExerciseInGroupUseCase,
     private val replaceExerciseWithGroup: ReplaceExerciseWithGroupUseCase,
-    private val getWorkoutByAddedDateUseCase: GetWorkoutByAddedDateUseCase,
+    private val getWorkoutUseCase: GetWorkoutUseCase,
     private val removeSetUseCase: RemoveSetUseCase,
     private val sharedPreferences: SharedPreferences,
     val timerServiceConnection: TimerServiceConnection,
@@ -68,12 +68,12 @@ class WorkoutDetailsViewModel @Inject constructor(
     private var _weightUnit: MutableState<WeightUnit> = mutableStateOf(Pounds)
     val weightUnit: State<WeightUnit> = _weightUnit
 
-    private var _createdPlanAddedAt: MutableState<DataState<OffsetDateTime>> = mutableStateOf(DataState.NotSent())
-    val createdPlanAddedAt: State<DataState<OffsetDateTime>> = _createdPlanAddedAt
-
     private val workoutInstance: Workout?
-        get() =
-            (_workout.value as? DataState.Success)?.data
+        get() {
+            val data = (_workout.value as? DataState.Success)?.data
+            return if (data?.id == 0L) null
+            else data
+        }
 
     val exercises: List<UiExercise>
         get() = workoutInstance?.entries.orEmpty().map { entry ->
@@ -116,26 +116,24 @@ class WorkoutDetailsViewModel @Inject constructor(
                 }.sortedBy { it.position }
 
     init {
-        val workoutDate = savedStateHandle.get<Long>("workoutId")
+        val workoutId = savedStateHandle.get<Long>("workoutId")
         val plan = savedStateHandle.get<String?>("plan")
-        if (workoutDate != null) {
-            if (workoutDate == 0L && _workout.value is DataState.NotSent) {
-                val now = OffsetDateTime.now()
+        if (workoutId != null) {
+            if (workoutId == 0L && _workout.value is DataState.NotSent) {
                 viewModelScope.launch {
                     createWorkoutUseCase.run(
-                        Workout(
-                            addedAt = now,
-                        ),
-                        planAddedAt = if (plan == null) null else
-                            OffsetDateTime.ofInstant(Instant.ofEpochMilli(plan.toLong()), ZoneOffset.UTC)
-                    ).collect { _workout.value = it }
+                        Workout(id = 0L),
+                        planId = plan?.toLong()
+                    ).collect { state ->
+                        _workout.value = state
+                        if (state is DataState.Success) {
+                            savedStateHandle["workoutId"] = state.data.id
+                        }
+                    }
                 }
-                savedStateHandle["workoutId"] = now.toInstant().toEpochMilli()
             } else {
                 viewModelScope.launch {
-                    getWorkoutByAddedDateUseCase.run(
-                        OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
-                    ).collect { wo ->
+                    getWorkoutUseCase.run(workoutId).collect { wo ->
                         _workout.value = wo
                         cachedWorkout = (wo as? DataState.Success)?.data
                     }
@@ -150,8 +148,7 @@ class WorkoutDetailsViewModel @Inject constructor(
     fun getWorkout() = viewModelScope.launch {
         workoutInstance?.let { currentWorkout ->
             viewModelScope.launch {
-                getWorkoutByAddedDateUseCase.run(currentWorkout.addedAt).collect { wo ->
-                    Timber.d("*** workout entries = ${(wo as? DataState.Success)?.data?.entries}")
+                getWorkoutUseCase.run(currentWorkout.id).collect { wo ->
                     _workout.value = wo
                     cachedWorkout = (wo as? DataState.Success)?.data
                 }
@@ -287,11 +284,11 @@ class WorkoutDetailsViewModel @Inject constructor(
 
     override fun addExerciseSet(
         entry: WorkoutEntry,
-        workoutAddedAt: OffsetDateTime
+        workoutId: Long
     ) = viewModelScope.launch {
         addSetUseCase.run(
             entry,
-            workoutAddedAt = workoutAddedAt,
+            workoutId = workoutId,
             set = ExerciseSet(
                 0L,
                 exercise = entry.exercise!!,
@@ -357,9 +354,10 @@ class WorkoutDetailsViewModel @Inject constructor(
     }
 
     override fun removeSet(
-        setId: Long
+        set: ExerciseSet,
+        workoutId: Long,
     ) = viewModelScope.launch {
-        removeSetUseCase.run(setId).collect { dataState ->
+        removeSetUseCase.run(set, workoutId).collect { dataState ->
             if (dataState is DataState.Error) {
                 Timber.e(dataState.e)
             }
@@ -367,9 +365,13 @@ class WorkoutDetailsViewModel @Inject constructor(
                 // filter out the set from the workout
                 workoutInstance?.let { currentWorkout ->
                     _workout.value = DataState.Success(currentWorkout.copy(
-                        entries = currentWorkout.entries.map { entry ->
-                            entry.copy(sets = entry.sets.filterNot { set -> set.id == setId }
-                                .sortedBy { it.setNumber })
+                        entries = currentWorkout.entries.mapNotNull { entry ->
+                            if (entry.sets.isNotEmpty() && entry.sets.all { it.id == set.id }) {
+                                null
+                            } else {
+                                entry.copy(sets = entry.sets.filterNot { s -> s.id == set.id }
+                                    .sortedBy { it.setNumber })
+                            }
                         }
                     )
                 )}
@@ -378,7 +380,7 @@ class WorkoutDetailsViewModel @Inject constructor(
     }
 
     override fun addWarmupSets(
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
         entry: WorkoutEntry,
         unit: WeightUnit
     ) = viewModelScope.launch {
@@ -413,7 +415,7 @@ class WorkoutDetailsViewModel @Inject constructor(
 
         addMultipleSetsUseCase.run(
             entry = entry,
-            workoutAddedAt = workoutAddedAt,
+            workoutId = workoutId,
             sets = setsToAdd
         ).collect { state ->
             if (state is DataState.Success) {

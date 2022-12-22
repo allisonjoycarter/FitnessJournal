@@ -22,7 +22,7 @@ class ExerciseRemoteMediator(
     private val query: String,
     private val muscleFilter: String,
     private val category: String,
-    private val service: ExerciseSearchService.Impl,
+    private val service: ExerciseSearchService,
     private val database: FitnessJournalDb
 ) : RemoteMediator<Int, ExerciseWithSets>() {
 

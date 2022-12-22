@@ -3,6 +3,7 @@ package com.catscoffeeandkitchen.fitnessjournal
 object TestTags {
     const val BottomNavigationBar = "bottomNavigationBar"
     const val FAB = "floatingActionButton"
+    const val ScrollableComponent = "scrollableComponent"
 
     const val AddExerciseButton = "addExerciseButton"
     const val AddGroupButton = "addGroupButton"
@@ -10,7 +11,8 @@ object TestTags {
     const val EditableExercise = "editableExercise"
     const val ReadOnlyExercise = "readOnlyExercise"
     const val ChooseExerciseFromGroup = "chooseExerciseFromGroup"
+    const val AddSetButton = "addSetButton"
+    const val CompleteSetCheckbox = "completeSetCheckbox"
 
     const val ExerciseSearchResult = "exerciseSearchResult"
-    const val ExerciseSearchIdlingResource = "exerciseSearchIdlingResource"
 }

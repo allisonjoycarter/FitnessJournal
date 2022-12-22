@@ -77,7 +77,7 @@ fun ColumnScope.editableExerciseCardContent(
                     }
                 },
                 removeSet = {
-                    uiActions?.removeSet(set.id)
+                    uiActions?.removeSet(set, uiData.workoutId)
                 },
                 onFocus = {
                     onFocus()
@@ -90,7 +90,8 @@ fun ColumnScope.editableExerciseCardContent(
 
     FitnessJournalButton(
         text = "Add Set",
-        onClick = { uiActions?.addExerciseSet(uiData.entry, uiData.workoutAddedAt) },
-        fullWidth = true
+        onClick = { uiActions?.addExerciseSet(uiData.entry, uiData.workoutId) },
+        fullWidth = true,
+        modifier = Modifier.testTag(TestTags.AddSetButton)
     )
 }

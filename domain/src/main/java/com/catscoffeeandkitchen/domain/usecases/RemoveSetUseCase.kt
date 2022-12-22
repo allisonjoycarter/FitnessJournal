@@ -17,9 +17,9 @@ import javax.inject.Inject
 class RemoveSetUseCase @Inject constructor(
     private val workoutRepository: WorkoutRepository
 ) {
-    fun run(setId: Long): Flow<DataState<Boolean>> = flow {
+    fun run(set: ExerciseSet, workoutId: Long): Flow<DataState<Boolean>> = flow {
         emit(DataState.Loading())
-        workoutRepository.deleteSet(setId)
+        workoutRepository.deleteSet(set, workoutId)
         emit(DataState.Success(true))
     }
         .catch { ex ->

@@ -64,9 +64,9 @@ class ExerciseSetRepositoryImpl@Inject constructor(
     override suspend fun addExerciseSetWithPopulatedData(
         entry: WorkoutEntry,
         exerciseSet: ExerciseSet,
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
     ): WorkoutEntry {
-        val dbWorkout = database.workoutDao().getWorkoutByAddedAt(workoutAddedAt)
+        val dbWorkout = database.workoutDao().getWorkout(workoutId)
         val dbExercise = database.exerciseDao().getExerciseByName(entry.name)
         val dbSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)
 
@@ -118,11 +118,11 @@ class ExerciseSetRepositoryImpl@Inject constructor(
     }
 
     override suspend fun addExerciseSets(
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
         entry: WorkoutEntry,
         exerciseSets: List<ExerciseSet>
     ): WorkoutEntry {
-        val dbWorkout = database.workoutDao().getWorkoutByAddedAt(workoutAddedAt)
+        val dbWorkout = database.workoutDao().getWorkout(workoutId)
         val dbExercise = database.exerciseDao().getExerciseByName(entry.name)
 
         val existingSets = database.exerciseSetDao().getSetsInWorkout(dbWorkout.wId)

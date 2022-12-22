@@ -24,30 +24,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WorkoutsViewModel @Inject constructor(
-//    private val getWorkoutsUseCase: GetWorkoutsUseCase,
     private val getPagedWorkoutsUseCase: GetPagedWorkoutsUseCase,
     private val removeWorkoutUseCase: RemoveWorkoutUseCase,
 ): ViewModel() {
-//    private var _workouts: MutableState<DataState<List<Workout>>> = mutableStateOf(DataState.Loading())
-//    val workouts: State<DataState<List<Workout>>> = _workouts
-
     private var _pagedWorkouts: Flow<PagingData<Workout>> = getPagedWorkoutsUseCase.run()
     val pagedWorkout: Flow<PagingData<Workout>>
         get() = _pagedWorkouts
-//
-//    init {
-//        getWorkouts()
-//
-//    }
-//
-//    fun getWorkouts() = viewModelScope.launch {
-//        getWorkoutsUseCase.run()
-//            .distinctUntilChanged()
-//            .collect { wos ->
-//                Timber.d("*** Workouts $wos")
-//                _workouts.value = wos
-//            }
-//    }
 
     fun deleteWorkout(workout: Workout) = viewModelScope.launch {
         removeWorkoutUseCase.run(workout).collect { state ->

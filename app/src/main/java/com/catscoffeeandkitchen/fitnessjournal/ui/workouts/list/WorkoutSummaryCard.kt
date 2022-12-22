@@ -106,6 +106,7 @@ fun WorkoutSummaryCard(
 @Composable
 fun WorkoutCardPreview() {
     WorkoutSummaryCard(workout = Workout(
+        id = 1L,
         name = "Best Workout Ever",
         addedAt = OffsetDateTime.now().minusDays(30L),
         completedAt = OffsetDateTime.now().minusDays(3),

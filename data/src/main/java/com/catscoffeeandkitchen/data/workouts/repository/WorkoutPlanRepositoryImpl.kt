@@ -20,6 +20,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         return database.workoutPlanDao().getAllWithGoals().map { dbWorkout ->
             Timber.d("got workout ${dbWorkout.plan.wpId}, note = ${dbWorkout.plan.note}")
             WorkoutPlan(
+                id = dbWorkout.plan.wpId,
                 addedAt = dbWorkout.plan.addedAt,
                 name = dbWorkout.plan.name,
                 note = dbWorkout.plan.note,
@@ -28,9 +29,10 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getWorkoutPlanByAddedDate(addedAt: OffsetDateTime): WorkoutPlan {
-        val dbWorkout = database.workoutPlanDao().getWithGoalsByAddedAt(addedAt)
+    override suspend fun getWorkoutPlan(id: Long): WorkoutPlan {
+        val dbWorkout = database.workoutPlanDao().getWorkoutPlanWithGoalsById(id)
         return WorkoutPlan(
+            id = dbWorkout.plan.wpId,
             addedAt = dbWorkout.plan.addedAt,
             name = dbWorkout.plan.name,
             note = dbWorkout.plan.note,

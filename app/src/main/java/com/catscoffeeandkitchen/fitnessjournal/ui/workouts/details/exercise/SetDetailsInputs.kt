@@ -16,12 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseEquipmentType
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.ExerciseSetType
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import com.catscoffeeandkitchen.fitnessjournal.ui.util.toCleanString
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.inputs.*
@@ -113,7 +115,8 @@ fun SetDetailsInputs(
                     },
                     colors = CheckboxDefaults.colors(
                         uncheckedColor = labelColor
-                    )
+                    ),
+                    modifier = Modifier.testTag(TestTags.CompleteSetCheckbox)
                 )
 
                 SetInput(

@@ -5,10 +5,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
-import com.catscoffeeandkitchen.domain.usecases.GetExercisesUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.GetExercisesUseCase
 import com.catscoffeeandkitchen.domain.usecases.GetSetsAndExercisesUseCase
 import com.catscoffeeandkitchen.domain.usecases.GetWorkoutDatesUseCase
 import com.catscoffeeandkitchen.domain.util.DataState

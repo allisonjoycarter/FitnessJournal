@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'com.dicedmelon.gradle.jacoco-android'
 }
 
 android {
@@ -11,7 +12,7 @@ android {
         minSdk 26
         targetSdk 33
 
-        testInstrumentationRunner "com.catscoffeeandkitchen.fitnessjournal.HiltTestRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
 
         javaCompileOptions {
@@ -24,7 +25,17 @@ android {
         }
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            unitTests.returnDefaultValues = true
+        }
+    }
+
     buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
 
         release {
             minifyEnabled true
@@ -44,6 +55,21 @@ android {
         ]
     }
     namespace 'com.catscoffeeandkitchen.data'
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+//
+//jacocoAndroidUnitTestReport {
+//    csv.enabled false
+//    html.enabled true
+//    xml.enabled false
+//}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
 }
 
 dependencies {
@@ -96,6 +122,10 @@ dependencies {
     implementation "com.github.doyaaaaaken:kotlin-csv-jvm:1.6.0"
 
     ////////////////// Tests //////////////////
-    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
-    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.1'
+    testImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+    testImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 }

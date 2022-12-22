@@ -9,7 +9,7 @@ interface WorkoutPlanRepository {
 
     suspend fun getWorkoutPlans(): List<WorkoutPlan>
 
-    suspend fun getWorkoutPlanByAddedDate(addedAt: OffsetDateTime): WorkoutPlan
+    suspend fun getWorkoutPlan(id: Long): WorkoutPlan
 
     suspend fun createWorkoutPlan(plan: WorkoutPlan)
 

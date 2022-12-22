@@ -10,11 +10,11 @@ interface ExerciseUiActions {
     fun swapExercise(exercisePosition: Int, exercise: Exercise): Job
     fun removeEntry(entry: WorkoutEntry): Job
     fun moveEntryTo(entry: WorkoutEntry, newPosition: Int): Job
-    fun removeSet(setId: Long): Job
+    fun removeSet(set: ExerciseSet, workoutId: Long): Job
     fun updateSet(set: ExerciseSet): Job
     fun updateSets(sets: List<ExerciseSet>): Job
-    fun addExerciseSet(entry: WorkoutEntry, workoutAddedAt: OffsetDateTime): Job
-    fun addWarmupSets(workoutAddedAt: OffsetDateTime, entry: WorkoutEntry, unit: WeightUnit): Job
+    fun addExerciseSet(entry: WorkoutEntry, workoutId: Long): Job
+    fun addWarmupSets(workoutId: Long, entry: WorkoutEntry, unit: WeightUnit): Job
 
     fun replaceWithGroup(entry: WorkoutEntry): Job
     fun selectExerciseFromGroup(

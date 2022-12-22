@@ -3,7 +3,8 @@ package com.catscoffeeandkitchen.domain.models
 import java.time.OffsetDateTime
 
 data class Workout(
-    val addedAt: OffsetDateTime,
+    val id: Long,
+    val addedAt: OffsetDateTime = OffsetDateTime.now(),
     val name: String = "New Workout",
     val note: String? = null,
     val completedAt: OffsetDateTime? = null,

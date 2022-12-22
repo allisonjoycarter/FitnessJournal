@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -17,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExerciseGroup
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -81,7 +83,7 @@ fun ExerciseGroupScreen(
             state.e.localizedMessage?.let { Text(it, modifier = modifier) }
         }
         is DataState.Success -> {
-            LazyColumn(state = listState, modifier = modifier) {
+            LazyColumn(state = listState, modifier = modifier.testTag(TestTags.ScrollableComponent)) {
                 items(state.data) { group ->
                     ExerciseGroupSummaryCard(
                         group,

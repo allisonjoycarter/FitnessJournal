@@ -94,6 +94,14 @@ interface WorkoutDao {
     )
     suspend fun getWorkoutByAddedAt(addedAt: OffsetDateTime): WorkoutEntity
 
+    @Query("""
+        SELECT *
+        FROM WorkoutEntity
+        WHERE wId = :id
+        LIMIT 1
+    """)
+    suspend fun getWorkout(id: Long): WorkoutEntity
+
     @Transaction
     @Query(
         """

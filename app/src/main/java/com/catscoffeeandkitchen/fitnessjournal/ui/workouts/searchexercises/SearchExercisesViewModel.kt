@@ -1,6 +1,5 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.searchexercises
 
-import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -9,21 +8,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.catscoffeeandkitchen.domain.models.Exercise
-import com.catscoffeeandkitchen.domain.usecases.CreateExercisesUseCase
-import com.catscoffeeandkitchen.domain.usecases.GetPagedExercisesUseCase
-import com.catscoffeeandkitchen.domain.usecases.UpdateExerciseUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.CreateExercisesUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.GetPagedExercisesUseCase
+import com.catscoffeeandkitchen.domain.usecases.exercise.UpdateExerciseUseCase
 import com.catscoffeeandkitchen.domain.util.DataState
-import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.jetbrains.annotations.TestOnly
-import timber.log.Timber
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)

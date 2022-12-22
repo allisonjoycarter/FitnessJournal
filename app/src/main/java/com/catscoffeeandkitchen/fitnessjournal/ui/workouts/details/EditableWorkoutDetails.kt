@@ -103,6 +103,7 @@ fun WorkoutDetails(
     LazyColumn(
         state = scrollState,
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.testTag(TestTags.ScrollableComponent),
     ) {
         item {
             WorkoutNameAndNoteSection(
@@ -193,10 +194,10 @@ fun WorkoutDetails(
             }
         }
 
-        itemsIndexed(workout.entries) { index, entry ->
+        itemsIndexed(workout.entries, key = { _, entry -> entry.position }) { index, entry ->
             ExerciseCard(
                 ExerciseUiData(
-                    workout.addedAt,
+                    workout.id,
                     entry,
                     unit = unit,
                     isFirstExercise = index == 0,
@@ -271,20 +272,21 @@ fun TimerButton(
 @Composable
 fun AddWorkoutFormPreview() {
     val workoutState = Workout(
-            completedAt = OffsetDateTime.now().minusDays(3),
-            addedAt = OffsetDateTime.now().minusDays(10),
-            sets = listOf(
-                ExerciseSet(
-                    exercise = Exercise(
-                        "Bicep Curls",
-                        musclesWorked = listOf("Bicep", "Tricep"),
-                    ),
-                    reps = 10,
-                    weightInPounds = 20f,
-                    id = 20
-                )
+        id = 1L,
+        completedAt = OffsetDateTime.now().minusDays(3),
+        addedAt = OffsetDateTime.now().minusDays(10),
+        sets = listOf(
+            ExerciseSet(
+                exercise = Exercise(
+                    "Bicep Curls",
+                    musclesWorked = listOf("Bicep", "Tricep"),
+                ),
+                reps = 10,
+                weightInPounds = 20f,
+                id = 20
             )
         )
+    )
 
     val scrollState = rememberLazyListState()
 

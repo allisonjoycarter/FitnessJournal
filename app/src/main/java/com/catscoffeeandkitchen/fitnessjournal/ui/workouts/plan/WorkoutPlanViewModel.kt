@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel()
 class WorkoutPlanViewModel @Inject constructor(
-    private val getWorkoutByAddedDateUseCase: GetWorkoutPlanByAddedDateUseCase,
+    private val getPlanUseCase: GetWorkoutPlanUseCase,
     private val updateWorkoutPlanUseCase: UpdateWorkoutPlanUseCase,
     private val addSetToWorkoutPlan: AddSetToWorkoutPlanUseCase,
     private val createExerciseGroupUseCase: CreateExerciseGroupUseCase,
@@ -43,22 +43,22 @@ class WorkoutPlanViewModel @Inject constructor(
     var exercisesToGroup = _exercisesToGroup
 
     init {
-        val workoutDate = savedStateHandle.get<Long?>("workoutId")
-        if (workoutDate != null) {
-            if (workoutDate == 0L) {
-                val now = OffsetDateTime.now()
+        val planId = savedStateHandle.get<Long?>("workoutId")
+        if (planId != null) {
+            if (planId == 0L) {
                 viewModelScope.launch {
-                    createWorkoutPlanUseCase.run(WorkoutPlan(addedAt = now)
+                    createWorkoutPlanUseCase.run(WorkoutPlan(id = 0L)
                     ).collect { wo ->
                         _workoutPlan.value = wo
+
+                        if (wo is DataState.Success) {
+                            savedStateHandle["workoutId"] = wo.data.id
+                        }
                     }
                 }
-                savedStateHandle["workoutId"] = now.toInstant().toEpochMilli()
             } else {
                 viewModelScope.launch {
-                    getWorkoutByAddedDateUseCase.run(
-                        OffsetDateTime.ofInstant(Instant.ofEpochMilli(workoutDate), ZoneOffset.UTC)
-                    ).collect { wo ->
+                    getPlanUseCase.run(planId).collect { wo ->
                         Timber.d("*** ${(wo as? DataState.Success)?.data?.entries}")
                         _workoutPlan.value = wo
                     }
@@ -76,7 +76,7 @@ class WorkoutPlanViewModel @Inject constructor(
                     getUpdatedExpectedSetField(setFromWorkout, field, value)
                 ).collect { result ->
                     if (result is DataState.Success) {
-                        getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                        getPlanUseCase.run(workout.id).collect { wo ->
                             Timber.d("updated plan = $wo")
                             _workoutPlan.value = wo
                         }
@@ -96,7 +96,7 @@ class WorkoutPlanViewModel @Inject constructor(
                     newSetNumber,
                 ).collect { result ->
                     if (result is DataState.Success) {
-                        getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                        getPlanUseCase.run(workout.id).collect { wo ->
                             Timber.d("updated plan = $wo")
                             _workoutPlan.value = wo
                         }
@@ -122,7 +122,7 @@ class WorkoutPlanViewModel @Inject constructor(
                 )
             ).collect { result ->
                 if (result is DataState.Success) {
-                    getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                    getPlanUseCase.run(workout.id).collect { wo ->
                         Timber.d("added to workout = $wo")
                         _workoutPlan.value = wo
                     }
@@ -145,7 +145,7 @@ class WorkoutPlanViewModel @Inject constructor(
                             )
                         ).collectLatest { addedSetState ->
                             if (addedSetState is DataState.Success) {
-                                getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                                getPlanUseCase.run(workout.id).collect { wo ->
                                     _workoutPlan.value = wo
                                 }
                             }
@@ -162,7 +162,7 @@ class WorkoutPlanViewModel @Inject constructor(
                 expectedSet
             ).collect { result ->
                 if (result is DataState.Success) {
-                    getWorkoutByAddedDateUseCase.run(workout.addedAt).collect { wo ->
+                    getPlanUseCase.run(workout.id).collect { wo ->
                         _workoutPlan.value = wo
                     }
                 }
@@ -207,7 +207,7 @@ class WorkoutPlanViewModel @Inject constructor(
                 )
             ).collectLatest { addedSetState ->
                 if (addedSetState is DataState.Success) {
-                    getWorkoutByAddedDateUseCase.run(currentWorkout.addedAt).collect { wo ->
+                    getPlanUseCase.run(currentWorkout.id).collect { wo ->
                         _workoutPlan.value = wo
                     }
                 }

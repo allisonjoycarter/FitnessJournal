@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        maven { url 'https://plugins.gradle.org/m2/' }
         gradlePluginPortal()
         google()
         mavenCentral()
@@ -8,9 +9,9 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven { url 'https://jitpack.io' }
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 rootProject.name = "Fitness Journal"

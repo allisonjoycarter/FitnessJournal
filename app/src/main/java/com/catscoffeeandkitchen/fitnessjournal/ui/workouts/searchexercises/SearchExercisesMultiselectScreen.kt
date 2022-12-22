@@ -96,7 +96,7 @@ fun SearchExercisesMultiSelectScreen(
             )
         }
 
-        LazyColumn(modifier = modifier.padding(padding)) {
+        LazyColumn(modifier = modifier.padding(padding).testTag(TestTags.ScrollableComponent)) {
             stickyHeader {
                 SearchExerciseHeader(
                     currentSearch = searchState.value.name,

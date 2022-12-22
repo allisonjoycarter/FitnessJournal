@@ -1,0 +1,9 @@
+Lifting Log is a workout tracking app that allows you to create plans for your workout and track them while in the gym. Using the new Material UI (on Android 13), view your workouts in a cohesive theme matching your wallpaper and app icons.
+
+Enjoy full flexibility by creating groups of exercises and choosing between them while in the middle of your workout. Create a group of pull exercises and decide in the moment which one fits your current workout best. Is your planned machine taken? Grouping your exercises allows you to choose a different exercise that still hits the right group of muscles.
+
+If you are performing a barbell workout, Lifting Log will show you which plates you should load on the bar for the given weight. You can also edit the plates on the fly so you can swap out plates instantly. No more math involved when you want to switch out 45lb plates for 35lb plates. Change the plates for your set and the graphic will automatically update to show you which plates add up to your desired weight. 
+
+Lifting Log provides the ability to import and export data in a multitude of formats so you can always save the work you've done. Create a CSV or import one so you can view your progression on any platform, or import workouts you've already performed.
+
+Lifting Log allows you to be fully equipped in the gym to track your exercises in a simple, intuitive way.

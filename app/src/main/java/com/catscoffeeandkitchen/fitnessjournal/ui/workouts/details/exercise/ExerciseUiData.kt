@@ -5,7 +5,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.util.WeightUnit
 import java.time.OffsetDateTime
 
 data class ExerciseUiData(
-    val workoutAddedAt: OffsetDateTime,
+    val workoutId: Long,
     val entry: WorkoutEntry,
     val unit: WeightUnit,
     val isFirstExercise: Boolean = false,

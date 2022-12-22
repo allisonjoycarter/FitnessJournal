@@ -85,7 +85,7 @@ fun SearchExercisesScreen(
         )
     }
 
-    LazyColumn(modifier = modifier) {
+    LazyColumn(modifier = modifier.testTag(TestTags.ScrollableComponent)) {
         stickyHeader {
             SearchExerciseHeader(
                 currentSearch = searchState.value.name,

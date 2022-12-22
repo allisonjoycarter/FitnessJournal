@@ -20,9 +20,9 @@ import javax.inject.Inject
 class AddMultipleExerciseSetsUseCase @Inject constructor(
     private val repository: ExerciseSetRepository
 ) {
-    fun run(sets: List<ExerciseSet>, entry: WorkoutEntry, workoutAddedAt: OffsetDateTime): Flow<DataState<WorkoutEntry>> = flow {
+    fun run(sets: List<ExerciseSet>, entry: WorkoutEntry, workoutId: Long): Flow<DataState<WorkoutEntry>> = flow {
         emit(DataState.Loading())
-        val result = repository.addExerciseSets(exerciseSets = sets, entry = entry, workoutAddedAt = workoutAddedAt)
+        val result = repository.addExerciseSets(exerciseSets = sets, entry = entry, workoutId = workoutId)
         emit(DataState.Success(result))
     }
         .catch { ex ->

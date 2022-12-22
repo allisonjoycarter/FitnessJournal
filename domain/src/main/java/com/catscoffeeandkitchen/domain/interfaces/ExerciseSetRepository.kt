@@ -10,11 +10,11 @@ interface ExerciseSetRepository {
     suspend fun addExerciseSetWithPopulatedData(
         entry: WorkoutEntry,
         exerciseSet: ExerciseSet,
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
     ): WorkoutEntry
 
     suspend fun addExerciseSets(
-        workoutAddedAt: OffsetDateTime,
+        workoutId: Long,
         entry: WorkoutEntry,
         exerciseSets: List<ExerciseSet>
     ): WorkoutEntry

@@ -6,7 +6,6 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEn
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseSetPartial
 import com.catscoffeeandkitchen.data.workouts.models.SetEntity
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity
-import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
 import com.catscoffeeandkitchen.data.workouts.util.*
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutRepository
 import com.catscoffeeandkitchen.domain.models.*
@@ -18,7 +17,6 @@ import java.time.OffsetDateTime
 @OptIn(ExperimentalPagingApi::class)
 class WorkoutRepositoryImpl(
     val database: FitnessJournalDb,
-    private val exerciseSearchService: ExerciseSearchService.Impl
 ): WorkoutRepository {
     override suspend fun getWorkouts(): List<Workout> {
         return database.workoutDao().getWorkoutsWithPlans().map { dbWorkout ->
@@ -26,16 +24,18 @@ class WorkoutRepositoryImpl(
                 .getPositionsWithExerciseAndSets(dbWorkout.workout.wId)
 
             Workout(
+                id = dbWorkout.workout.wId,
                 name = dbWorkout.workout.name,
                 note = dbWorkout.workout.note,
                 completedAt = dbWorkout.workout.completedAt,
                 addedAt = dbWorkout.workout.addedAt,
                 plan = if (dbWorkout.plan == null) null else
                     WorkoutPlan(
-                    addedAt = dbWorkout.plan.addedAt,
-                    name = dbWorkout.plan.name,
-                    note = dbWorkout.plan.note,
-                    entries = emptyList()
+                        id = dbWorkout.plan.wpId,
+                        addedAt = dbWorkout.plan.addedAt,
+                        name = dbWorkout.plan.name,
+                        note = dbWorkout.plan.note,
+                        entries = emptyList()
                 ),
                 entries = entryData.map { entry ->
                     WorkoutEntry(
@@ -61,7 +61,7 @@ class WorkoutRepositoryImpl(
                 prefetchDistance = 5
             ),
             pagingSourceFactory = {
-                    database.workoutDao().getAllPaged()
+                database.workoutDao().getAllPaged()
             }
         ).flow.map { pagingData ->
             pagingData.map { data ->
@@ -78,24 +78,15 @@ class WorkoutRepositoryImpl(
         }
     }
 
-    override suspend fun getCompletedWorkouts(): List<Workout> {
-        return database.workoutDao().getAllCompletedWorkouts().map { dbWorkout ->
-            Workout(
-                completedAt = dbWorkout.completedAt,
-                addedAt = dbWorkout.addedAt,
-            )
-        }
-    }
-
     override suspend fun getWorkoutCompletedDates(monthsBack: Int): List<OffsetDateTime> {
         val earliest = OffsetDateTime.now().minusMonths(monthsBack.toLong())
         return database.workoutDao().getAllCompletedWorkoutDates(earliest.toUTCEpochMilli())
     }
 
-    override suspend fun getWorkoutByAddedDate(addedAt: OffsetDateTime): Workout {
-        val dbWorkout = database.workoutDao().getWorkoutByAddedAt(addedAt)
-        val sets = database.exercisePositionDao()
-            .getPositionsWithExerciseAndSets(dbWorkout.wId)
+    override suspend fun getWorkout(id: Long): Workout {
+        Timber.d("*** getting workout $id")
+        val dbWorkout = database.workoutDao().getWorkout(id)
+        val sets = database.exercisePositionDao().getPositionsWithExerciseAndSets(dbWorkout.wId)
 
         val plan = when (dbWorkout.planId) {
             null -> null
@@ -103,6 +94,7 @@ class WorkoutRepositoryImpl(
         }
 
         return Workout(
+            id = dbWorkout.wId,
             name = dbWorkout.name,
             note = dbWorkout.note,
             completedAt = dbWorkout.completedAt,
@@ -134,6 +126,7 @@ class WorkoutRepositoryImpl(
             }.sortedBy { it.position },
             plan = if (plan == null) null else
                 WorkoutPlan(
+                    id = plan.plan.wpId,
                     addedAt = plan.plan.addedAt,
                     name = plan.plan.name,
                     note = plan.plan.note,
@@ -142,33 +135,36 @@ class WorkoutRepositoryImpl(
         )
     }
 
-    override suspend fun createWorkout(workout: Workout, planAddedAt: OffsetDateTime?): Workout {
-        val dbPlan = when (planAddedAt) {
+    override suspend fun createWorkout(workout: Workout, planId: Long?): Workout {
+        val planEntry = when (planId) {
             null -> null
-            else -> database.workoutPlanDao().getWithGoalsByAddedAt(planAddedAt)
+            else -> database.workoutPlanDao().getWorkoutPlanWithGoalsById(planId)
         }
+        val plan = planEntry?.plan
+
         val workoutId = database.workoutDao().insert(
             WorkoutEntity(
                 wId = 0L,
-                planId = dbPlan?.plan?.wpId,
-                name = dbPlan?.plan?.name ?: "${OffsetDateTime.now().dayOfWeek.name.lowercase()} workout",
-                note = dbPlan?.plan?.note,
+                planId = plan?.wpId,
+                name = plan?.name ?: "${OffsetDateTime.now().dayOfWeek.name.lowercase()} workout",
+                note = plan?.note,
                 minutesToComplete = 0,
                 completedAt = workout.completedAt,
                 addedAt = workout.addedAt,
             )
         )
 
-        var createdWorkout = workout
-        if (dbPlan != null) {
-            val planPositions = database.exercisePositionDao().getPositionsInPlan(dbPlan.plan.wpId)
-            val dbExercises = database.exerciseDao().getExercisesByIds(dbPlan.goals.mapNotNull { it.exerciseId })
+        var createdWorkout = workout.copy(id = workoutId)
+        if (planEntry != null && plan != null) {
+            val planPositions = database.exercisePositionDao().getPositionsInPlan(plan.wpId)
+            val dbExercises = database.exerciseDao().getExercisesByIds(planEntry.goals.mapNotNull { it.exerciseId })
 
             createdWorkout = createdWorkout.copy(
                 plan = WorkoutPlan(
-                    addedAt = dbPlan.plan.addedAt,
-                    name = dbPlan.plan.name,
-                    note = dbPlan.plan.note,
+                    id = plan.wpId,
+                    addedAt = plan.addedAt,
+                    name = plan.name,
+                    note = plan.note,
                     entries = emptyList(),
                 ),
             )
@@ -186,7 +182,7 @@ class WorkoutRepositoryImpl(
             database.exercisePositionDao().insertAll(positions)
 
             val addedPositions = database.exercisePositionDao().getPositionsInWorkout(workoutId)
-            val individualSets = dbPlan.goals
+            val individualSets = planEntry.goals
                 .filter { it.exerciseId != null }
                 .flatMap { goal ->
                     val tmp = arrayListOf<SetEntity>()
@@ -221,16 +217,24 @@ class WorkoutRepositoryImpl(
 
             val insertedSets = database.exerciseSetDao().getSetsInWorkout(workoutId)
             createdWorkout = createdWorkout.copy(
-                entries = positions.map { position ->
+                entries = addedPositions.map { position ->
                     val matchingExercise = dbExercises.find { it.eId == position.exerciseId }
-                    val matchingGoal = dbPlan.goals.find { goal ->
-                        goal.positionId == planPositions.find { it.position == position.position }?.epId
+                    val matchingGoal = planEntry.goals.find { goal ->
+                        goal.exerciseId == position.exerciseId ||
+                                goal.exerciseGroupId == position.groupId
                     }
+                    val goalExercise = dbExercises.firstOrNull { matchingGoal != null && it.eId == matchingGoal.exerciseId }
+                    val goalGroup = position.groupId?.let { database.exerciseGroupDao().getGroupByIdWithExercises(it) }
 
                     WorkoutEntry(
                         position = position.position,
                         exercise = matchingExercise?.toExercise(),
-                        expectedSet = matchingGoal?.toExpectedSet(position.position),
+                        expectedSet = matchingGoal?.toExpectedSet(
+                            position.position,
+                            exercise = goalExercise?.toExercise(),
+                            group = goalGroup?.group?.toExerciseGroup(
+                                goalGroup.exercises.map { it.toExercise() }.orEmpty())
+                        ),
                         sets = insertedSets.filter { it.exerciseId == position.exerciseId }
                             .map { item ->
                                 item.toExerciseSet(matchingExercise!!.toExercise())
@@ -250,59 +254,13 @@ class WorkoutRepositoryImpl(
     }
 
     override suspend fun updateWorkout(workout: Workout): Workout {
-        val existingWorkout = database.workoutDao().getWorkoutByAddedAt(workout.addedAt)
+        val existingWorkout = database.workoutDao().getWorkout(workout.id)
 
         database.workoutDao().update(workout.toDbWorkout(
             existingWorkout.wId,
             planId = existingWorkout.planId
         ))
         return workout
-    }
-
-    override suspend fun getExercises(names: List<String>?): List<Exercise> {
-        if (names != null) {
-            return database.exerciseDao().getExercisesByName(names).map { exercise ->
-                exercise.toExercise()
-            }
-        }
-        return database.exerciseDao().getAllExercises().map { exerciseWithCount ->
-            exerciseWithCount.exercise.toExercise(amountOfSets = exerciseWithCount.amountPerformed)
-        }
-    }
-
-    override fun getPagedExercises(search: String?, muscle: String?, category: String?): Flow<PagingData<Exercise>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false,
-                prefetchDistance = 5
-            ),
-            remoteMediator = ExerciseRemoteMediator(
-                search.orEmpty(),
-                muscle.orEmpty(),
-                category.orEmpty(),
-                exerciseSearchService,
-                database
-            ),
-            pagingSourceFactory = {
-                if (search.isNullOrEmpty() && muscle.isNullOrEmpty() && category.isNullOrEmpty()) {
-                    database.exerciseDao().getAllPagedExercises()
-                } else {
-                    database.exerciseDao().getPagedExercisesByName(
-                        search.orEmpty(),
-                        muscle.orEmpty(),
-                        category.orEmpty()
-                    )
-                }
-            }
-        ).flow.map { pagingData ->
-            pagingData.map { it.exercise.toExercise() }
-        }
-    }
-
-    override suspend fun createExercise(exercise: Exercise): Exercise {
-        database.exerciseDao().insert(exercise = exercise.toDbExercise(id = 0L, userCreated = true))
-        return exercise
     }
 
     override suspend fun addEntry(
@@ -357,13 +315,6 @@ class WorkoutRepositoryImpl(
         )
     }
 
-    override suspend fun updateExercise(exercise: Exercise, workout: Workout?) {
-        val dbExercise = database.exerciseDao().getExerciseByName(exercise.name)
-        dbExercise?.let { dbEx ->
-            database.exerciseDao().update(exercise.toDbExercise(id = dbEx.eId))
-        }
-    }
-
     override suspend fun removeEntryFromWorkout(entry: WorkoutEntry, workoutAddedAt: OffsetDateTime) {
         val dbWorkout = database.workoutDao().getWorkoutByAddedAt(workoutAddedAt)
         val positions = database.exercisePositionDao().getPositionsInWorkout(dbWorkout.wId)
@@ -395,13 +346,15 @@ class WorkoutRepositoryImpl(
         ))
     }
 
-    override suspend fun deleteSet(setId: Long) {
-        database.exerciseSetDao().delete(setId)
-    }
+    override suspend fun deleteSet(set: ExerciseSet, workoutId: Long) {
+        val setEntity = database.exerciseSetDao().getSet(set.id)
+        database.exerciseSetDao().delete(set.id)
 
-    override suspend fun getExerciseByName(name: String): Exercise? {
-        val dbExercise = database.exerciseDao().getExerciseByName(name) ?: return null
-        return dbExercise.toExercise()
+        val positions = database.exercisePositionDao().getPositionsWithExerciseAndSets(workoutId)
+        val position = positions.find { it.position.epId == setEntity.positionId }
+        if (position?.exerciseSets?.isEmpty() == true) {
+            database.exercisePositionDao().delete(position.position)
+        }
     }
 
     override suspend fun swapEntryPosition(

@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,13 +25,13 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import com.catscoffeeandkitchen.domain.models.Workout
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
 import timber.log.Timber
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WorkoutsScreen(
     navController: NavController,
@@ -63,10 +64,8 @@ fun WorkoutsScreen(
     LazyColumn(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
+            .testTag(TestTags.ScrollableComponent),
     ) {
-        item {
-
-        }
 
         items(workouts) { item ->
             if (item != null) {
@@ -74,11 +73,7 @@ fun WorkoutsScreen(
                     item,
                     onTap = {
                         navController.navigate(
-                            "${FitnessJournalScreen.WorkoutDetails.route}/${
-                                item.addedAt
-                                    .toInstant()
-                                    .toEpochMilli()
-                            }"
+                            "${FitnessJournalScreen.WorkoutDetails.route}/${item.id}"
                         )
                     },
                     onLongPress = { workoutToDelete = item }

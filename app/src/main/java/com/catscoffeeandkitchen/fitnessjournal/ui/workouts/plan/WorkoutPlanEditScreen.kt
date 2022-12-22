@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -19,6 +20,7 @@ import androidx.navigation.NavController
 import com.catscoffeeandkitchen.domain.models.ExpectedSet
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
 import com.catscoffeeandkitchen.domain.util.DataState
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.AddExerciseOrGroupButtons
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
@@ -132,7 +134,7 @@ fun WorkoutPlanEditScreen(
     }
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.ScrollableComponent),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         when (val workoutState = viewModel.workoutPlan.value) {
@@ -170,7 +172,7 @@ fun WorkoutPlanEditScreen(
                         override fun startWorkout() {
                             navController.navigate(
                                 "${FitnessJournalScreen.WorkoutDetails.route}/0?" +
-                                        "plan=${workoutState.data.addedAt.toInstant().toEpochMilli()}"
+                                        "plan=${workoutState.data.id}"
                             )
                         }
 
