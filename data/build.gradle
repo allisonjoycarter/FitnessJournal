@@ -60,12 +60,10 @@ android {
 jacoco {
     toolVersion = "0.8.7"
 }
-//
-//jacocoAndroidUnitTestReport {
-//    csv.enabled false
-//    html.enabled true
-//    xml.enabled false
-//}
+
+jacocoAndroidUnitTestReport {
+    destination "$rootDir/coverage-report/data/"
+}
 
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true

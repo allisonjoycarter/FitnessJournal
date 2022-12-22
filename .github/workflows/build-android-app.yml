@@ -18,9 +18,6 @@ jobs:
           ruby-version: 2.7.2
           bundler-cache: true
 
-      - name: Make gradlew executable
-        run: chmod +x /home/runner/work/FitnessJournal/FitnessJournal/gradlew
-
       - name: Run tests
         run: bundle exec fastlane android test
 

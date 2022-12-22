@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'dagger.hilt.android.plugin'
     id 'kotlin-kapt'
+    id 'com.dicedmelon.gradle.jacoco-android'
 }
 
 android {
@@ -70,6 +71,20 @@ android {
 
     namespace 'com.catscoffeeandkitchen.fitnessjournal'
 }
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+jacocoAndroidUnitTestReport {
+    destination "$rootDir/coverage-report/app/"
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
 
 dependencies {
     implementation project(path: ':domain')
