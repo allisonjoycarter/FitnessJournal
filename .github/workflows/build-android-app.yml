@@ -1,10 +1,7 @@
 name: build-android-app
 
 on:
-  workflow_dispatch:
-#  push:
-#    branches:
-#      - 'main'
+  push: tags
 
 jobs:
   test:
