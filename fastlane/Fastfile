@@ -24,9 +24,6 @@ platform :android do
 
   desc "Deploy a new version to Internal Testers"
   lane :deployInternal do
-    increment_version_number(
-        bump_type: "patch"
-    )
     gradle(
         task: "bundle",
         build_type: "release",
