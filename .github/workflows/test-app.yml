@@ -18,7 +18,7 @@ jobs:
         run: bundle exec fastlane android test
 
       - name: Deploy coverage to pages
-          uses: JamesIves/github-pages-deploy-action@v4
-          with:
-            folder: /home/runner/work/FitnessJournal/FitnessJournal/coverage-report
-            token: ${{ secrets.PAGES_DEPLOY_KEY }}
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: /home/runner/work/FitnessJournal/FitnessJournal/coverage-report
+          token: ${{ secrets.PAGES_DEPLOY_KEY }}
