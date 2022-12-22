@@ -2,6 +2,7 @@ package com.catscoffeeandkitchen.fitnessjournal
 
 import android.os.Environment
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.catscoffeeandkitchen.data.workouts.db.ExerciseDao
@@ -35,7 +36,7 @@ class CreateWorkoutTest {
     var hiltTestRule = HiltAndroidRule(this)
 
     @get:Rule(order = 2)
-    var composeTestRule = createComposeRule()
+    var composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Inject
     lateinit var database: FitnessJournalDb
@@ -108,7 +109,7 @@ class CreateWorkoutTest {
             .performClick()
 
         composeTestRule
-            .onNodeWithText("New Workout")
+            .onNodeWithText("No Note")
             .assertIsDisplayed()
     }
 
@@ -120,7 +121,6 @@ class CreateWorkoutTest {
         composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
             .performClick()
 
-
         composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)
             .onFirst()
             .performClick()
@@ -129,8 +129,7 @@ class CreateWorkoutTest {
             .assertIsDisplayed()
     }
 
-
-    @Test
+    @Test @Config(qualifiers = "long-xxhdpi")
     fun performWorkout() {
         composeTestRule.onNodeWithTag(TestTags.FAB)
             .performClick()
@@ -144,6 +143,13 @@ class CreateWorkoutTest {
             .performClick()
 
         composeTestRule.onNodeWithTag(TestTags.EditableExercise)
+            .assertIsDisplayed()
+
+        // scroll down
+        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent)
+            .performScrollToIndex(2)
+
+        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
             .assertIsDisplayed()
 
         // add second exercise
@@ -160,19 +166,24 @@ class CreateWorkoutTest {
         composeTestRule.onAllNodesWithTag(TestTags.AddSetButton)
             .onFirst()
             .performClick()
-            .performClick()
+
+        composeTestRule.onAllNodesWithTag(TestTags.EditableSet).assertCountEquals(2)
 
         composeTestRule.onNodeWithTag(TestTags.ScrollableComponent).performScrollToKey(2)
         composeTestRule.onAllNodesWithTag(TestTags.AddSetButton)
             .onLast()
             .performClick()
-            .performClick()
 
-        composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox).assertCountEquals(6)
+        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent).performTouchInput { swipeUp() }
+        composeTestRule
+            .onAllNodesWithTag(TestTags.EditableExercise).onLast()
+            .onChildren()
+            .filter(hasTestTag(TestTags.EditableSet))
+            .assertCountEquals(2)
 
         // check first exercise complete
-        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent).performScrollToIndex(0)
-        for (i in 0 until 3) {
+        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent).performScrollToKey(1)
+        for (i in 0 until 2) {
             composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox)[i].performClick()
         }
 
@@ -183,13 +194,14 @@ class CreateWorkoutTest {
         composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
             .performClick()
 
+        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent).performScrollToIndex(3)
         composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)[2]
             .performClick()
 
         composeTestRule.onAllNodesWithTag(TestTags.ReadOnlyExercise).assertCountEquals(1)
         composeTestRule.onAllNodesWithTag(TestTags.EditableExercise).assertCountEquals(2)
 
-        composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox).assertCountEquals(4)
+        composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox).assertCountEquals(3)
 
     }
 }

@@ -9,6 +9,7 @@ object TestTags {
     const val AddGroupButton = "addGroupButton"
 
     const val EditableExercise = "editableExercise"
+    const val EditableSet = "editableSet"
     const val ReadOnlyExercise = "readOnlyExercise"
     const val ChooseExerciseFromGroup = "chooseExerciseFromGroup"
     const val AddSetButton = "addSetButton"

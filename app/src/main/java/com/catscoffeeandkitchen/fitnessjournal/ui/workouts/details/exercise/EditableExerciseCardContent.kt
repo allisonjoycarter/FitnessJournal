@@ -48,6 +48,7 @@ fun ColumnScope.editableExerciseCardContent(
         uiData.entry.sets.sortedBy { it.setNumber }.forEach { set ->
             SetDetailsInputs(
                 set,
+                modifier = Modifier.testTag(TestTags.EditableSet),
                 useKeyboard = uiData.useKeyboard,
                 updateValue = { field ->
                     when (field) {
