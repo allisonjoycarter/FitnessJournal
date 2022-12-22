@@ -43,7 +43,7 @@ fun WorkoutDetails(
 ) {
     var useKeyboard by rememberSaveable { mutableStateOf(false) }
     val (startTimerOnSetFinish, setTimerOnStartFinish) = rememberSaveable { mutableStateOf(false) }
-    val (timeSinceKey, setTimeSinceKey) = remember { mutableStateOf(null as OffsetDateTime?) }
+    val (timerSeconds, setTimerSeconds) = remember { mutableStateOf(null as Long?) }
     val (selectedTimer, setSelectedTimer) = remember { mutableStateOf(30L) }
     var showSettings by remember { mutableStateOf(false) }
 
@@ -138,10 +138,10 @@ fun WorkoutDetails(
         if (workout.completedAt == null) {
             stickyHeader {
                 TimerSection(
-                    timeSinceKey,
+                    timerSeconds,
                     selectedTimer,
-                    onUpdateTimeSinceKey = setTimeSinceKey,
                     onUpdateSelectedTimer = setSelectedTimer,
+                    onUpdateTimerProgress = setTimerSeconds,
                     startTimer = startTimer,
                     connection = connection
                 )
@@ -165,7 +165,7 @@ fun WorkoutDetails(
                 onCompleteSet = { time ->
                     if (startTimerOnSetFinish && time != null) {
                         startTimer(selectedTimer)
-                        setTimeSinceKey(time.minusSeconds(selectedTimer - 1))
+                        setTimerSeconds(selectedTimer)
                     }
                 },
                 modifier = Modifier.animateItemPlacement(),

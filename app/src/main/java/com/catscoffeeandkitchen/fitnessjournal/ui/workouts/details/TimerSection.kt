@@ -20,28 +20,37 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.catscoffeeandkitchen.fitnessjournal.services.TimerServiceConnection
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.exercise.TimeSinceText
-import java.time.OffsetDateTime
+import kotlinx.coroutines.delay
 
 @Composable
 fun TimerSection(
-    timeSinceKey: OffsetDateTime?,
+    secondsLeft: Long?,
     selectedTimer: Long,
-    onUpdateTimeSinceKey: (OffsetDateTime) -> Unit,
     onUpdateSelectedTimer: (Long) -> Unit,
+    onUpdateTimerProgress: (Long?) -> Unit,
     startTimer: (Long) -> Unit = {},
     connection: TimerServiceConnection? = null,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
     val context = LocalContext.current
     var showNotificationRationaleDialog by remember { mutableStateOf(false) }
+    var startingSeconds by remember { mutableStateOf(connection?.timerService?.startingSeconds ?: selectedTimer) }
+    var seconds by remember { mutableStateOf(connection?.timerService?.startingSeconds ?: secondsLeft ?: selectedTimer) }
 
+    LaunchedEffect(key1 = seconds) {
+        if (seconds > -3) {
+            delay(1000L)
+            seconds -= 1
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                val seconds = connection?.timerService?.seconds
-                if (seconds != null) {
-                    onUpdateTimeSinceKey(OffsetDateTime.now().minusSeconds(seconds - 1))
+                val remaining = connection?.timerService?.seconds
+                if (remaining != null) {
+                    onUpdateTimerProgress(remaining)
+                    seconds = remaining
                 }
             }
         }
@@ -91,9 +100,11 @@ fun TimerSection(
             horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             listOf(30L, 60L, 90L, 120L).forEach { amount ->
-                TimerButton(amount) { time ->
-                    onUpdateTimeSinceKey(time)
+                TimerButton(amount) {
+                    onUpdateTimerProgress(amount)
                     onUpdateSelectedTimer(amount)
+                    startingSeconds = amount
+                    seconds = amount
 
                     when {
                         ContextCompat.checkSelfPermission(
@@ -117,10 +128,10 @@ fun TimerSection(
             }
         }
 
-        timeSinceKey?.let { time ->
+        if (secondsLeft != null) {
             TimeSinceText(
-                startTime = time,
-                totalTime = connection?.timerService?.startingSeconds ?: selectedTimer,
+                secondsLeft = seconds,
+                totalTime = startingSeconds,
             )
         }
     }
@@ -130,11 +141,11 @@ fun TimerSection(
 @Composable
 fun TimerButton(
     seconds: Long,
-    onClick: (OffsetDateTime) -> Unit
+    onClick: () -> Unit
 ) {
     TextButton(
         onClick = {
-            onClick(OffsetDateTime.now().minusSeconds(seconds - 1))
+            onClick()
         },
     ) {
         Text("${seconds}s")
