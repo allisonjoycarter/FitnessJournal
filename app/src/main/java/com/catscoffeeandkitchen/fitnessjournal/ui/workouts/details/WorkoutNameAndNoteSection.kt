@@ -32,7 +32,7 @@ fun WorkoutNameAndNoteSection(
     var note by remember { mutableStateOf(workoutNote) }
 
     Column(
-        modifier = Modifier.padding(4.dp),
+        modifier = Modifier.padding(horizontal = 4.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         if (isEditing) {
@@ -73,7 +73,7 @@ fun WorkoutNameAndNoteSection(
                 Text(
                     name,
                     modifier = Modifier.padding(8.dp),
-                    style = MaterialTheme.typography.headlineLarge
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 IconButton(
@@ -83,12 +83,7 @@ fun WorkoutNameAndNoteSection(
                 }
             }
 
-            if (note.isNullOrEmpty()) {
-                Text(
-                    "No Note",
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    style = MaterialTheme.typography.bodyMedium)
-            } else {
+            if (!note.isNullOrEmpty()) {
                 Text(
                     note ?: "",
                     modifier = Modifier.padding(horizontal = 12.dp),
