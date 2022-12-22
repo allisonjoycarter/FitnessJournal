@@ -18,7 +18,6 @@ default_platform(:android)
 platform :android do
   desc "Runs all the tests"
   lane :test do
-    match(type: 'appstore')
     gradle(task: "testDebugUnitTest")
     gradle(task: "jacocoTestDebugUnitTestReport")
   end
