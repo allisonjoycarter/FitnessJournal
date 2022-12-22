@@ -20,5 +20,5 @@ jobs:
       - name: Deploy coverage to pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: /home/runner/work/FitnessJournal/FitnessJournal/coverage-report
+          folder: /home/runner/work/FitnessJournal/FitnessJournal/coverage-report/data/jacocoHtml
           token: ${{ secrets.PAGES_DEPLOY_KEY }}

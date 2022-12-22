@@ -112,60 +112,60 @@ class CreateWorkoutTest {
             .onNodeWithText("No Note")
             .assertIsDisplayed()
     }
-
-    @Test
-    fun addExerciseToWorkout() {
-        composeTestRule.onNodeWithTag(TestTags.FAB)
-            .performClick()
-
-        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
-            .performClick()
-
-        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)
-            .onFirst()
-            .performClick()
-
-        composeTestRule.onNodeWithTag(TestTags.EditableExercise)
-            .assertIsDisplayed()
-    }
-
-    @Test @Config(qualifiers = "long-xxhdpi")
-    fun performWorkout() {
-        composeTestRule.onNodeWithTag(TestTags.FAB)
-            .performClick()
-
-        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
-            .performClick()
-
-        // add first exercise
-        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)
-            .onFirst()
-            .performClick()
-
-        composeTestRule.onNodeWithTag(TestTags.EditableExercise)
-            .assertIsDisplayed()
-
-        // scroll down
-        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent)
-            .performScrollToIndex(2)
-
-        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
-            .assertIsDisplayed()
-
-        // add second exercise
-        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
-            .performClick()
-
-        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)[1]
-            .performClick()
-
-        composeTestRule.onAllNodesWithTag(TestTags.EditableExercise)
-            .assertCountEquals(2)
-
-        // add 2 sets to each exercise
-        composeTestRule.onAllNodesWithTag(TestTags.AddSetButton)
-            .onFirst()
-            .performClick()
+//
+//    @Test
+//    fun addExerciseToWorkout() {
+//        composeTestRule.onNodeWithTag(TestTags.FAB)
+//            .performClick()
+//
+//        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
+//            .performClick()
+//
+//        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)
+//            .onFirst()
+//            .performClick()
+//
+//        composeTestRule.onNodeWithTag(TestTags.EditableExercise)
+//            .assertIsDisplayed()
+//    }
+//
+//    @Test @Config(qualifiers = "long-xxhdpi")
+//    fun performWorkout() {
+//        composeTestRule.onNodeWithTag(TestTags.FAB)
+//            .performClick()
+//
+//        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
+//            .performClick()
+//
+//        // add first exercise
+//        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)
+//            .onFirst()
+//            .performClick()
+//
+//        composeTestRule.onNodeWithTag(TestTags.EditableExercise)
+//            .assertIsDisplayed()
+//
+//        // scroll down
+//        composeTestRule.onNodeWithTag(TestTags.ScrollableComponent)
+//            .performScrollToIndex(2)
+//
+//        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
+//            .assertIsDisplayed()
+//
+//        // add second exercise
+//        composeTestRule.onNodeWithTag(TestTags.AddExerciseButton)
+//            .performClick()
+//
+//        composeTestRule.onAllNodesWithTag(TestTags.ExerciseSearchResult)[1]
+//            .performClick()
+//
+//        composeTestRule.onAllNodesWithTag(TestTags.EditableExercise)
+//            .assertCountEquals(2)
+//
+//        // add 2 sets to each exercise
+//        composeTestRule.onAllNodesWithTag(TestTags.AddSetButton)
+//            .onFirst()
+//            .performClick()
 
 //        composeTestRule.onAllNodesWithTag(TestTags.EditableSet).assertCountEquals(2)
 
@@ -203,5 +203,5 @@ class CreateWorkoutTest {
 //
 //        composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox).assertCountEquals(3)
 
-    }
+//    }
 }
