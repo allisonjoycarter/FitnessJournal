@@ -3,7 +3,7 @@ name: build-android-app
 on: push
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
