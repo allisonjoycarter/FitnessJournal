@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
 import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
 import com.catscoffeeandkitchen.fitnessjournal.TestTags
@@ -51,8 +52,9 @@ fun Navigation() {
         exitTransition = { fadeOut(animationSpec = tween(easing = FastOutSlowInEasing)) },
     ) {
         composable(
-            FitnessJournalScreen.WorkoutsScreen.route
-        ) {
+            FitnessJournalScreen.WorkoutsScreen.route,
+            deepLinks = listOf(navDeepLink { uriPattern = "liftinglog://app/${FitnessJournalScreen.WorkoutsScreen.route}" }),
+            ) {
             Scaffold(
                 topBar = { FitnessJournalTopAppBar {
                     navController.navigate(FitnessJournalScreen.Settings.route)
@@ -124,6 +126,9 @@ fun Navigation() {
 
         composable(
             "${FitnessJournalScreen.WorkoutDetails.route}/{workoutId}?plan={plan}",
+            deepLinks = listOf(navDeepLink {
+                uriPattern = "liftinglog://app/${FitnessJournalScreen.WorkoutDetails.route}/{workoutId}"
+            }),
             arguments = listOf(
                 navArgument("workoutId") { type = NavType.LongType },
                 navArgument("plan") {
