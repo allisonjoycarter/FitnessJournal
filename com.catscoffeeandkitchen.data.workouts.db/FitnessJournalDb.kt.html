@@ -19,16 +19,17 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEn
         ExerciseGoal::class,
         RemoteKeys::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3, spec = FitnessJournalDb.Migration2To3::class),
-        AutoMigration(from = 4, to = 5)
+        AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ]
 )
 @TypeConverters(Converters::class)
-<span class="fc" id="L31">abstract class FitnessJournalDb: RoomDatabase() {</span>
+<span class="fc" id="L32">abstract class FitnessJournalDb: RoomDatabase() {</span>
     abstract fun workoutDao(): WorkoutDao
     abstract fun workoutPlanDao(): WorkoutPlanDao
     abstract fun exerciseDao(): ExerciseDao
@@ -38,10 +39,10 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExercisePositionEn
     abstract fun exercisePositionDao(): ExercisePositionDao
     abstract fun remoteKeysDao(): RemoteKeysDao
 
-<span class="fc" id="L41">    @RenameTable(</span>
+<span class="fc" id="L42">    @RenameTable(</span>
         fromTableName = &quot;ExercisePositionInWorkout&quot;,
         toTableName = &quot;ExercisePositionEntity&quot;
     )
-<span class="fc" id="L45">    class Migration2To3: AutoMigrationSpec</span>
+<span class="fc" id="L46">    class Migration2To3: AutoMigrationSpec</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -82,7 +82,7 @@ interface WorkoutDao {
         LIMIT 1
     &quot;&quot;&quot;
     )
-    suspend fun getLastWorkout(): WorkoutEntity
+    suspend fun getLastWorkout(): WorkoutEntity?
 
     @Query(
         &quot;&quot;&quot;
@@ -111,5 +111,12 @@ interface WorkoutDao {
     )
     suspend fun getWorkoutsWithPlans(): List&lt;WorkoutWithPlanAndGoals&gt;
 
+    @Query(&quot;&quot;&quot;
+        SELECT *
+        FROM WorkoutEntity
+        WHERE completedAt IS NOT NULL AND 
+            completedAt &gt;= :epochMillis
+    &quot;&quot;&quot;)
+    suspend fun getWorkoutsAfter(epochMillis: Long): List&lt;WorkoutEntity&gt;
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

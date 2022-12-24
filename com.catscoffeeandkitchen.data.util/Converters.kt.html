@@ -22,7 +22,7 @@ import java.time.ZoneOffset
 
     @TypeConverter
     fun toStringList(unbrokenString: String?): List&lt;String&gt;? {
-<span class="pc bpc" id="L25" title="4 of 8 branches missed.">        return unbrokenString?.split(&quot;|&quot;)?.filter { it.isNotEmpty() }</span>
+<span class="pc bpc" id="L25" title="2 of 8 branches missed.">        return unbrokenString?.split(&quot;|&quot;)?.filter { it.isNotEmpty() }</span>
     }
 
     @TypeConverter

@@ -183,6 +183,12 @@ import javax.inject.Singleton
         ): DataRepository {
 <span class="nc" id="L184">        return DataRepositoryImpl(context, backupHelper, database)</span>
     }
+    @Provides
+    fun provideHomeRepository(
+        database: FitnessJournalDb
+        ): HomeRepository {
+<span class="nc" id="L190">        return HomeRepositoryImpl(database)</span>
+    }
     //endregion
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
