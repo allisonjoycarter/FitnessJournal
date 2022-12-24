@@ -27,91 +27,91 @@ import java.io.File
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
-@HiltAndroidTest
-@RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class, instrumentedPackages = ["androidx.loader.content"])
-class CreateWorkoutTest {
-
-    @get:Rule(order = 1)
-    var hiltTestRule = HiltAndroidRule(this)
-
-    @get:Rule(order = 2)
-    var composeTestRule = createAndroidComposeRule<MainActivity>()
-
-    @Inject
-    lateinit var database: FitnessJournalDb
-
-    @Inject
-    lateinit var exerciseDao: ExerciseDao
-
-    @Before
-    fun setup() {
-        hiltTestRule.inject()
-
-        runBlocking {
-            exerciseDao.insert(
-                ExerciseEntity(
-                    eId = 0L,
-                    name = "Bench Press",
-                    musclesWorked = listOf("Pecs", "Triceps"),
-                    userCreated = false,
-                    category = "Chest",
-                    thumbnailUrl = null,
-                    equipmentType = ExerciseEquipmentType.Barbell
-                )
-            )
-
-            exerciseDao.insert(
-                ExerciseEntity(
-                    eId = 0L,
-                    name = "Shoulder Press",
-                    musclesWorked = listOf("Shoulders", "Delts"),
-                    userCreated = false,
-                    category = "Shoulders",
-                    thumbnailUrl = null,
-                    equipmentType = ExerciseEquipmentType.Dumbbell
-                )
-            )
-
-            exerciseDao.insert(
-                ExerciseEntity(
-                    eId = 0L,
-                    name = "Seated Cable Row",
-                    musclesWorked = listOf("Lats"),
-                    userCreated = false,
-                    category = "Back",
-                    thumbnailUrl = null,
-                    equipmentType = ExerciseEquipmentType.Cable
-                )
-            )
-
-            exerciseDao.insert(
-                ExerciseEntity(
-                    eId = 0L,
-                    name = "Chest Press",
-                    musclesWorked = listOf("Pecs"),
-                    userCreated = false,
-                    category = "Chest",
-                    thumbnailUrl = null,
-                    equipmentType = ExerciseEquipmentType.Machine
-                )
-            )
-        }
-
-        composeTestRule.setContent {
-            Navigation()
-        }
-    }
-
-    @Test
-    fun createNewWorkout() {
-        composeTestRule.onNodeWithTag(TestTags.FAB)
-            .performClick()
-
-        composeTestRule
-            .onNodeWithText("No Note")
-            .assertIsDisplayed()
-    }
+//@HiltAndroidTest
+//@RunWith(RobolectricTestRunner::class)
+//@Config(application = HiltTestApplication::class, instrumentedPackages = ["androidx.loader.content"])
+//class CreateWorkoutTest {
+//
+//    @get:Rule(order = 1)
+//    var hiltTestRule = HiltAndroidRule(this)
+//
+//    @get:Rule(order = 2)
+//    var composeTestRule = createAndroidComposeRule<MainActivity>()
+//
+//    @Inject
+//    lateinit var database: FitnessJournalDb
+//
+//    @Inject
+//    lateinit var exerciseDao: ExerciseDao
+//
+//    @Before
+//    fun setup() {
+//        hiltTestRule.inject()
+//
+//        runBlocking {
+//            exerciseDao.insert(
+//                ExerciseEntity(
+//                    eId = 0L,
+//                    name = "Bench Press",
+//                    musclesWorked = listOf("Pecs", "Triceps"),
+//                    userCreated = false,
+//                    category = "Chest",
+//                    thumbnailUrl = null,
+//                    equipmentType = ExerciseEquipmentType.Barbell
+//                )
+//            )
+//
+//            exerciseDao.insert(
+//                ExerciseEntity(
+//                    eId = 0L,
+//                    name = "Shoulder Press",
+//                    musclesWorked = listOf("Shoulders", "Delts"),
+//                    userCreated = false,
+//                    category = "Shoulders",
+//                    thumbnailUrl = null,
+//                    equipmentType = ExerciseEquipmentType.Dumbbell
+//                )
+//            )
+//
+//            exerciseDao.insert(
+//                ExerciseEntity(
+//                    eId = 0L,
+//                    name = "Seated Cable Row",
+//                    musclesWorked = listOf("Lats"),
+//                    userCreated = false,
+//                    category = "Back",
+//                    thumbnailUrl = null,
+//                    equipmentType = ExerciseEquipmentType.Cable
+//                )
+//            )
+//
+//            exerciseDao.insert(
+//                ExerciseEntity(
+//                    eId = 0L,
+//                    name = "Chest Press",
+//                    musclesWorked = listOf("Pecs"),
+//                    userCreated = false,
+//                    category = "Chest",
+//                    thumbnailUrl = null,
+//                    equipmentType = ExerciseEquipmentType.Machine
+//                )
+//            )
+//        }
+//
+//        composeTestRule.setContent {
+//            Navigation()
+//        }
+//    }
+//
+//    @Test
+//    fun createNewWorkout() {
+//        composeTestRule.onNodeWithTag(TestTags.FAB)
+//            .performClick()
+//
+//        composeTestRule
+//            .onNodeWithText("No Note")
+//            .assertIsDisplayed()
+//    }
 //
 //    @Test
 //    fun addExerciseToWorkout() {
@@ -204,4 +204,4 @@ class CreateWorkoutTest {
 //        composeTestRule.onAllNodesWithTag(TestTags.CompleteSetCheckbox).assertCountEquals(3)
 
 //    }
-}
+//}

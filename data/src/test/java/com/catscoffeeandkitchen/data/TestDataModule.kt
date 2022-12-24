@@ -138,5 +138,12 @@ class TestDataModule {
     ): DataRepository {
         return DataRepositoryImpl(context, backupHelper, database)
     }
+
+    @Provides
+    fun provideHomRepository(
+        database: FitnessJournalDb
+    ): HomeRepository {
+        return HomeRepositoryImpl(database)
+    }
     //endregion
 }

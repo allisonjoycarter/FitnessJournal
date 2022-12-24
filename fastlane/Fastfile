@@ -19,8 +19,12 @@ platform :android do
   desc "Runs all the tests"
   lane :test do
     gradle(task: "testDebugUnitTest")
-    gradle(task: "jacocoTestDebugUnitTestReport")
   end
+
+  desc "Runs tests with coverage"
+    lane :testCoverage do
+      gradle(task: "jacocoTestDebugUnitTestReport")
+    end
 
   desc "Deploy a new version to Internal Testers"
   lane :deployInternal do

@@ -114,7 +114,8 @@ interface WorkoutDao {
     @Query("""
         SELECT *
         FROM WorkoutEntity
-        WHERE completedAt >= :epochMillis
+        WHERE completedAt IS NOT NULL AND 
+            completedAt >= :epochMillis
     """)
     suspend fun getWorkoutsAfter(epochMillis: Long): List<WorkoutEntity>
 }

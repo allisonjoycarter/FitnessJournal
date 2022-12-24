@@ -1,4 +1,4 @@
-name: build-android-app
+name: Test and Deploy Coverage
 
 on: push
 
@@ -14,8 +14,8 @@ jobs:
           ruby-version: 2.7.2
           bundler-cache: true
 
-      - name: Run tests
-        run: bundle exec fastlane android test
+      - name: Run tests with coverage
+        run: bundle exec fastlane android testCoverage
 
       - name: Deploy coverage to pages
         uses: JamesIves/github-pages-deploy-action@v4

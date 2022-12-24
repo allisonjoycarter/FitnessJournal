@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.catscoffeeandkitchen.domain.models.ExerciseProgressStats
 import com.catscoffeeandkitchen.domain.models.WorkoutEntry
 import com.catscoffeeandkitchen.domain.models.WorkoutPlan
+import com.catscoffeeandkitchen.domain.models.WorkoutWeekStats
 import com.catscoffeeandkitchen.domain.usecases.home.GetLastExercisesCompletedUseCase
 import com.catscoffeeandkitchen.domain.usecases.home.GetMostImprovedExerciseUseCase
 import com.catscoffeeandkitchen.domain.usecases.home.GetNextWorkoutPlanUseCase
@@ -14,7 +15,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
@@ -35,8 +35,8 @@ class HomeViewModel @Inject constructor(
     private var _mostImprovedExercise: MutableStateFlow<DataState<ExerciseProgressStats?>> = MutableStateFlow(DataState.NotSent())
     val mostImprovedExercise: StateFlow<DataState<ExerciseProgressStats?>> = _mostImprovedExercise
 
-    private var _workoutDates: MutableStateFlow<DataState<List<OffsetDateTime>>> = MutableStateFlow(DataState.NotSent())
-    val workoutDates: StateFlow<DataState<List<OffsetDateTime>>> = _workoutDates
+    private var _weekStats: MutableStateFlow<DataState<WorkoutWeekStats>> = MutableStateFlow(DataState.NotSent())
+    val weekStats: StateFlow<DataState<WorkoutWeekStats>> = _weekStats
 
     init {
         viewModelScope.launch {
@@ -49,13 +49,12 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             getMostImprovedExerciseUseCase.run(12).collect {
-                Timber.d("*** Exercise Progress = ${(it as? DataState.Success)?.data}")
                 _mostImprovedExercise.value = it
             }
         }
 
         viewModelScope.launch {
-            getWorkoutsPerWeekUseCase.run(4 * 6).collect { _workoutDates.value = it }
+            getWorkoutsPerWeekUseCase.run(4 * 6).collect { _weekStats.value = it }
         }
     }
 }
