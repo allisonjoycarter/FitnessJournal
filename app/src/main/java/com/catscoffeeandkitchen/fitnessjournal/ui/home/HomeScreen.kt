@@ -6,9 +6,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.catscoffeeandkitchen.fitnessjournal.TestTags
 import java.util.*
 
 @Composable
@@ -19,7 +21,7 @@ fun HomeScreen(
 ) {
     val nextPlan = viewModel.nextWorkoutPlan.collectAsState()
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.ScrollableComponent),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

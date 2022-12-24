@@ -26,6 +26,23 @@ platform :android do
       gradle(task: "jacocoTestDebugUnitTestReport")
     end
 
+  desc "Capture screenshots"
+    lane :screenshot do
+        build_android_app(
+          task: 'assemble',
+          build_type: 'Debug'
+        )
+        build_android_app(
+          task: 'assemble',
+          build_type: 'AndroidTest'
+        )
+        capture_android_screenshots(
+            tests_apk_path: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+            app_apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+            skip_open_summary: false,
+        )
+    end
+
   desc "Deploy a new version to Internal Testers"
   lane :deployInternal do
     increment_version_name(app_project_dir: '**/app', bump_type: 'patch')
@@ -50,10 +67,6 @@ platform :android do
     upload_to_play_store(
         json_key: ENV["ANDROID_JSON_KEY_FILE"],
         track: "internal",
-        skip_upload_metadata: true,
-        skip_upload_changelogs: true,
-        skip_upload_images: true,
-        skip_upload_screenshots: true,
     )
   end
 end
