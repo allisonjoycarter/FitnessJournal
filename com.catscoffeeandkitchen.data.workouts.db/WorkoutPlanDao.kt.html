@@ -45,13 +45,6 @@ interface WorkoutPlanDao {
     )
     fun getAllWithGoals(): List&lt;WorkoutPlanWithGoals&gt;
 
-    @Query(&quot;&quot;&quot;
-        SELECT *
-        FROM WorkoutPlanEntity
-        WHERE wpId = :id
-    &quot;&quot;&quot;)
-    suspend fun getById(id: Long): WorkoutPlanEntity
-
     @Query(
         &quot;&quot;&quot;
         SELECT *
@@ -90,12 +83,5 @@ interface WorkoutPlanDao {
     &quot;&quot;&quot;
     )
     fun getWorkoutPlanWithGoalsById(planId: Long): WorkoutPlanWithGoals
-
-    @Query(&quot;&quot;&quot;
-        SELECT *
-        FROM WorkoutPlanEntity
-        WHERE daysOfWeek LIKE '%' || :today || '%'
-    &quot;&quot;&quot;)
-    suspend fun getWithDay(today: String): List&lt;WorkoutPlanEntity&gt;
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
