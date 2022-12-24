@@ -1,5 +1,6 @@
 package com.catscoffeeandkitchen.domain.models
 
+import java.time.DayOfWeek
 import java.time.OffsetDateTime
 
 data class WorkoutPlan(
@@ -8,4 +9,5 @@ data class WorkoutPlan(
     val name: String = "New Workout Plan",
     val note: String? = null,
     val entries: List<ExpectedSet> = emptyList(),
+    val daysOfWeek: List<DayOfWeek> = emptyList(),
 )

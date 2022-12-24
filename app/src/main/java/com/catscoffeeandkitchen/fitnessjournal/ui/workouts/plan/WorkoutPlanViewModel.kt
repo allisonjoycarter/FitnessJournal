@@ -17,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -41,6 +42,9 @@ class WorkoutPlanViewModel @Inject constructor(
     val showExerciseGroupNameDialog = _showExerciseGroupNameDialog
     private var _exercisesToGroup = MutableStateFlow(emptyList<String>())
     var exercisesToGroup = _exercisesToGroup
+
+    val planInstance
+        get() = (workoutPlan.value as? DataState.Success)?.data
 
     init {
         val planId = savedStateHandle.get<Long?>("workoutId")
@@ -87,7 +91,7 @@ class WorkoutPlanViewModel @Inject constructor(
     }
 
     fun updateExercisePosition(originalSetNumber: Int, newSetNumber: Int) = viewModelScope.launch {
-        (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
+        planInstance?.let { workout ->
             val setFromWorkout = workout.entries.find { it.positionInWorkout == originalSetNumber }
             setFromWorkout?.let { set ->
                 updateExercisePositionUseCase.run(
@@ -132,7 +136,6 @@ class WorkoutPlanViewModel @Inject constructor(
     }
 
     fun addExerciseGroup(names: List<String>, groupName: String = "") = viewModelScope.launch {
-        Timber.d("*** creating exercise group $names")
         (workoutPlan.value as? DataState.Success)?.data?.let { workout ->
             createExerciseGroupUseCase.run(names, groupName)
                 .collect { state ->
@@ -188,6 +191,19 @@ class WorkoutPlanViewModel @Inject constructor(
         (workoutPlan.value as? DataState.Success)?.data?.let { currentWorkout ->
             _workoutPlan.value = DataState.Loading()
             val updatedWorkout = currentWorkout.copy(note = note)
+            updateWorkoutPlanUseCase.run(updatedWorkout).collect { updated ->
+                if (updated is DataState.Success) {
+                    _workoutPlan.value = DataState.Success(updatedWorkout)
+                } else if (updated is DataState.Error) {
+                    _workoutPlan.value = DataState.Error(updated.e)
+                }
+            }
+        }
+    }
+
+    fun updateWeekdays(weekdays: List<DayOfWeek>) = viewModelScope.launch {
+        planInstance?.let { currentWorkout ->
+            val updatedWorkout = currentWorkout.copy(daysOfWeek = weekdays)
             updateWorkoutPlanUseCase.run(updatedWorkout).collect { updated ->
                 if (updated is DataState.Success) {
                     _workoutPlan.value = DataState.Success(updatedWorkout)

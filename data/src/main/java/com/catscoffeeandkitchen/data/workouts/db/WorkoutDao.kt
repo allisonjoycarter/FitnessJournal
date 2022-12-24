@@ -82,7 +82,7 @@ interface WorkoutDao {
         LIMIT 1
     """
     )
-    suspend fun getLastWorkout(): WorkoutEntity
+    suspend fun getLastWorkout(): WorkoutEntity?
 
     @Query(
         """
@@ -111,4 +111,10 @@ interface WorkoutDao {
     )
     suspend fun getWorkoutsWithPlans(): List<WorkoutWithPlanAndGoals>
 
+    @Query("""
+        SELECT *
+        FROM WorkoutEntity
+        WHERE completedAt >= :epochMillis
+    """)
+    suspend fun getWorkoutsAfter(epochMillis: Long): List<WorkoutEntity>
 }

@@ -42,21 +42,22 @@ class NavigationTests {
         }
     }
 
+
     @Test
-    fun navigateToPlans() {
-        composeTestRule.onNodeWithTag(FitnessJournalScreen.WorkoutPlansScreen.testTag)
+    fun navigateToHome() {
+        composeTestRule.onNodeWithTag(FitnessJournalScreen.HomeScreen.testTag)
             .performClick()
 
         composeTestRule
             .onNodeWithTag(TestTags.BottomNavigationBar)
             .onChild()
-            .onChildAt(1)
+            .onChildAt(0)
             .assertIsSelected()
     }
 
     @Test
-    fun navigateToGroups() {
-        composeTestRule.onNodeWithTag(FitnessJournalScreen.ExerciseGroupScreen.testTag)
+    fun navigateToPlans() {
+        composeTestRule.onNodeWithTag(FitnessJournalScreen.WorkoutPlansScreen.testTag)
             .performClick()
 
         composeTestRule

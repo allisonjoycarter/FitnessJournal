@@ -25,6 +25,7 @@ import com.catscoffeeandkitchen.fitnessjournal.ui.components.AddExerciseOrGroupB
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalButton
 import com.catscoffeeandkitchen.fitnessjournal.ui.components.FitnessJournalOutlinedTextField
 import com.catscoffeeandkitchen.fitnessjournal.ui.navigation.FitnessJournalScreen
+import java.time.DayOfWeek
 
 @Composable
 fun WorkoutPlanEditScreen(
@@ -157,6 +158,10 @@ fun WorkoutPlanEditScreen(
                             viewModel.updateWorkoutNotes(notes)
                         }
 
+                        override fun updateWeekdays(weekdays: List<DayOfWeek>) {
+                            viewModel.updateWeekdays(weekdays)
+                        }
+
                         override fun updateExercise(
                             setNumber: Int,
                             field: ExercisePlanField,
@@ -227,6 +232,20 @@ fun LazyListScope.exercisePlanItems(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
         )
+    }
+
+    item {
+        WeekRow(
+            plan.daysOfWeek,
+        ) { day ->
+            uiActions?.updateWeekdays(
+                if (plan.daysOfWeek.contains(day)) {
+                    plan.daysOfWeek.filter { it != day }
+                } else {
+                    plan.daysOfWeek + listOf(day)
+                }
+            )
+        }
     }
 
     items(expectedSets) { expected ->

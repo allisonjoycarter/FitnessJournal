@@ -9,6 +9,7 @@ import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as 
 import com.catscoffeeandkitchen.domain.interfaces.WorkoutPlanRepository
 import com.catscoffeeandkitchen.domain.models.*
 import timber.log.Timber
+import java.time.DayOfWeek
 import java.time.OffsetDateTime
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -24,7 +25,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                 addedAt = dbWorkout.plan.addedAt,
                 name = dbWorkout.plan.name,
                 note = dbWorkout.plan.note,
-                entries = getExpectedSetFromGoals(dbWorkout.goals)
+                entries = getExpectedSetFromGoals(dbWorkout.goals),
+                daysOfWeek = dbWorkout.plan.daysOfWeek.map { DayOfWeek.valueOf(it) }
             )
         }
     }
@@ -36,12 +38,13 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             addedAt = dbWorkout.plan.addedAt,
             name = dbWorkout.plan.name,
             note = dbWorkout.plan.note,
-            entries = getExpectedSetFromGoals(dbWorkout.goals)
+            entries = getExpectedSetFromGoals(dbWorkout.goals),
+            daysOfWeek = dbWorkout.plan.daysOfWeek.map { DayOfWeek.valueOf(it) }
         )
     }
 
     override suspend fun createWorkoutPlan(plan: WorkoutPlan) {
-        database.workoutPlanDao().insert(plan.toDbWorkoutPlan())
+        database.workoutPlanDao().insert(plan.toEntity())
     }
 
     override suspend fun createPlanFromWorkout(workout: Workout): OffsetDateTime {
@@ -84,8 +87,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateWorkoutPlan(plan: WorkoutPlan) {
-        val dbPlan = database.workoutPlanDao().getWorkoutPlanByAddedAt(plan.addedAt)
-        database.workoutPlanDao().update(plan.toDbWorkoutPlan(dbPlan.wpId))
+        val dbPlan = database.workoutPlanDao().getById(plan.id)
+        database.workoutPlanDao().update(plan.toEntity(dbPlan.wpId))
     }
 
     override suspend fun addExpectedSetToWorkout(workout: WorkoutPlan, expectedSet: ExpectedSet) {
