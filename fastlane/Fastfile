@@ -18,12 +18,12 @@ default_platform(:android)
 platform :android do
   desc "Runs all the tests"
   lane :test do
-    gradle(task: "testDebugUnitTest")
+    gradle(task: ":data:testDebugUnitTest")
   end
 
   desc "Runs tests with coverage"
     lane :testCoverage do
-      gradle(task: "jacocoTestDebugUnitTestReport")
+      gradle(task: ":data:jacocoTestDebugUnitTestReport")
     end
 
   desc "Capture screenshots"
