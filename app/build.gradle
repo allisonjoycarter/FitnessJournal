@@ -16,7 +16,7 @@ android {
         versionCode 9
         versionName "0.1.7"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.catscoffeeandkitchen.fitnessjournal.workouts.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary true
         }
