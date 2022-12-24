@@ -48,7 +48,6 @@ platform :android do
   desc "Deploy a new version to Internal Testers"
   lane :deployInternal do
     changelog_from_git_commits(
-      between: ["7dc9034", "HEAD"],
       pretty: "- (%ae) %s",
     )
 
