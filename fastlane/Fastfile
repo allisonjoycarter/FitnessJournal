@@ -34,7 +34,7 @@ platform :android do
         )
         build_android_app(
           task: 'assemble',
-          build_type: 'AndroidTest'
+          build_type: 'DebugAndroidTest'
         )
         capture_android_screenshots(
             tests_apk_path: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
