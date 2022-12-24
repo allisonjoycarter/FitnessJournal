@@ -25,9 +25,11 @@ import javax.inject.Inject
 @HiltAndroidTest
 @RunWith(JUnit4::class)
 class ScreenshotsTest {
-
-    @ClassRule
-    val localeTestRule: LocaleTestRule = LocaleTestRule()
+    companion object {
+        @ClassRule
+        @JvmField
+        val localeTestRule: LocaleTestRule = LocaleTestRule()
+    }
 
     @get:Rule(order = 1)
     var hiltTestRule = HiltAndroidRule(this)
