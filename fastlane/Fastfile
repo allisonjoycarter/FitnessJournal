@@ -46,11 +46,11 @@ platform :android do
   desc "Deploy a new version to Internal Testers"
   lane :deployInternal do
     increment_version_name(
-        gradle_file: "app/build.gradle"
+        app_project_dir: "**/app",
         bump_type: 'patch'
     )
     increment_version_code(
-        gradle_file_path: "app/build.gradle"
+        app_project_dir: "**/app"
     )
 
     changelog_from_git_commits(
