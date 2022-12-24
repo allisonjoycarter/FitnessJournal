@@ -24,7 +24,6 @@ import tools.fastlane.screengrab.locale.LocaleTestRule
 import javax.inject.Inject
 
 @HiltAndroidTest
-@RunWith(JUnit4::class)
 class ScreenshotsTest {
     companion object {
         @ClassRule
