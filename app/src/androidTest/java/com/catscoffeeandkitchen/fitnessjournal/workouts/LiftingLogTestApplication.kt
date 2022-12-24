@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal
+package com.catscoffeeandkitchen.fitnessjournal.workouts
 
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint

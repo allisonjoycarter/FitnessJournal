@@ -1,32 +1,22 @@
 package com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details
 
-import android.app.Activity
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import com.catscoffeeandkitchen.domain.models.Exercise
 import com.catscoffeeandkitchen.domain.models.ExerciseSet
 import com.catscoffeeandkitchen.domain.models.Workout
@@ -50,55 +40,12 @@ fun WorkoutDetails(
     exerciseNavigableActions: ExerciseNavigableActions?,
     startTimer: (Long) -> Unit = {},
     connection: TimerServiceConnection? = null,
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
-    val context = LocalContext.current
-    var showNotificationRationaleDialog by remember { mutableStateOf(false) }
     var useKeyboard by rememberSaveable { mutableStateOf(false) }
-    var timeSinceKey by remember { mutableStateOf(null as OffsetDateTime?) }
-    var selectedTimer by remember { mutableStateOf(30L) }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                val seconds = connection?.timerService?.seconds
-                if (seconds != null) {
-                    timeSinceKey = OffsetDateTime.now().minusSeconds(seconds - 1)
-                }
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        startTimer(selectedTimer)
-    }
-
-    if (showNotificationRationaleDialog) {
-        AlertDialog(
-            modifier = Modifier.fillMaxWidth(.7f),
-            onDismissRequest = { showNotificationRationaleDialog = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showNotificationRationaleDialog = false
-                        permissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
-                    }
-                ) { Text("OK") }
-            },
-            text = {
-                Text("Notifications are only shown to" +
-                        " display seconds left on a timer you start.")
-            }
-        )
-    }
-
+    val (startTimerOnSetFinish, setTimerOnStartFinish) = rememberSaveable { mutableStateOf(false) }
+    val (timerSeconds, setTimerSeconds) = remember { mutableStateOf(null as Long?) }
+    val (selectedTimer, setSelectedTimer) = remember { mutableStateOf(30L) }
+    var showSettings by remember { mutableStateOf(false) }
 
     LazyColumn(
         state = scrollState,
@@ -114,74 +61,31 @@ fun WorkoutDetails(
             )
         }
 
-        if (workout.completedAt == null) {
-            stickyHeader {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .fillMaxWidth()
-                        .padding(12.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
-                        .padding(8.dp)
-                ) {
-                    Text("Start a Timer", style = MaterialTheme.typography.titleSmall)
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
-                    ) {
-                        listOf(30L, 60L, 90L, 120L).forEach { amount ->
-                            TimerButton(amount) { time ->
-                                timeSinceKey = time
-                                selectedTimer = amount
-
-                                when {
-                                    ContextCompat.checkSelfPermission(
-                                        context,
-                                        "android.permission.POST_NOTIFICATIONS"
-                                    ) == PackageManager.PERMISSION_GRANTED -> {
-                                        startTimer(amount)
-                                    }
-                                    shouldShowRequestPermissionRationale(
-                                        context as Activity,
-                                        "android.permission.POST_NOTIFICATIONS"
-                                    ) -> {
-                                        showNotificationRationaleDialog = true
-                                    }
-                                    else -> {
-                                        permissionLauncher
-                                            .launch("android.permission.POST_NOTIFICATIONS")
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    timeSinceKey?.let { time ->
-                        TimeSinceText(
-                            startTime = time,
-                            totalTime = connection?.timerService?.startingSeconds ?: selectedTimer,
-                        )
-                    }
-                }
-            }
-        }
-
-        if (workout.completedAt != null) {
-            item {
-                FitnessJournalButton(
-                    text = "Create Plan from this Workout",
-                    onClick = { workoutActions?.createPlanFromWorkout() },
-                    fullWidth = true
+        item {
+            TextButton(
+                modifier = Modifier.padding(start = 8.dp).animateItemPlacement(),
+                onClick = { showSettings = !showSettings }
+            ) {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    "toggle options section",
+                    modifier = Modifier.rotate(if (showSettings) 180f else 0f)
                 )
+                Text("${if (showSettings) "hide" else "show"} options")
             }
         }
 
-        if (workout.entries.any { it.sets.any { set -> !set.isComplete } }) {
-            item {
+        val showKeyboardSwitch = showSettings && workout.entries.any { it.sets.any { set -> !set.isComplete } }
+        item {
+            AnimatedVisibility(
+                showKeyboardSwitch,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(horizontal = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -191,6 +95,56 @@ fun WorkoutDetails(
                     )
                     Text("Use Keyboard Inputs", style = MaterialTheme.typography.labelMedium)
                 }
+            }
+        }
+
+        item {
+            AnimatedVisibility(
+                visible = showSettings,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Switch(
+                        checked = startTimerOnSetFinish,
+                        onCheckedChange = { setTimerOnStartFinish(it) }
+                    )
+                    Text("Start timer after set", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+
+        val showCreatePlan = showSettings && workout.completedAt != null
+        item {
+            AnimatedVisibility(
+                visible = showCreatePlan,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                FitnessJournalButton(
+                    text = "Create Plan from this Workout",
+                    onClick = { workoutActions?.createPlanFromWorkout() },
+                    fullWidth = true,
+                )
+            }
+        }
+
+        if (workout.completedAt == null) {
+            stickyHeader {
+                TimerSection(
+                    timerSeconds,
+                    selectedTimer,
+                    onUpdateSelectedTimer = setSelectedTimer,
+                    onUpdateTimerProgress = setTimerSeconds,
+                    startTimer = startTimer,
+                    connection = connection
+                )
             }
         }
 
@@ -204,11 +158,16 @@ fun WorkoutDetails(
                     isLastExercise = index == sets.lastIndex,
                     useKeyboard = useKeyboard,
                     wasChosenFromGroup = entry.exercise != null &&
-                            entry.expectedSet?.exerciseGroup != null
+                            entry.expectedSet?.exerciseGroup != null,
                 ),
                 uiActions = exerciseUiActions,
                 navigableActions = exerciseNavigableActions,
-                onCompleteSet = { },
+                onCompleteSet = { time ->
+                    if (startTimerOnSetFinish && time != null) {
+                        startTimer(selectedTimer)
+                        setTimerSeconds(selectedTimer)
+                    }
+                },
                 modifier = Modifier.animateItemPlacement(),
             )
         }
@@ -224,7 +183,9 @@ fun WorkoutDetails(
                         Icon(painterResource(id = R.drawable.fitness_center), "group")
                     },
                     fullWidth = true,
-                    modifier = Modifier.padding(horizontal = 2.dp).testTag(TestTags.AddExerciseButton)
+                    modifier = Modifier
+                        .padding(horizontal = 2.dp)
+                        .testTag(TestTags.AddExerciseButton)
                 )
             }
 
@@ -251,20 +212,6 @@ fun WorkoutDetails(
                     .padding(bottom = 12.dp))
             }
         }
-    }
-}
-
-@Composable
-fun TimerButton(
-    seconds: Long,
-    onClick: (OffsetDateTime) -> Unit
-) {
-    TextButton(
-        onClick = {
-            onClick(OffsetDateTime.now().minusSeconds(seconds - 1))
-        }
-    ) {
-        Text("${seconds}s")
     }
 }
 

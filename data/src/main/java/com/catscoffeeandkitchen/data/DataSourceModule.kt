@@ -183,5 +183,11 @@ class DataSourceModule {
         ): DataRepository {
         return DataRepositoryImpl(context, backupHelper, database)
     }
+    @Provides
+    fun provideHomeRepository(
+        database: FitnessJournalDb
+        ): HomeRepository {
+        return HomeRepositoryImpl(database)
+    }
     //endregion
 }

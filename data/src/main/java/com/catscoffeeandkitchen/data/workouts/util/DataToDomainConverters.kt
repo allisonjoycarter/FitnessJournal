@@ -1,10 +1,8 @@
 package com.catscoffeeandkitchen.data.workouts.util
 
-import com.catscoffeeandkitchen.data.workouts.models.CombinedSetData
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
-import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoalWithExercises
-import com.catscoffeeandkitchen.data.workouts.models.SetEntity
+import com.catscoffeeandkitchen.data.workouts.models.*
 import com.catscoffeeandkitchen.domain.models.*
+import java.time.DayOfWeek
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity as DbExerciseGroup
@@ -85,5 +83,16 @@ fun DbWorkout.toWorkout(): Workout {
         name = this.name,
         note = this.note,
         completedAt = this.completedAt,
+    )
+}
+
+fun WorkoutPlanEntity.toPlan(entries: List<ExpectedSet> = emptyList()): WorkoutPlan {
+    return WorkoutPlan(
+        id = this.wpId,
+        addedAt = this.addedAt,
+        name = this.name,
+        note = this.note,
+        entries = entries,
+        daysOfWeek = this.daysOfWeek.map { DayOfWeek.valueOf(it) }
     )
 }

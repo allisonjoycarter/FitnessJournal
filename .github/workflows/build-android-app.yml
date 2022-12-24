@@ -1,7 +1,9 @@
-name: build-android-app
+name: Build and Release
 
 on:
-  push: tags
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   test:

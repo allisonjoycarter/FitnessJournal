@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal
+package com.catscoffeeandkitchen.fitnessjournal.workouts
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -135,6 +135,13 @@ class TestDataModule {
         database: FitnessJournalDb
     ): DataRepository {
         return DataRepositoryImpl(context, backupHelper, database)
+    }
+
+    @Provides
+    fun provideHomRepository(
+        database: FitnessJournalDb
+    ): HomeRepository {
+        return HomeRepositoryImpl(database)
     }
     //endregion
 }

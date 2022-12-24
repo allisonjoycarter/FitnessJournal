@@ -35,7 +35,8 @@ class WorkoutRepositoryImpl(
                         addedAt = dbWorkout.plan.addedAt,
                         name = dbWorkout.plan.name,
                         note = dbWorkout.plan.note,
-                        entries = emptyList()
+                        entries = emptyList(),
+                        daysOfWeek = dbWorkout.plan.daysOfWeek.map { DayOfWeek.valueOf(it) }
                 ),
                 entries = entryData.map { entry ->
                     WorkoutEntry(
@@ -131,6 +132,7 @@ class WorkoutRepositoryImpl(
                     name = plan.plan.name,
                     note = plan.plan.note,
                     entries = emptyList(),
+                    daysOfWeek = plan.plan.daysOfWeek.map { DayOfWeek.valueOf(it) }
                 )
         )
     }
@@ -166,6 +168,7 @@ class WorkoutRepositoryImpl(
                     name = plan.name,
                     note = plan.note,
                     entries = emptyList(),
+                    daysOfWeek = plan.daysOfWeek.map { DayOfWeek.valueOf(it) }
                 ),
             )
 

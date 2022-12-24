@@ -3,6 +3,7 @@ package com.catscoffeeandkitchen.fitnessjournal.ui.navigation
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -21,6 +22,14 @@ sealed class FitnessJournalScreen(
         icon = Icons.Default.Settings,
         testTag = "SettingsNavItem"
     )
+
+    object HomeScreen : FitnessJournalScreen(
+        route = "home",
+        resourceId = R.string.home,
+        icon = Icons.Default.Home,
+        testTag = "HomeNavItem"
+    )
+
     object WorkoutsScreen : FitnessJournalScreen(
         route = "workouts",
         resourceId = R.string.workouts,

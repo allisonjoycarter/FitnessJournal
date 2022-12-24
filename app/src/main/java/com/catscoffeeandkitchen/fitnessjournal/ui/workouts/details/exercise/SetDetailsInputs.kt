@@ -50,11 +50,9 @@ fun SetDetailsInputs(
     useKeyboard: Boolean = false,
     updateValue: (field: ExerciseSetField) -> Unit = { },
     removeSet: () -> Unit = {},
-    onFocus: () -> Unit = {},
     onBlur: () -> Unit = {},
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-//    var setWithUpdatedData by remember { mutableStateOf(set) }
     var showInput by remember { mutableStateOf(null as InputToDisplay?) }
     var inputOpen by remember { mutableStateOf(false) }
     var shouldShowPlateCalculator by remember { mutableStateOf(false) }
@@ -94,15 +92,15 @@ fun SetDetailsInputs(
         Column {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(setColor)
                     .combinedClickable(
                         onClick = {},
                         onLongClick = {
                             showOptionsMenu = true
                         }
                     )
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(setColor)
                     .padding(6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {

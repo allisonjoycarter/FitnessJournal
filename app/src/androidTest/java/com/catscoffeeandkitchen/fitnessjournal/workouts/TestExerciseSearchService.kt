@@ -1,4 +1,4 @@
-package com.catscoffeeandkitchen.fitnessjournal
+package com.catscoffeeandkitchen.fitnessjournal.workouts
 
 import com.catscoffeeandkitchen.data.workouts.network.ExerciseSearchService
 import com.catscoffeeandkitchen.data.workouts.network.models.*

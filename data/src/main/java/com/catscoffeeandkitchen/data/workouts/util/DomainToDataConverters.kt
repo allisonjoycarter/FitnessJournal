@@ -3,10 +3,10 @@ package com.catscoffeeandkitchen.data.workouts.util
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGoal
 import com.catscoffeeandkitchen.data.workouts.models.ExerciseGroupEntity
 import com.catscoffeeandkitchen.data.workouts.models.SetEntity
+import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseWithStats
 import com.catscoffeeandkitchen.domain.models.*
 import com.catscoffeeandkitchen.data.workouts.models.exercise.ExerciseEntity as DbExercise
-import com.catscoffeeandkitchen.data.workouts.models.WorkoutPlanEntity as DbWorkoutPlan
 import com.catscoffeeandkitchen.data.workouts.models.WorkoutEntity as DbWorkout
 
 
@@ -32,12 +32,13 @@ fun ExerciseSet.toDbExerciseSet(
     )
 }
 
-fun WorkoutPlan.toDbWorkoutPlan(planId: Long = 0L): DbWorkoutPlan {
-    return DbWorkoutPlan(
+fun WorkoutPlan.toEntity(planId: Long = 0L): WorkoutPlanEntity {
+    return WorkoutPlanEntity(
         wpId = planId,
         addedAt = this.addedAt,
         name = this.name,
-        note = this.note
+        note = this.note,
+        daysOfWeek = this.daysOfWeek.map { it.name }
     )
 }
 

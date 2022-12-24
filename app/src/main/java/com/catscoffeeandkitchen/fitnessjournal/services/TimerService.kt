@@ -53,29 +53,38 @@ class TimerService: LifecycleService() {
         manager.createNotificationChannel(NotificationChannel(channelId, "Timer", NotificationManager.IMPORTANCE_DEFAULT))
 
         val secondsInIntent = intent?.getLongExtra("seconds", 30L) ?: 30L
+        val workoutId = intent?.getLongExtra("workoutId", 0L)
         seconds = secondsInIntent
         startingSeconds = secondsInIntent
 
-        val notificationManager = TimerNotificationManager()
-        val notification = notificationManager.createNotification(this, secondsInIntent, secondsInIntent)
+        if (intent?.action == TimerNotificationManager.CancelTimerAction) {
+            cancelTimer()
+        } else {
+            val notificationManager = TimerNotificationManager()
+            val notification = notificationManager.createNotification(this, workoutId, secondsInIntent, secondsInIntent)
+            startForeground(notificationId, notification)
 
-        startForeground(notificationId, notification)
-
-        timerJob = lifecycleScope.launch(Dispatchers.IO) {
-            (0L..secondsInIntent)
-                .asFlow()
-                .onEach { delay(1_000) }
-                .collect { sec ->
-                    val remaining = secondsInIntent - sec
-                    seconds = remaining
-
-                    notificationManager.updateNotification(this@TimerService, remaining, secondsInIntent)
-                    if (remaining == 0L) {
-                        val player = MediaPlayer.create(this@TimerService, R.raw.alert_chime)
-                        player.start()
-                        this@TimerService.stopSelf()
+            timerJob = lifecycleScope.launch(Dispatchers.IO) {
+                (0L..secondsInIntent)
+                    .asFlow()
+                    .onEach { delay(1_000) }
+                    .onCompletion {
+                        stopSelf()
+                        stopForeground(STOP_FOREGROUND_REMOVE)
                     }
-                }
+                    .collect { sec ->
+                        val remaining = secondsInIntent - sec
+                        seconds = remaining
+
+                        notificationManager.updateNotification(this@TimerService, workoutId, remaining, secondsInIntent)
+                        if (remaining == 0L) {
+                            val player = MediaPlayer.create(this@TimerService, R.raw.alert_chime)
+                            player.start()
+                            this@TimerService.stopSelf()
+                            manager.cancel(notificationId)
+                        }
+                    }
+            }
         }
 
         return START_STICKY

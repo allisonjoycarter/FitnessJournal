@@ -1,0 +1,842 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "13153c633f14a1b95186dda4a402d91d",
+    "entities": [
+      {
+        "tableName": "ExerciseEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `musclesWorked` TEXT NOT NULL, `userCreated` INTEGER NOT NULL, `category` TEXT, `thumbnailUrl` TEXT, `equipmentType` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "eId",
+            "columnName": "eId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musclesWorked",
+            "columnName": "musclesWorked",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userCreated",
+            "columnName": "userCreated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "thumbnailUrl",
+            "columnName": "thumbnailUrl",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "equipmentType",
+            "columnName": "equipmentType",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "eId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ExerciseEntity_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_ExerciseEntity_name` ON `${TABLE_NAME}` (`name`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "ExerciseGroupEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "gId",
+            "columnName": "gId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "gId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "GroupExerciseXRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`egxrId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `exerciseId` INTEGER NOT NULL, `groupId` INTEGER NOT NULL, FOREIGN KEY(`exerciseId`) REFERENCES `ExerciseEntity`(`eId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`groupId`) REFERENCES `ExerciseGroupEntity`(`gId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "egxrId",
+            "columnName": "egxrId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "egxrId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_GroupExerciseXRef_exerciseId",
+            "unique": false,
+            "columnNames": [
+              "exerciseId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_GroupExerciseXRef_exerciseId` ON `${TABLE_NAME}` (`exerciseId`)"
+          },
+          {
+            "name": "index_GroupExerciseXRef_groupId",
+            "unique": false,
+            "columnNames": [
+              "groupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_GroupExerciseXRef_groupId` ON `${TABLE_NAME}` (`groupId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ExerciseEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "exerciseId"
+            ],
+            "referencedColumns": [
+              "eId"
+            ]
+          },
+          {
+            "table": "ExerciseGroupEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "groupId"
+            ],
+            "referencedColumns": [
+              "gId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "SetEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `exerciseId` INTEGER NOT NULL, `workoutId` INTEGER NOT NULL, `positionId` INTEGER NOT NULL, `groupId` INTEGER, `reps` INTEGER NOT NULL, `weightInPounds` REAL NOT NULL, `weightInKilograms` REAL NOT NULL, `repsInReserve` INTEGER NOT NULL, `perceivedExertion` INTEGER NOT NULL, `setNumber` INTEGER NOT NULL, `completedAt` INTEGER, `type` TEXT NOT NULL, `seconds` INTEGER NOT NULL, `modifier` TEXT, FOREIGN KEY(`exerciseId`) REFERENCES `ExerciseEntity`(`eId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`workoutId`) REFERENCES `WorkoutEntity`(`wId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`positionId`) REFERENCES `ExercisePositionEntity`(`epId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`groupId`) REFERENCES `ExerciseGroupEntity`(`gId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "sId",
+            "columnName": "sId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workoutId",
+            "columnName": "workoutId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "positionId",
+            "columnName": "positionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "reps",
+            "columnName": "reps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightInPounds",
+            "columnName": "weightInPounds",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightInKilograms",
+            "columnName": "weightInKilograms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repsInReserve",
+            "columnName": "repsInReserve",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "perceivedExertion",
+            "columnName": "perceivedExertion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "setNumber",
+            "columnName": "setNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seconds",
+            "columnName": "seconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modifier",
+            "columnName": "modifier",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "sId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_SetEntity_exerciseId",
+            "unique": false,
+            "columnNames": [
+              "exerciseId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_SetEntity_exerciseId` ON `${TABLE_NAME}` (`exerciseId`)"
+          },
+          {
+            "name": "index_SetEntity_workoutId",
+            "unique": false,
+            "columnNames": [
+              "workoutId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_SetEntity_workoutId` ON `${TABLE_NAME}` (`workoutId`)"
+          },
+          {
+            "name": "index_SetEntity_positionId",
+            "unique": false,
+            "columnNames": [
+              "positionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_SetEntity_positionId` ON `${TABLE_NAME}` (`positionId`)"
+          },
+          {
+            "name": "index_SetEntity_groupId",
+            "unique": false,
+            "columnNames": [
+              "groupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_SetEntity_groupId` ON `${TABLE_NAME}` (`groupId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ExerciseEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "exerciseId"
+            ],
+            "referencedColumns": [
+              "eId"
+            ]
+          },
+          {
+            "table": "WorkoutEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "workoutId"
+            ],
+            "referencedColumns": [
+              "wId"
+            ]
+          },
+          {
+            "table": "ExercisePositionEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "positionId"
+            ],
+            "referencedColumns": [
+              "epId"
+            ]
+          },
+          {
+            "table": "ExerciseGroupEntity",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "groupId"
+            ],
+            "referencedColumns": [
+              "gId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "ExercisePositionEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `workoutId` INTEGER, `planId` INTEGER, `position` INTEGER NOT NULL, `exerciseId` INTEGER, `groupId` INTEGER, FOREIGN KEY(`exerciseId`) REFERENCES `ExerciseEntity`(`eId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`groupId`) REFERENCES `ExerciseGroupEntity`(`gId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`workoutId`) REFERENCES `WorkoutEntity`(`wId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`planId`) REFERENCES `WorkoutPlanEntity`(`wpId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "epId",
+            "columnName": "epId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workoutId",
+            "columnName": "workoutId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "planId",
+            "columnName": "planId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "epId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ExercisePositionEntity_exerciseId",
+            "unique": false,
+            "columnNames": [
+              "exerciseId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExercisePositionEntity_exerciseId` ON `${TABLE_NAME}` (`exerciseId`)"
+          },
+          {
+            "name": "index_ExercisePositionEntity_planId",
+            "unique": false,
+            "columnNames": [
+              "planId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExercisePositionEntity_planId` ON `${TABLE_NAME}` (`planId`)"
+          },
+          {
+            "name": "index_ExercisePositionEntity_groupId",
+            "unique": false,
+            "columnNames": [
+              "groupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExercisePositionEntity_groupId` ON `${TABLE_NAME}` (`groupId`)"
+          },
+          {
+            "name": "index_ExercisePositionEntity_workoutId",
+            "unique": false,
+            "columnNames": [
+              "workoutId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExercisePositionEntity_workoutId` ON `${TABLE_NAME}` (`workoutId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ExerciseEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "exerciseId"
+            ],
+            "referencedColumns": [
+              "eId"
+            ]
+          },
+          {
+            "table": "ExerciseGroupEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "groupId"
+            ],
+            "referencedColumns": [
+              "gId"
+            ]
+          },
+          {
+            "table": "WorkoutEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "workoutId"
+            ],
+            "referencedColumns": [
+              "wId"
+            ]
+          },
+          {
+            "table": "WorkoutPlanEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "planId"
+            ],
+            "referencedColumns": [
+              "wpId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "WorkoutEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`wId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `planId` INTEGER, `minutesToComplete` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL, `completedAt` INTEGER, `name` TEXT NOT NULL, `note` TEXT, FOREIGN KEY(`planId`) REFERENCES `WorkoutPlanEntity`(`wpId`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "wId",
+            "columnName": "wId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "planId",
+            "columnName": "planId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "minutesToComplete",
+            "columnName": "minutesToComplete",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "wId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_WorkoutEntity_planId",
+            "unique": false,
+            "columnNames": [
+              "planId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_WorkoutEntity_planId` ON `${TABLE_NAME}` (`planId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "WorkoutPlanEntity",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "planId"
+            ],
+            "referencedColumns": [
+              "wpId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "WorkoutPlanEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`wpId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `addedAt` INTEGER NOT NULL, `name` TEXT NOT NULL, `note` TEXT, `daysOfWeek` TEXT NOT NULL DEFAULT '')",
+        "fields": [
+          {
+            "fieldPath": "wpId",
+            "columnName": "wpId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "daysOfWeek",
+            "columnName": "daysOfWeek",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "wpId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "ExerciseGoal",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`egId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `exerciseId` INTEGER, `exerciseGroupId` INTEGER, `workoutPlanId` INTEGER NOT NULL, `positionId` INTEGER NOT NULL, `positionInWorkout` INTEGER NOT NULL, `sets` INTEGER NOT NULL, `reps` INTEGER NOT NULL, `repRangeMax` INTEGER NOT NULL, `repRangeMin` INTEGER NOT NULL, `weightInPounds` REAL NOT NULL, `weightInKilograms` REAL NOT NULL, `repsInReserve` INTEGER NOT NULL, `perceivedExertion` INTEGER NOT NULL, `note` TEXT NOT NULL, `modifier` TEXT, `type` TEXT NOT NULL, FOREIGN KEY(`exerciseId`) REFERENCES `ExerciseEntity`(`eId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`exerciseGroupId`) REFERENCES `ExerciseGroupEntity`(`gId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`workoutPlanId`) REFERENCES `WorkoutPlanEntity`(`wpId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`positionId`) REFERENCES `ExercisePositionEntity`(`epId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "egId",
+            "columnName": "egId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exerciseId",
+            "columnName": "exerciseId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "exerciseGroupId",
+            "columnName": "exerciseGroupId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "workoutPlanId",
+            "columnName": "workoutPlanId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "positionId",
+            "columnName": "positionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "positionInWorkout",
+            "columnName": "positionInWorkout",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sets",
+            "columnName": "sets",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reps",
+            "columnName": "reps",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repRangeMax",
+            "columnName": "repRangeMax",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repRangeMin",
+            "columnName": "repRangeMin",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightInPounds",
+            "columnName": "weightInPounds",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weightInKilograms",
+            "columnName": "weightInKilograms",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repsInReserve",
+            "columnName": "repsInReserve",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "perceivedExertion",
+            "columnName": "perceivedExertion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modifier",
+            "columnName": "modifier",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "egId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ExerciseGoal_workoutPlanId",
+            "unique": false,
+            "columnNames": [
+              "workoutPlanId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_workoutPlanId` ON `${TABLE_NAME}` (`workoutPlanId`)"
+          },
+          {
+            "name": "index_ExerciseGoal_exerciseGroupId",
+            "unique": false,
+            "columnNames": [
+              "exerciseGroupId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_exerciseGroupId` ON `${TABLE_NAME}` (`exerciseGroupId`)"
+          },
+          {
+            "name": "index_ExerciseGoal_exerciseId",
+            "unique": false,
+            "columnNames": [
+              "exerciseId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ExerciseGoal_exerciseId` ON `${TABLE_NAME}` (`exerciseId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "ExerciseEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "exerciseId"
+            ],
+            "referencedColumns": [
+              "eId"
+            ]
+          },
+          {
+            "table": "ExerciseGroupEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "exerciseGroupId"
+            ],
+            "referencedColumns": [
+              "gId"
+            ]
+          },
+          {
+            "table": "WorkoutPlanEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "workoutPlanId"
+            ],
+            "referencedColumns": [
+              "wpId"
+            ]
+          },
+          {
+            "table": "ExercisePositionEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "positionId"
+            ],
+            "referencedColumns": [
+              "epId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "RemoteKeys",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`exerciseName` TEXT NOT NULL, `prevKey` INTEGER, `nextKey` INTEGER, PRIMARY KEY(`exerciseName`))",
+        "fields": [
+          {
+            "fieldPath": "exerciseName",
+            "columnName": "exerciseName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prevKey",
+            "columnName": "prevKey",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "nextKey",
+            "columnName": "nextKey",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "exerciseName"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '13153c633f14a1b95186dda4a402d91d')"
+    ]
+  }
+}

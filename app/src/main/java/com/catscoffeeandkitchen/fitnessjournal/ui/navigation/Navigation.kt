@@ -20,9 +20,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.catscoffeeandkitchen.domain.usecases.data.BackupDataUseCase
 import com.catscoffeeandkitchen.domain.usecases.data.RestoreDataUseCase
 import com.catscoffeeandkitchen.fitnessjournal.TestTags
+import com.catscoffeeandkitchen.fitnessjournal.ui.home.HomeScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.settings.SettingsScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.SelectPlanScreen
 import com.catscoffeeandkitchen.fitnessjournal.ui.workouts.details.WorkoutDetailsScreen
@@ -46,13 +48,33 @@ fun Navigation() {
     AnimatedNavHost(
         navController,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        startDestination = FitnessJournalScreen.WorkoutsScreen.route,
+        startDestination = FitnessJournalScreen.HomeScreen.route,
         enterTransition = { fadeIn(initialAlpha = .3f, animationSpec = tween(easing = FastOutSlowInEasing)) },
         exitTransition = { fadeOut(animationSpec = tween(easing = FastOutSlowInEasing)) },
     ) {
         composable(
-            FitnessJournalScreen.WorkoutsScreen.route
+            FitnessJournalScreen.HomeScreen.route,
+            deepLinks = listOf(navDeepLink { uriPattern = "liftinglog://app/${FitnessJournalScreen.HomeScreen.route}" }),
         ) {
+            Scaffold(
+                topBar = { FitnessJournalTopAppBar {
+                    navController.navigate(FitnessJournalScreen.Settings.route)
+                }},
+                bottomBar = {
+                    FitnessJournalBottomNavigationBar(navController = navController)
+                },
+            )  { padding ->
+                HomeScreen(
+                    navController,
+                    modifier = Modifier.padding(padding)
+                )
+            }
+        }
+
+        composable(
+            FitnessJournalScreen.WorkoutsScreen.route,
+            deepLinks = listOf(navDeepLink { uriPattern = "liftinglog://app/${FitnessJournalScreen.WorkoutsScreen.route}" }),
+            ) {
             Scaffold(
                 topBar = { FitnessJournalTopAppBar {
                     navController.navigate(FitnessJournalScreen.Settings.route)
@@ -124,6 +146,9 @@ fun Navigation() {
 
         composable(
             "${FitnessJournalScreen.WorkoutDetails.route}/{workoutId}?plan={plan}",
+            deepLinks = listOf(navDeepLink {
+                uriPattern = "liftinglog://app/${FitnessJournalScreen.WorkoutDetails.route}/{workoutId}"
+            }),
             arguments = listOf(
                 navArgument("workoutId") { type = NavType.LongType },
                 navArgument("plan") {
@@ -244,14 +269,6 @@ fun Navigation() {
             val selectable = backStackEntry.arguments?.getBoolean("selectable")
 
             Scaffold(
-                topBar = if (selectable == true) ({}) else ({ FitnessJournalTopAppBar {
-                    navController.navigate(FitnessJournalScreen.Settings.route)
-                }}),
-                bottomBar = if (selectable == true) ({}) else ({
-                    FitnessJournalBottomNavigationBar(
-                        navController = navController
-                    )
-                }),
                 floatingActionButtonPosition = FabPosition.End,
                 floatingActionButton = {
                     FloatingActionButton(
@@ -313,6 +330,14 @@ fun FitnessJournalBottomNavigationBar(
         Modifier.testTag(TestTags.BottomNavigationBar)
     ) {
         NavigationBarItem(
+            selected = navController.currentDestination?.route?.contains("home") == true,
+            onClick = { navController.navigate(FitnessJournalScreen.HomeScreen.route) },
+            icon = { BottomBarIcon(screen = FitnessJournalScreen.HomeScreen) },
+            label = { Text("Home") },
+            modifier = Modifier.testTag(FitnessJournalScreen.HomeScreen.testTag)
+        )
+
+        NavigationBarItem(
             selected = navController.currentDestination?.route?.contains("workout") == true,
             onClick = { navController.navigate(FitnessJournalScreen.WorkoutsScreen.route) },
             icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutsScreen) },
@@ -326,14 +351,6 @@ fun FitnessJournalBottomNavigationBar(
             icon = { BottomBarIcon(screen = FitnessJournalScreen.WorkoutPlansScreen) },
             label = { Text("Plans") },
             modifier = Modifier.testTag(FitnessJournalScreen.WorkoutPlansScreen.testTag)
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route?.contains("groups") == true,
-            onClick = { navController.navigate(FitnessJournalScreen.ExerciseGroupScreen.route) },
-            icon = { BottomBarIcon(screen = FitnessJournalScreen.ExerciseGroupScreen) },
-            label = { Text("Groups") },
-            modifier = Modifier.testTag(FitnessJournalScreen.ExerciseGroupScreen.testTag)
         )
 
         NavigationBarItem(

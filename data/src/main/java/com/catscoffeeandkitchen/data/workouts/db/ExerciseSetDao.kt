@@ -139,4 +139,48 @@ interface ExerciseSetDao {
     )
     fun getLastSetOfExerciseInWorkout(exerciseId: Long, workoutId: Long): SetEntity?
 
+    @Query(
+        """
+            SELECT *
+            FROM SetEntity AS t1
+            WHERE
+                exerciseId = :exerciseId AND
+                t1.sId != :bestSetId AND
+                completedAt >= :epochMillis AND
+                (weightInPounds / (1.0278 - 0.0278 * reps)) = (
+                SELECT MIN(weightInPounds / (1.0278 - 0.0278 * reps)) 
+                FROM SetEntity AS t2 
+                WHERE t2.sId <= t1.sId AND t2.exerciseId = t1.exerciseId
+            )
+            ORDER BY (
+                SELECT MIN(weightInPounds / (1.0278 - 0.0278 * reps)) 
+                FROM SetEntity AS t2 
+                WHERE t2.sId <= t1.sId AND t2.exerciseId = t1.exerciseId
+            ) 
+            ASC
+            LIMIT 1
+        """
+    )
+    suspend fun getWorstSetSince(epochMillis: Long, exerciseId: Long, bestSetId: Long): SetEntity?
+
+    @Query(
+        """
+            SELECT *
+            FROM SetEntity AS t1
+            WHERE completedAt >= :epochMillis
+            ORDER BY (
+                SELECT MAX(
+                    (t1.weightInPounds / (1.0278 - 0.0278 * t1.reps)) - 
+                    (t2.weightInPounds / (1.0278 - 0.0278 * t2.reps))
+                )   
+                FROM SetEntity AS t2 
+                WHERE t2.sId <= t1.sId AND 
+                    t2.exerciseId = t1.exerciseId AND 
+                    t2.completedAt < t1.completedAt
+            ) 
+            DESC
+            LIMIT 1
+        """
+    )
+    suspend fun getBestSetSince(epochMillis: Long): SetEntity?
 }

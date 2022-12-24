@@ -496,8 +496,10 @@ class WorkoutDetailsViewModel @Inject constructor(
     fun startTimerNotification(seconds: Long) {
         timerServiceConnection.timerService?.cancelTimer()
 
-        val intent = Intent(context, TimerService::class.java)
-        intent.putExtra("seconds", seconds)
+        val intent = Intent(context, TimerService::class.java).apply {
+            putExtra("seconds", seconds)
+            putExtra("workoutId", workoutInstance?.id)
+        }
 
         context.startForegroundService(intent)
         connectionIsBound = context.bindService(intent, timerServiceConnection, Context.BIND_AUTO_CREATE)

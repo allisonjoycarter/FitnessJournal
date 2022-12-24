@@ -80,9 +80,6 @@ fun ColumnScope.editableExerciseCardContent(
                 removeSet = {
                     uiActions?.removeSet(set, uiData.workoutId)
                 },
-                onFocus = {
-                    onFocus()
-                },
                 onBlur = onBlur,
                 unit = uiData.unit,
             )

@@ -227,7 +227,7 @@ class GetWorkoutUnitTests {
 
         val workoutDates = workoutRepository.getWorkoutCompletedDates(1000)
         assertEquals(dates.size, workoutDates.size)
-        assertEquals(dates, workoutDates.sorted())
+        assertEquals(dates, workoutDates.sortedBy { it.dayOfMonth })
     }
 
     @Test

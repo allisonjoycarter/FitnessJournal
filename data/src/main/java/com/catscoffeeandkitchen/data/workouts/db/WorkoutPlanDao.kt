@@ -45,6 +45,13 @@ interface WorkoutPlanDao {
     )
     fun getAllWithGoals(): List<WorkoutPlanWithGoals>
 
+    @Query("""
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE wpId = :id
+    """)
+    suspend fun getById(id: Long): WorkoutPlanEntity
+
     @Query(
         """
         SELECT *
@@ -83,4 +90,11 @@ interface WorkoutPlanDao {
     """
     )
     fun getWorkoutPlanWithGoalsById(planId: Long): WorkoutPlanWithGoals
+
+    @Query("""
+        SELECT *
+        FROM WorkoutPlanEntity
+        WHERE daysOfWeek LIKE '%' || :today || '%'
+    """)
+    suspend fun getWithDay(today: String): List<WorkoutPlanEntity>
 }
